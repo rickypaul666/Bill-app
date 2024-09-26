@@ -10,6 +10,13 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.Typography
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
+import com.example.billapp.R
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -33,6 +40,24 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
+val jf_font = FontFamily(
+    Font(R.font.jf_openhuninn_2_1, FontWeight.Normal)
+
+)
+
+val custom_jf_Typography = Typography(
+    displayLarge = TextStyle(
+        fontFamily = jf_font,
+        fontWeight = FontWeight.Bold,
+        fontSize = 30.sp
+    ),
+    bodyLarge = TextStyle(
+        fontFamily = jf_font,
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp
+    )
+)
+
 @Composable
 fun BillAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -52,7 +77,7 @@ fun BillAppTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = custom_jf_Typography,
         content = content
     )
 }

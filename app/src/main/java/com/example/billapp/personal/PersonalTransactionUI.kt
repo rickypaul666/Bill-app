@@ -117,23 +117,31 @@ fun PersonalTransactionItem(
                     .clickable(onClick = onItemClick),
                 elevation = 4.dp
             ) {
-                Row(
+                Box(
                     modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = formattedDate
-                    )
-                    Column {
-                        Text(text = transaction.name)
+                    .fillMaxSize()
+                    .background(Color(0xFFBBB0A2))  // 外层Box设置padding区域颜色
+                    .padding(16.dp)  // 内边距
+                 ) {
+                    Row(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .background(Color(0xFFBBB0A2))
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = formattedDate
+                        )
+                        Column {
+                            Text(text = transaction.name)
+                        }
+                        Text(
+                            text = "${if (transaction.type == "收入") "+" else "-"}${transaction.amount}",
+                            color = if (transaction.type == "收入") Color.Green else Color.Red
+                        )
                     }
-                    Text(
-                        text = "${if (transaction.type == "收入") "+" else "-"}${transaction.amount}",
-                        color = if (transaction.type == "收入") Color.Green else Color.Red
-                    )
                 }
             }
         }

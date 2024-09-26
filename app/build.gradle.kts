@@ -72,6 +72,7 @@ dependencies {
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("com.google.android.material:material:1.12.0")
     implementation(libs.volley)
+    implementation(libs.androidx.runtime.livedata)
 
     val compose_version = "1.5.1"
     implementation ("androidx.compose.material:material:$compose_version")
@@ -134,6 +135,9 @@ dependencies {
     implementation(libs.firebase.storage)
 
     implementation("androidx.compose.material:material:1.6.8")
+
+    implementation("androidx.core:core-splashscreen:1.0.0")
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
