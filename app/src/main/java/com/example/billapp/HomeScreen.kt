@@ -120,6 +120,9 @@ fun HomeScreen(
             val total = income + expense
             val balance = income - expense
 
+            val level = viewModel.getUserLevel()
+            val trustLevel = viewModel.getUserTrustLevel()
+
             HorizontalPager(
                 state = pagerState,
                 modifier =Modifier
@@ -203,27 +206,27 @@ fun HomeScreen(
                             ) {
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.SpaceEvenly
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    ParallelogramProgressBar(
+                                    RoundedCornerProgressBar(
                                         TargetProgress = 1f,
-                                        text = "信譽等級: 5/5",
+                                        text = "信譽點數: $trustLevel/100",
                                         color = Color.Green,
-                                        modifier = Modifier.fillMaxWidth(0.8f)
+                                        modifier = Modifier.padding(4.dp)
                                     )
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    ParallelogramProgressBar(
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    RoundedCornerProgressBar(
                                         TargetProgress = 0.5f,
-                                        text = "社交值: 等級: LV50/100",
+                                        text = "社交值: 等級: lv.$level",
                                         color = Color.Blue,
-                                        modifier = Modifier.fillMaxWidth(0.8f)
+                                        modifier = Modifier.padding(4.dp)
                                     )
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    ParallelogramProgressBar(
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    RoundedCornerProgressBar(
                                         TargetProgress = 0.083f,
                                         text = "血條: 2500/30000",
                                         color = Color.Red,
-                                        modifier = Modifier.fillMaxWidth(0.8f)
+                                        modifier = Modifier.padding(4.dp)
                                     )
                                 }
                             }
