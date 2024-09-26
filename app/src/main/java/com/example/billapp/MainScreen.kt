@@ -3,6 +3,7 @@ package com.example.billapp
 import AvatarScreen
 import ExposedDropdown
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +22,7 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemColors
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -36,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -65,6 +68,11 @@ import com.example.billapp.sign.IntroScreen
 import com.example.billapp.sign.SignInScreen
 import com.example.billapp.sign.SignUpScreen
 import com.example.billapp.sign.SplashScreen
+import com.example.billapp.ui.theme.Black
+import com.example.billapp.ui.theme.BlueGray
+import com.example.billapp.ui.theme.BottomBackgroundColor
+import com.example.billapp.ui.theme.DarkGray
+import com.example.billapp.ui.theme.White
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
 import kotlinx.coroutines.launch
@@ -110,7 +118,9 @@ fun MainScreen(
         Scaffold(
             bottomBar = {
                 if (currentRoute != "intro" && currentRoute != "signin" && currentRoute != "signup" && currentRoute != "splash") { // 確認當前路由不是 IntroScreen
-                    NavigationBar {
+                    NavigationBar(
+                        containerColor = BottomBackgroundColor
+                    ) {
                         items.forEachIndexed { index, item ->
                             NavigationBarItem(
                                 icon = {
@@ -130,7 +140,16 @@ fun MainScreen(
                                         3 -> navController.navigate("group")
                                         4 -> navController.navigate("settings")
                                     }
-                                }
+                                },
+                                colors = NavigationBarItemColors(
+                                    selectedIndicatorColor = BlueGray,
+                                    selectedIconColor = Black,
+                                    selectedTextColor = Black,
+                                    unselectedIconColor = White,
+                                    unselectedTextColor =  White,
+                                    disabledIconColor = DarkGray,
+                                    disabledTextColor = DarkGray
+                                )
                             )
                         }
                     }

@@ -1,6 +1,7 @@
 package com.example.billapp.personal
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -60,6 +62,11 @@ import com.example.billapp.StylishTextField
 import com.example.billapp.evaluateExpression
 import com.example.billapp.models.PersonalTransaction
 import com.example.billapp.models.TransactionCategory
+import com.example.billapp.ui.theme.Black
+import com.example.billapp.ui.theme.ButtonGrayColor
+import com.example.billapp.ui.theme.ButtonGreenColor
+import com.example.billapp.ui.theme.MainBackgroundColor
+import com.example.billapp.ui.theme.PrimaryFontColor
 import com.example.billapp.viewModel.MainViewModel
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
@@ -119,12 +126,16 @@ fun EditTransactionDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Edit Transaction") },
+                title = { Text("編輯交易紀錄") },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = topAppBarColors(
+                    containerColor = MainBackgroundColor,
+                    titleContentColor = Black,
+                )
             )
         },
         modifier = Modifier
@@ -133,11 +144,13 @@ fun EditTransactionDetailScreen(
                     focusManager.clearFocus()
                 })
             }
+
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .background(MainBackgroundColor)
                 .padding(16.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
@@ -152,7 +165,7 @@ fun EditTransactionDetailScreen(
                 Button(
                     onClick = { viewModel.setTransactionType("收入") },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (type == "收入") Color.Gray else Color.LightGray
+                        containerColor = if (type == "收入") PrimaryFontColor else ButtonGrayColor
                     ),
                     modifier = Modifier.weight(1f)
                 ) {
@@ -164,7 +177,7 @@ fun EditTransactionDetailScreen(
                 Button(
                     onClick = { viewModel.setTransactionType("支出") },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor =  if(type == "支出") Color.Gray else Color.LightGray
+                        containerColor =  if(type == "支出") PrimaryFontColor else ButtonGrayColor
                     ),
                     modifier = Modifier.weight(1f)
                 ) {
@@ -358,6 +371,7 @@ fun EditTransactionDetailScreen(
                         showErrorDialog = true
                     }
                 },
+                colors = ButtonDefaults.buttonColors(containerColor = ButtonGreenColor),
                 enabled = amountInput.isNotBlank() && name.isNotBlank() && amountInput.toDoubleOrNull() != 0.0,
                 modifier = Modifier.fillMaxWidth()
             ) {
