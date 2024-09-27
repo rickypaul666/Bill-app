@@ -50,12 +50,15 @@ import com.example.billapp.group.GroupList
 import com.example.billapp.models.Group
 import com.example.billapp.models.User
 import com.example.billapp.models.GroupTransaction
+import com.example.billapp.models.TransactionCategory
 import com.example.billapp.personal.PersonalTransactionList
 import com.example.billapp.ui.theme.BoxBackgroundColor
 import com.example.billapp.ui.theme.MainBackgroundColor
 import com.example.billapp.ui.theme.MainCardRedColor
 import com.example.billapp.viewModel.MainViewModel
 import java.util.Calendar
+
+
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -103,6 +106,72 @@ fun HomeScreen(
     val pagerState = rememberPagerState(pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
 
+    var year by remember { mutableStateOf(Calendar.getInstance().get(Calendar.YEAR)) }
+    var month by remember { mutableStateOf(Calendar.getInstance().get(Calendar.MONTH) + 1) }
+    var day by remember { mutableStateOf(Calendar.getInstance().get(Calendar.DAY_OF_MONTH)) }
+
+    var dateType by remember { mutableStateOf("月") }
+    var filteredIncome by remember { mutableStateOf(0f) }
+    var filteredExpense by remember { mutableStateOf(0f) }
+    var startDate by remember { mutableStateOf<Long?>(null) }
+    var endDate by remember { mutableStateOf<Long?>(null) }
+
+    // 根據選中的類型過濾記錄
+    fun filterRecords() {
+        val filtered = transactions.filter { transaction ->
+            val calendar =
+                Calendar.getInstance().apply { timeInMillis = transaction.date!!.toDate().time }
+            when (dateType) {
+                "年" -> calendar.get(Calendar.YEAR) == year
+                "月" -> calendar.get(Calendar.YEAR) == year && calendar.get(Calendar.MONTH) + 1 == month
+                "日" -> calendar.get(Calendar.YEAR) == year && calendar.get(Calendar.MONTH) + 1 == month && calendar.get(
+                    Calendar.DAY_OF_MONTH
+                ) == day
+
+                "自訂" -> startDate?.let { calendar.timeInMillis >= it } == true && endDate?.let { calendar.timeInMillis <= it } == true
+
+                else -> true
+            }
+        }
+        filteredRecords = filtered.filter { transaction ->
+            when (selectedChart) {
+                "支出" -> transaction.type == "支出"
+                "收入" -> transaction.type == "收入"
+                "結餘" -> true
+                else -> true
+            }
+        }
+        filteredIncome = filtered.filter { it.type == "收入" }.sumOf { it.amount }.toFloat()
+        filteredExpense = filtered.filter { it.type == "支出" }.sumOf { it.amount }.toFloat()
+    }
+
+    LaunchedEffect(user) {
+        user?.let {
+            viewModel.loadUserTransactions()
+            filterRecords()
+        }
+    }
+    LaunchedEffect(transactions) {
+        filterRecords()
+    }
+
+    // 更新日期
+    fun updateDate(increment: Int) {
+        val calendar = Calendar.getInstance()
+        calendar.set(year, month - 1, day)
+        when (dateType) {
+            "年" -> calendar.add(Calendar.YEAR, increment)
+            "月" -> calendar.add(Calendar.MONTH, increment)
+            "日" -> calendar.add(Calendar.DAY_OF_MONTH, increment)
+        }
+        year = calendar.get(Calendar.YEAR)
+        month = calendar.get(Calendar.MONTH) + 1
+        day = calendar.get(Calendar.DAY_OF_MONTH)
+
+        // 更新數據
+        filterRecords()  // 過濾記錄
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -115,8 +184,8 @@ fun HomeScreen(
                 .background(Color(0xFFD9C2A7))
         ) {
             val userName = "getUserName()"
-            val income = viewModel.getUserIncome()
-            val expense = viewModel.getUserExpense()
+            val income = filteredIncome
+            val expense = filteredExpense
             val total = income + expense
             val balance = income - expense
 
@@ -300,8 +369,7 @@ fun HomeScreen(
                                 modifier = Modifier
                                     .weight(1f)
                                     .aspectRatio(1f) // 確保 Box 是正方形
-                                    .padding(8.dp)
-                                    .clickable { navController.navigate("personal") },
+                                    .padding(8.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 PieChart(
@@ -366,7 +434,7 @@ fun HomeScreen(
                                         horizontalArrangement = Arrangement.Center
                                     ) {
                                         IconButton(
-                                            onClick = { /*TODO*/ }
+                                            onClick = { updateDate(-1) }
                                         ) {
                                             Icon(
                                                 painter = painterResource(id = R.drawable.baseline_navigate_before_24),
@@ -381,14 +449,14 @@ fun HomeScreen(
                                                 .padding(4.dp) // 內部 padding
                                         ) {
                                             Text(
-                                                text = "2024/09",
+                                                text = "$year/$month",
                                                 fontSize = 12.sp,
-                                                fontWeight = FontWeight.Medium
+                                                fontWeight = FontWeight.Bold
                                             )
                                         }
 
                                         IconButton(
-                                            onClick = { /*TODO*/ }
+                                            onClick = { updateDate(1) }
                                         ) {
                                             Icon(
                                                 painter = painterResource(id = R.drawable.baseline_navigate_next_24),
