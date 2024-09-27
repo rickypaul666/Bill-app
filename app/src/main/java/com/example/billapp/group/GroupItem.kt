@@ -3,6 +3,8 @@ package com.example.billapp.group
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -35,14 +37,17 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.billapp.R
 import com.example.billapp.models.Group
+import com.example.billapp.ui.theme.ButtonRedColor
+import com.example.billapp.ui.theme.Purple40
+
 
 // 顯示在 Group，會放在底下 GroupList 中
 @Composable
-fun GroupItem(groupName: String, createdBy: String, onClick: () -> Unit) {
+fun GroupItem(groupName: String, createdBy: String, totalDebt: Float, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp) // External padding
+            .padding(horizontal = 40.dp, vertical = 8.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp), // Rounded corners
         elevation = CardDefaults.cardElevation(4.dp)
@@ -50,7 +55,8 @@ fun GroupItem(groupName: String, createdBy: String, onClick: () -> Unit) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp), // Internal padding
+                .background(Color(0xFFBBB0A2))
+                .padding(top = 8.dp, start = 8.dp, end = 8.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Circular ImageView
@@ -60,7 +66,7 @@ fun GroupItem(groupName: String, createdBy: String, onClick: () -> Unit) {
                 modifier = Modifier
                     .size(60.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
+                    .background(color = Purple40),
                 contentScale = ContentScale.Crop
             )
 
@@ -83,6 +89,29 @@ fun GroupItem(groupName: String, createdBy: String, onClick: () -> Unit) {
                 )
             }
         }
+
+        //Spacer(modifier = Modifier.height(0.dp)) // 縮短距離，根據需要調整此值
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth() // 填滿整個寬度
+                .background(Color(0xFFBBB0A2))
+                .padding(4.dp), // 外邊距
+            horizontalArrangement = Arrangement.End // 內容向右對齊
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(150.dp) // 固定寬度
+                    .padding(top = 16.dp, start = 4.dp, end = 4.dp, bottom = 4.dp) // 加入上方的內邊距
+                    .background(color = ButtonRedColor, shape = RoundedCornerShape(8.dp)), // 圓角背景顏色
+                contentAlignment = Alignment.BottomStart // 內容對齊到左下角
+            ) {
+                Text(
+                    text = "總欠債: $totalDebt NTD",
+                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black)
+                )
+            }
+        }
     }
 }
 
@@ -92,14 +121,21 @@ fun GroupList(
     onGroupClick: (String) -> Unit,
     navController: NavController
 ) {
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(groupItems) { groupItem ->
-            GroupItem(
-                groupName = groupItem.name,
-                createdBy = groupItem.createdBy,
-                onClick = { onGroupClick(groupItem.id) }
-            )
-        }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFE4DFCB)) // 設置整個頁面的背景顏色
+    ) {
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            items(groupItems) { groupItem ->
+                GroupItem(
+                    groupName = groupItem.name,
+                    createdBy = groupItem.createdBy,
+                    totalDebt = 10000f, // 假設你有這個數據，這裡使用示例值
+                    onClick = { onGroupClick(groupItem.id) }
+                )
+            }
+            /*
         item {
             Spacer(modifier = Modifier.height(16.dp))
             Button(
@@ -114,6 +150,8 @@ fun GroupList(
                 Text("新增群組")
             }
         }
+        */
+        }
     }
 }
 
@@ -121,5 +159,5 @@ fun GroupList(
 @Composable
 fun GroupItemPreview()
 {
-    GroupItem("Travel","Jason",{})
+    GroupItem("Travel","Jason",10000f,{})
 }
