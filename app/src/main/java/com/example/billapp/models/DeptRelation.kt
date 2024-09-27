@@ -2,7 +2,7 @@ package com.example.billapp.models
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
-import java.security.Timestamp
+import com.google.firebase.Timestamp
 
 @Parcelize
 data class DeptRelation(

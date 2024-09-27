@@ -689,7 +689,8 @@ class MainViewModel : ViewModel() {
                             groupTransactionId = transaction.id,
                             from = dividerId,
                             to = payerId,
-                            amount = amountPerDivider / transaction.payer.size
+                            amount = amountPerDivider / transaction.payer.size,
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -714,7 +715,8 @@ class MainViewModel : ViewModel() {
                             groupTransactionId = transaction.id,
                             from = userId,
                             to = payerId,
-                            amount = amountOwed
+                            amount = amountOwed,
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -740,7 +742,8 @@ class MainViewModel : ViewModel() {
                             groupTransactionId = transaction.id,
                             from = dividerId,
                             to = payerId,
-                            amount = amountOwed
+                            amount = amountOwed,
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -761,7 +764,8 @@ class MainViewModel : ViewModel() {
                             groupTransactionId = transaction.id,
                             from = userId,
                             to = payerId,
-                            amount = amount.toDouble() / transaction.payer.size
+                            amount = amount.toDouble() / transaction.payer.size,
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -786,7 +790,8 @@ class MainViewModel : ViewModel() {
                             groupTransactionId = transaction.id,
                             from = userId,
                             to = payerId,
-                            amount = amountOwed
+                            amount = amountOwed,
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
