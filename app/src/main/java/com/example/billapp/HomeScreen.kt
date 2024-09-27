@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.pager.HorizontalPager
@@ -612,22 +613,17 @@ fun HomeScreen(
                     }
                 }
 
-                // 顯示時間最近的 4 個 Group，並利用 4 宮格顯示
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
+                // 顯示時間最近的 4 個 Group，並利用水平滑動顯示
+                LazyRow(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.height(320.dp)  // Adjust the height as needed
+                    modifier = Modifier.height(320.dp)  // 調整高度
                 ) {
-                    items(4) { index ->
-                        if (index < groups.size) {
-                            GroupItem(group = groups[index], onItemClick = {
-                                navController.navigate("groupDetail/${groups[index].id}")
-                            })
-                        } else {
-                            EmptyGroupSlot()
-                        }
+                    items(groups.take(4).size) { index ->  // 使用 size 獲取前 4 個群組的數量
+                        val group = groups[index]  // 根據索引獲取群組
+                        GroupItem(group = group, onItemClick = {
+                            navController.navigate("groupDetail/${group.id}")
+                        })
                     }
                 }
             }
