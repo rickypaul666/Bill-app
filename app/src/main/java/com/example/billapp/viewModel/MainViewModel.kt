@@ -435,6 +435,23 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    fun createGroupWtihImageId(groupName: String, imageId: Int) {
+        viewModelScope.launch {
+            _groupCreationStatus.value = GroupCreationStatus.LOADING
+            try {
+                val group = Group(
+                    name = groupName,
+                    imageId = imageId
+                )
+                val groupId = FirebaseRepository.createGroup(group)
+
+                _groupCreationStatus.value = GroupCreationStatus.SUCCESS
+            } catch (e: Exception) {
+                _groupCreationStatus.value = GroupCreationStatus.ERROR
+            }
+        }
+    }
+
 
 
     fun resetGroupCreationStatus() {

@@ -16,6 +16,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
@@ -209,7 +210,7 @@ fun MainScreen(
                 }
 
                 composable("CreateGroupScreen") {
-                    CreateGroup(navController = navController,viewModel = viewModel, avatarViewModel = avatarViewModel)
+                    CreateGroup(navController = navController,viewModel = viewModel)
                 }
                 composable("contact_us"){
                     ContactUsScreen(navController = navController, viewModel = viewModel)
@@ -342,7 +343,7 @@ fun DrawerContent(
             }
         }
 
-        Divider()
+        HorizontalDivider()
 
         // Menu items
         Spacer(modifier = Modifier.height(16.dp))

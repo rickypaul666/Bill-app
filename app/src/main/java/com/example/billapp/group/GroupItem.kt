@@ -3,25 +3,13 @@ package com.example.billapp.group
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,26 +24,24 @@ import androidx.navigation.NavController
 import com.example.billapp.R
 import com.example.billapp.models.Group
 
-// 顯示在 Group，會放在底下 GroupList 中
 @Composable
-fun GroupItem(groupName: String, createdBy: String, onClick: () -> Unit) {
+fun GroupItem(groupName: String, createdBy: String, imageId: Int, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp) // External padding
+            .padding(8.dp)
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp), // Rounded corners
+        shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp), // Internal padding
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Circular ImageView
             Image(
-                painter = painterResource(id = R.drawable.ic_board_place_holder),
+                painter = painterResource(id = getImageResourceById(imageId)),
                 contentDescription = stringResource(id = R.string.image_contentDescription),
                 modifier = Modifier
                     .size(60.dp)
@@ -66,12 +52,11 @@ fun GroupItem(groupName: String, createdBy: String, onClick: () -> Unit) {
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            // Group name and created by text
             Column {
                 BasicText(
                     text = groupName,
                     style = MaterialTheme.typography.titleLarge.copy(
-                        fontSize = MaterialTheme.typography.headlineSmall.fontSize // Larger font size
+                        fontSize = MaterialTheme.typography.headlineSmall.fontSize
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -97,6 +82,7 @@ fun GroupList(
             GroupItem(
                 groupName = groupItem.name,
                 createdBy = groupItem.createdBy,
+                imageId = groupItem.imageId,
                 onClick = { onGroupClick(groupItem.id) }
             )
         }
@@ -108,7 +94,7 @@ fun GroupList(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(60.dp) // 設定按鈕高度
+                    .height(60.dp)
                     .padding(vertical = 4.dp)
             ) {
                 Text("新增群組")
@@ -119,7 +105,6 @@ fun GroupList(
 
 @Preview
 @Composable
-fun GroupItemPreview()
-{
-    GroupItem("Travel","Jason",{})
+fun GroupItemPreview() {
+    GroupItem("Travel", "Jason", 1, {})
 }
