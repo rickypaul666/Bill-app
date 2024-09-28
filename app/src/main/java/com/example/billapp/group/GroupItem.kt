@@ -38,7 +38,14 @@ import com.example.billapp.ui.theme.Purple40
 
 
 @Composable
-fun GroupItem(groupName: String, createdBy: String, totalDebt: Float, onClick: () -> Unit) {
+fun GroupItem(
+    groupId: String,
+    groupName: String,
+    createdBy: String,
+    totalDebt: Float,
+    onClick: () -> Unit,
+    imageId: Int
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -123,10 +130,12 @@ fun GroupList(
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(groupItems) { groupItem ->
                 GroupItem(
+                    groupId = groupItem.id,
                     groupName = groupItem.name,
                     createdBy = groupItem.createdBy,
                     totalDebt = 10000f, // 假設你有這個數據，這裡使用示例值
-                    onClick = { onGroupClick(groupItem.id) }
+                    onClick = { onGroupClick(groupItem.id) },
+                    imageId = groupItem.imageId
                 )
             }
             /*
@@ -153,5 +162,5 @@ fun GroupList(
 @Composable
 fun GroupItemPreview()
 {
-    GroupItem("Travel","Jason",10000f,{})
+    GroupItem("1","Travel","Jason",10000f,{},1)
 }

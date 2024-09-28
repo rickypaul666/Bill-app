@@ -102,3 +102,18 @@ fun DeptRelationDetailItem(
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+fun DeptRelationDetailItemPreview() {
+    val viewModel = MainViewModel()
+    val deptRelation = DeptRelation(
+        from = "user1",
+        to = "user2",
+        id = "1",
+        name = "test",
+        amount = 100.0,
+        groupTransactionId = "1"
+    )
+    DeptRelationDetailItem(viewModel = viewModel, deptRelation = deptRelation, groupId = "1")
+}
+
