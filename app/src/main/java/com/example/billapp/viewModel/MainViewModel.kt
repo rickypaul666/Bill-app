@@ -82,7 +82,7 @@ class MainViewModel : ViewModel() {
     private val _name = MutableStateFlow("")
     val name: StateFlow<String> = _name.asStateFlow()
 
-    private val _shareMethod = MutableStateFlow("")
+    private val _shareMethod = MutableStateFlow("均分")
     val shareMethod: StateFlow<String> = _shareMethod
 
     private val _dividers = MutableStateFlow<List<String>>(emptyList())
@@ -239,7 +239,7 @@ class MainViewModel : ViewModel() {
         _date.value = Timestamp.now()
         _category.value = ""
         _name.value = ""
-        _shareMethod.value = ""
+        _shareMethod.value = "均分"
         _groupMembers.value = emptyList()
         _transaction.value = null
         _updatetime.value = Timestamp.now()
