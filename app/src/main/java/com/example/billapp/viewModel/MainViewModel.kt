@@ -121,7 +121,33 @@ class MainViewModel : ViewModel() {
         data class Error(val message: String) : AuthState()
     }
 
+    // 將經驗值加上 amount
+    fun updateUserExperience(userId: String, amount: Int) {
+        viewModelScope.launch {
+            FirebaseRepository.updateUserExperience(userId, amount)
+            reloadUserData()
+        }
+    }
 
+    // 將信任度加上 amount
+    fun updateUserTrustLevel(userId: String, amount: Int) {
+        viewModelScope.launch {
+            FirebaseRepository.updateUserTrustLevel(userId, amount)
+            reloadUserData()
+        }
+    }
+
+    fun dailyExperienceIncrease(userId: String) {
+        updateUserExperience(userId, 10)
+    }
+
+    fun getUserLevel(): Int {
+        return user.value?.experience?.div(100) ?: 0
+    }
+
+    fun getUserTrustLevel(): Int {
+        return user.value?.trustLevel ?: 0
+    }
 
     private fun checkCurrentUser() {
         viewModelScope.launch {
@@ -250,7 +276,7 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    private fun getCurrentUserID(): String {
+    fun getCurrentUserID(): String {
         val currentUser = FirebaseAuth.getInstance().currentUser
         return currentUser?.uid ?: ""
     }
@@ -401,6 +427,23 @@ class MainViewModel : ViewModel() {
                         imageUrl?.let { avatarRepository.updateGroupImage(groupId, it) }
                     }
                 }
+
+                _groupCreationStatus.value = GroupCreationStatus.SUCCESS
+            } catch (e: Exception) {
+                _groupCreationStatus.value = GroupCreationStatus.ERROR
+            }
+        }
+    }
+
+    fun createGroupWtihImageId(groupName: String, imageId: Int) {
+        viewModelScope.launch {
+            _groupCreationStatus.value = GroupCreationStatus.LOADING
+            try {
+                val group = Group(
+                    name = groupName,
+                    imageId = imageId
+                )
+                val groupId = FirebaseRepository.createGroup(group)
 
                 _groupCreationStatus.value = GroupCreationStatus.SUCCESS
             } catch (e: Exception) {
@@ -646,7 +689,8 @@ class MainViewModel : ViewModel() {
                             groupTransactionId = transaction.id,
                             from = dividerId,
                             to = payerId,
-                            amount = amountPerDivider / transaction.payer.size
+                            amount = amountPerDivider / transaction.payer.size,
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -671,7 +715,8 @@ class MainViewModel : ViewModel() {
                             groupTransactionId = transaction.id,
                             from = userId,
                             to = payerId,
-                            amount = amountOwed
+                            amount = amountOwed,
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -697,7 +742,8 @@ class MainViewModel : ViewModel() {
                             groupTransactionId = transaction.id,
                             from = dividerId,
                             to = payerId,
-                            amount = amountOwed
+                            amount = amountOwed,
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -718,7 +764,8 @@ class MainViewModel : ViewModel() {
                             groupTransactionId = transaction.id,
                             from = userId,
                             to = payerId,
-                            amount = amount.toDouble() / transaction.payer.size
+                            amount = amount.toDouble() / transaction.payer.size,
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -743,7 +790,8 @@ class MainViewModel : ViewModel() {
                             groupTransactionId = transaction.id,
                             from = userId,
                             to = payerId,
-                            amount = amountOwed
+                            amount = amountOwed,
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }

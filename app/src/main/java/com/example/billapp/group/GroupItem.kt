@@ -20,11 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,7 +43,6 @@ import com.example.billapp.ui.theme.ButtonRedColor
 import com.example.billapp.ui.theme.VeryDarkGray
 
 
-// 顯示在 Group，會放在底下 GroupList 中
 @Composable
 fun GroupItem(groupName: String, createdBy: String, totalDebt: Float, onClick: () -> Unit) {
     Card(
@@ -64,7 +59,6 @@ fun GroupItem(groupName: String, createdBy: String, totalDebt: Float, onClick: (
              */
         shape = RoundedCornerShape(16.dp), // Rounded corners
         elevation = CardDefaults.cardElevation(10.dp)
-
     ) {
         Column(
             modifier = Modifier
@@ -181,7 +175,7 @@ fun GroupList(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(60.dp) // 設定按鈕高度
+                    .height(60.dp)
                     .padding(vertical = 4.dp)
             ) {
                 Text("新增群組")
