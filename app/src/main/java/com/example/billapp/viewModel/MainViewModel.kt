@@ -82,7 +82,7 @@ class MainViewModel : ViewModel() {
     private val _name = MutableStateFlow("")
     val name: StateFlow<String> = _name.asStateFlow()
 
-    private val _shareMethod = MutableStateFlow("")
+    private val _shareMethod = MutableStateFlow("均分")
     val shareMethod: StateFlow<String> = _shareMethod
 
     private val _dividers = MutableStateFlow<List<String>>(emptyList())
@@ -239,7 +239,7 @@ class MainViewModel : ViewModel() {
         _date.value = Timestamp.now()
         _category.value = ""
         _name.value = ""
-        _shareMethod.value = ""
+        _shareMethod.value = "均分"
         _groupMembers.value = emptyList()
         _transaction.value = null
         _updatetime.value = Timestamp.now()
@@ -689,7 +689,8 @@ class MainViewModel : ViewModel() {
                             groupTransactionId = transaction.id,
                             from = dividerId,
                             to = payerId,
-                            amount = amountPerDivider / transaction.payer.size
+                            amount = amountPerDivider / transaction.payer.size,
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -714,7 +715,8 @@ class MainViewModel : ViewModel() {
                             groupTransactionId = transaction.id,
                             from = userId,
                             to = payerId,
-                            amount = amountOwed
+                            amount = amountOwed,
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -740,7 +742,8 @@ class MainViewModel : ViewModel() {
                             groupTransactionId = transaction.id,
                             from = dividerId,
                             to = payerId,
-                            amount = amountOwed
+                            amount = amountOwed,
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -761,7 +764,8 @@ class MainViewModel : ViewModel() {
                             groupTransactionId = transaction.id,
                             from = userId,
                             to = payerId,
-                            amount = amount.toDouble() / transaction.payer.size
+                            amount = amount.toDouble() / transaction.payer.size,
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -786,7 +790,8 @@ class MainViewModel : ViewModel() {
                             groupTransactionId = transaction.id,
                             from = userId,
                             to = payerId,
-                            amount = amountOwed
+                            amount = amountOwed,
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }

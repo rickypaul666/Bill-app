@@ -2,7 +2,7 @@ package com.example.billapp.models
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
-import java.security.Timestamp
+import com.google.firebase.Timestamp
 
 @Parcelize
 data class DeptRelation(
@@ -12,5 +12,5 @@ data class DeptRelation(
     val from: String = "",
     val to: String = "",
     val amount: Double = 0.0,
-    val lastRemindTimestamp: Timestamp
+    val lastRemindTimestamp: Timestamp = Timestamp.now()
 ) : Parcelable

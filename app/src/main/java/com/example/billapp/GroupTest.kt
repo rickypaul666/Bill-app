@@ -1,60 +1,31 @@
 package com.example.billapp
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.rememberScaffoldState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.billapp.viewModel.MainViewModel
-
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.rememberCoroutineScope
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,7 +37,7 @@ fun GroupTest(
     // Initialize scaffoldState
     val snackbarHostState = remember { SnackbarHostState() }
     var showSnackbar by remember { mutableStateOf(false) }
-    var showBottomSheet by remember { mutableStateOf(false) }
+    var showCustomBottomSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(groupId) {
         viewModel.getGroupMembers(groupId)
@@ -186,37 +157,6 @@ fun GroupTest(
             Spacer(modifier = Modifier.height(16.dp))
 
             ExposedDropdownMenuBox(
-                expanded = expandedShareMethod,
-                onExpandedChange = { expandedShareMethod = !expandedShareMethod }
-            ) {
-                StylishTextField(
-                    readOnly = true,
-                    value = shareMethod,
-                    onValueChange = { },
-                    label = "分帳方式" ,
-//                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedShareMethod) },
-//                    colors = ExposedDropdownMenuDefaults.textFieldColors(),
-                    modifier = Modifier.menuAnchor()
-                )
-                ExposedDropdownMenu(
-                    expanded = expandedShareMethod,
-                    onDismissRequest = { expandedShareMethod = false }
-                ) {
-                    listOf("均分", "比例", "調整", "金額", "份數").forEach { selectionOption ->
-                        DropdownMenuItem(
-                            text = { Text(selectionOption) },
-                            onClick = {
-                                viewModel.setShareMethod(selectionOption)
-                                expandedShareMethod = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            ExposedDropdownMenuBox(
                 expanded = expandedDividers,
                 onExpandedChange = { expandedDividers = !expandedDividers }
             ) {
@@ -299,63 +239,68 @@ fun GroupTest(
                 }
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .border(2.dp, colorResource(id = R.color.colorAccent), RoundedCornerShape(8.dp)) // 使用 colorResource 取得顏色
+                    .background(colorResource(id = R.color.colorLight)) // 背景顏色
+                    .clickable {
+                        if (amountInput.isNotBlank() && dividers.isNotEmpty() && payers.isNotEmpty()) {
+                            showCustomBottomSheet = true
+                        } else {
+                            showSnackbar = true // 顯示錯誤訊息
+                        }
+                    }
+            ) {
+                Text(
+                    text = if (shareMethod.isNotBlank()) "分帳方式 : $shareMethod" else "分帳方式 : 未選擇",
+                    modifier = Modifier.padding(16.dp),
+                    style = TextStyle(
+                        fontSize = 15.sp,
+                        fontFamily = FontFamily.Cursive,
+                        color = Color.DarkGray
+                    )
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = {
-                    if (amountInput.isNotBlank() && shareMethod.isNotBlank() && dividers.isNotEmpty() && payers.isNotEmpty()) {
-                        showBottomSheet = true
-                    } else {
-                        showSnackbar = true
-                    }
+                    // Trigger viewModel action to complete the transaction
+                    viewModel.addGroupTransaction(groupId)
+                    viewModel.loadGroupTransactions(groupId)
+                    viewModel.loadGroupDeptRelations(groupId)
+                    navController.popBackStack()
                 },
-                enabled = amountInput.isNotBlank() && shareMethod.isNotBlank() && dividers.isNotEmpty() && payers.isNotEmpty(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF7A5B3C) // 更深的顏色
+                ),
                 modifier = Modifier
-                    .align(Alignment.End)
-                    .padding(16.dp)
+                    .align(Alignment.End) // 右對齊
+                    .padding(16.dp) // 增加內邊距
             ) {
-                Text("分帳")
-            }
-
-            Button(onClick = {
-                // Trigger viewModel action to complete the transaction
-                viewModel.addGroupTransaction(groupId)
-                viewModel.loadGroupTransactions(groupId)
-                viewModel.loadGroupDeptRelations(groupId)
-                navController.popBackStack()
-            }) {
                 Text("完成")
             }
         }
     }
 
-    if (showBottomSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showBottomSheet = false },
-            sheetState = rememberModalBottomSheetState(),
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight(0.8f)
-                    .fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                ) {
-                    SeparateBottomSheetContent(
-                        viewModel = viewModel,
-                        groupId = groupId,
-                        amount = amount.toFloat(),
-                        onDismiss = { showBottomSheet = false },
-                        onComplete = {
-                            showBottomSheet = false
-                        }
-                    )
-                }
+    CustomBottomSheet(
+        isVisible = showCustomBottomSheet,
+        onDismiss = { showCustomBottomSheet = false }
+    ) {
+        SeparateBottomSheetContent(
+            viewModel = viewModel,
+            groupId = groupId,
+            amount = amount.toFloat(),
+            onDismiss = { showCustomBottomSheet = false },
+            onComplete = {
+                showCustomBottomSheet = false
             }
-        }
+        )
     }
 
     if (showSnackbar) {
@@ -366,6 +311,45 @@ fun GroupTest(
     }
 }
 
+@Composable
+fun CustomBottomSheet(
+    isVisible: Boolean,
+    onDismiss: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = slideInVertically(initialOffsetY = { it }),
+        exit = slideOutVertically(targetOffsetY = { it })
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(onClick = onDismiss)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.9f)
+                    .align(Alignment.BottomCenter)
+                    .background(
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+                    )
+                    .clickable(onClick = {})  // 防止點擊穿透
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                ) {
+                    content()
+                }
+            }
+        }
+    }
+}
 
 
 @Preview(showBackground = true)
