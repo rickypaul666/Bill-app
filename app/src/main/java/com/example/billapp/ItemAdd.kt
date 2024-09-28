@@ -15,14 +15,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -32,13 +30,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.*
@@ -47,18 +43,35 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.navigation.NavController
-import com.example.billapp.models.Group
 import com.example.billapp.models.TransactionCategory
-import com.example.billapp.models.User
 import com.example.billapp.viewModel.MainViewModel
-import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.platform.LocalFocusManager
-
+import androidx.compose.ui.text.font.FontWeight
+import com.example.billapp.ui.theme.VeryDarkGray
+import com.example.billapp.ui.theme.DarkerGray
+import com.example.billapp.ui.theme.DarkGray
+import com.example.billapp.ui.theme.Gray
+import com.example.billapp.ui.theme.LightGray
+import com.example.billapp.ui.theme.Gray
+import com.example.billapp.ui.theme.Orange1
+import com.example.billapp.ui.theme.Brown1
+import com.example.billapp.ui.theme.Brown2
+import com.example.billapp.ui.theme.Brown3
+import com.example.billapp.ui.theme.Brown4
+import com.example.billapp.ui.theme.Brown5
+import com.example.billapp.ui.theme.Brown6
+import com.example.billapp.ui.theme.Orange1
+import com.example.billapp.ui.theme.Orange2
+import com.example.billapp.ui.theme.Orange3
+import com.example.billapp.ui.theme.Orange4
+import com.example.billapp.ui.theme.ButtonGrayColor
+import com.example.billapp.ui.theme.BoxBackgroundColor
+import com.example.billapp.ui.theme.Green
+import com.example.billapp.ui.theme.Red
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,16 +91,17 @@ fun StylishTextField(
         readOnly = readOnly,
         textStyle = TextStyle(
             fontSize = 18.sp,
-            fontFamily = FontFamily.Cursive,
-            color = capybaraBrown
+            color = VeryDarkGray,
         ),
         modifier = modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .border(2.dp, capybaraBrown, RoundedCornerShape(8.dp)),
+            .border(2.dp, Brown1, RoundedCornerShape(8.dp)),
         colors = TextFieldDefaults.textFieldColors(
-            containerColor = colorResource(id = R.color.colorLight),
-            focusedIndicatorColor = capybaraBrown,
+            containerColor = BoxBackgroundColor,
+            focusedIndicatorColor = Brown1,
+            focusedLabelColor = Brown5,
+
             unfocusedIndicatorColor = Color.Transparent
         ),
         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
@@ -105,8 +119,8 @@ fun CustomKeyboard(
     onEqualsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val capybaraBrown = colorResource(id = R.color.colorAccent)
-    val capybaraLight = colorResource(id = R.color.colorLight)
+    val capybaraBrown = VeryDarkGray
+    val capybaraLight = BoxBackgroundColor
 
     Column(
         modifier = modifier
@@ -295,22 +309,28 @@ fun ItemAdd(
                 Button(
                     onClick = { personalOrGroup = "個人" },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (personalOrGroup == "個人") colorResource(id = R.color.colorAccent) else colorResource(id = R.color.primary_text_color)
-                    )
+                        containerColor = if (personalOrGroup == "個人") Brown1  else ButtonGrayColor
+                    ),
+                    elevation = ButtonDefaults.buttonElevation( // 設置按鈕陰影
+                        defaultElevation = 8.dp,  // 默認陰影
+                        pressedElevation = 12.dp, // 按下時的陰影
+                        hoveredElevation = 10.dp, // 懸停時的陰影
+                        focusedElevation = 10.dp  // 聚焦時的陰影
+                )
                 ) {
-                    Text("個人")
+                    Text("個人",color = if (personalOrGroup == "個人") LightGray  else DarkGray, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
                 Button(
                     onClick = { personalOrGroup = "群組" },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (personalOrGroup == "群組") colorResource(id = R.color.colorAccent) else colorResource(id = R.color.primary_text_color)
+                        containerColor = if (personalOrGroup == "群組") Brown1 else ButtonGrayColor
                     )
                 ) {
-                    Text("群組")
+                    Text("群組",color = if (personalOrGroup == "群組") LightGray  else DarkGray, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
-            Spacer(modifier = Modifier.height(7.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // if群組
             if (personalOrGroup == "群組") {
@@ -353,13 +373,11 @@ fun ItemAdd(
                     Button(
                         onClick = { viewModel.setTransactionType("支出") },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (transactionType == "支出") colorResource(id = R.color.colorAccent) else colorResource(
-                                id = R.color.primary_text_color
-                            )
+                            containerColor = if (transactionType == "支出") Orange1 else ButtonGrayColor
                         ),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text(text = "支出")
+                        Text(text = "支出",color = if (transactionType == "支出")  VeryDarkGray  else DarkGray,fontWeight = FontWeight.Bold)
                     }
 
                     Spacer(modifier = Modifier.width(7.dp))
@@ -367,13 +385,11 @@ fun ItemAdd(
                     Button(
                         onClick = { viewModel.setTransactionType("收入") },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (transactionType == "收入") colorResource(id = R.color.colorAccent) else colorResource(
-                                id = R.color.primary_text_color
-                            )
+                            containerColor = if (transactionType == "收入") Orange1 else ButtonGrayColor
                         ),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text(text = "收入")
+                        Text(text = "收入",color = if (transactionType == "收入") VeryDarkGray  else DarkGray,fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -600,7 +616,7 @@ fun ItemAdd(
                             showErrorDialog = true
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Red,
+                            containerColor = Red,
                             contentColor = Color.White
                         ),
                         modifier = Modifier.padding(end = 8.dp) // 與完成按鈕間距
@@ -631,7 +647,7 @@ fun ItemAdd(
                             showErrorDialog = true
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Red,
+                            containerColor = Red,
                             contentColor = Color.White
                         ),
                         modifier = Modifier.padding(end = 8.dp) // 與完成按鈕間距
@@ -648,6 +664,9 @@ fun ItemAdd(
                             viewModel.setNote("")
                             navController.popBackStack()
                         },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Green
+                        ),
                         enabled = amountInput.isNotBlank() && name.isNotBlank() && amountInput.toDoubleOrNull() != 0.0,
                         modifier = Modifier
                     ) {
