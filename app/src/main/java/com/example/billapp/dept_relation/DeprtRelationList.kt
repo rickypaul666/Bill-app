@@ -6,18 +6,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.billapp.models.DeptRelation
+import com.example.billapp.models.DebtRelation
 import com.example.billapp.viewModel.MainViewModel
 
 @Composable
 fun DeptRelationList(
     viewModel: MainViewModel,
-    deptRelations: Map<String, List<DeptRelation>>,
+    debtRelations: Map<String, List<DebtRelation>>,
     groupId: String,
     modifier: Modifier
 ) {
-    val optimizedDeptRelations = remember(deptRelations) {
-        optimizeDebtRelations(deptRelations.values.flatten())
+    val optimizedDeptRelations = remember(debtRelations) {
+        optimizeDebtRelations(debtRelations.values.flatten())
     }
 
     LazyColumn(
@@ -40,7 +40,7 @@ fun DeptRelationList(
                     fromName = fromName,
                     toName = toName,
                     totalAmount = amount,
-                    deptRelations = deptRelations.values.flatten().filter {
+                    debtRelations = debtRelations.values.flatten().filter {
                         (it.from == pair.first && it.to == pair.second) ||
                                 (it.from == pair.second && it.to == pair.first)
                     },
@@ -51,7 +51,7 @@ fun DeptRelationList(
     }
 }
 
-private fun optimizeDebtRelations(relations: List<DeptRelation>): Map<Pair<String, String>, Double> {
+private fun optimizeDebtRelations(relations: List<DebtRelation>): Map<Pair<String, String>, Double> {
     val debtMap = mutableMapOf<Pair<String, String>, Double>()
 
     relations.forEach { relation ->

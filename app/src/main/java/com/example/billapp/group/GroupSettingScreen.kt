@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.billapp.dept_relation.DeptRelationsScreen
 import com.example.billapp.R
 import com.example.billapp.dept_relation.GroupedDeptRelationItem
 import com.example.billapp.viewModel.MainViewModel
@@ -48,7 +47,7 @@ fun GroupSettingScreen(
     navController: NavController
 ) {
     val group by viewModel.getGroup(groupId).collectAsState(initial = null)
-    val deptRelations by viewModel.groupIdDeptRelations.collectAsState()
+    val deptRelations by viewModel.groupIdDebtRelations.collectAsState()
     val currentUser by viewModel.user.collectAsState()
     val currentUserId = currentUser?.id ?: ""
 
@@ -142,7 +141,7 @@ fun GroupSettingScreen(
                             fromName = fromName,
                             toName = toName,
                             totalAmount = relation.amount,
-                            deptRelations = listOf(relation),
+                            debtRelations = listOf(relation),
                             groupId = groupId
                         )
                     }
