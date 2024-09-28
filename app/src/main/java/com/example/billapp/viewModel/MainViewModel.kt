@@ -435,6 +435,23 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    fun createGroupWtihImageId(groupName: String, imageId: Int) {
+        viewModelScope.launch {
+            _groupCreationStatus.value = GroupCreationStatus.LOADING
+            try {
+                val group = Group(
+                    name = groupName,
+                    imageId = imageId
+                )
+                val groupId = FirebaseRepository.createGroup(group)
+
+                _groupCreationStatus.value = GroupCreationStatus.SUCCESS
+            } catch (e: Exception) {
+                _groupCreationStatus.value = GroupCreationStatus.ERROR
+            }
+        }
+    }
+
 
 
     fun resetGroupCreationStatus() {
@@ -672,7 +689,8 @@ class MainViewModel : ViewModel() {
                             groupTransactionId = transaction.id,
                             from = dividerId,
                             to = payerId,
-                            amount = amountPerDivider / transaction.payer.size
+                            amount = amountPerDivider / transaction.payer.size,
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -697,7 +715,8 @@ class MainViewModel : ViewModel() {
                             groupTransactionId = transaction.id,
                             from = userId,
                             to = payerId,
-                            amount = amountOwed
+                            amount = amountOwed,
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -723,7 +742,8 @@ class MainViewModel : ViewModel() {
                             groupTransactionId = transaction.id,
                             from = dividerId,
                             to = payerId,
-                            amount = amountOwed
+                            amount = amountOwed,
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -744,7 +764,8 @@ class MainViewModel : ViewModel() {
                             groupTransactionId = transaction.id,
                             from = userId,
                             to = payerId,
-                            amount = amount.toDouble() / transaction.payer.size
+                            amount = amount.toDouble() / transaction.payer.size,
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -769,7 +790,8 @@ class MainViewModel : ViewModel() {
                             groupTransactionId = transaction.id,
                             from = userId,
                             to = payerId,
-                            amount = amountOwed
+                            amount = amountOwed,
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
