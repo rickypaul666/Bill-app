@@ -13,7 +13,7 @@ data class Group(
     var assignedTo: MutableList<String> = mutableListOf(),
     val transactions: MutableList<GroupTransaction> = mutableListOf(),
     val closedTransactions: MutableList<GroupTransaction> = mutableListOf(),
-    val deptRelations: MutableList<DeptRelation> = mutableListOf(),
+    val debtRelations: MutableList<DebtRelation> = mutableListOf(),
     val createdTime: Timestamp? = null,
     val imageId: Int = 0
 ) : Parcelable
