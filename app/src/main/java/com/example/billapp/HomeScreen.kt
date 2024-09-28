@@ -6,21 +6,35 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,14 +43,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -45,20 +56,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
-import com.example.billapp.group.GroupList
 import com.example.billapp.models.Group
-import com.example.billapp.models.User
-import com.example.billapp.models.GroupTransaction
-import com.example.billapp.models.TransactionCategory
-import com.example.billapp.personal.PersonalTransactionList
 import com.example.billapp.ui.theme.BoxBackgroundColor
 import com.example.billapp.ui.theme.MainBackgroundColor
 import com.example.billapp.ui.theme.MainCardRedColor
+import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
 import java.util.Calendar
-
 
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -66,15 +71,22 @@ import java.util.Calendar
 fun HomeScreen(
     navController: NavController,
     onOpenDrawer: () -> Unit,
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
+    avatarViewModel: AvatarViewModel
 ) {
+    val user = viewModel.user.collectAsState().value
+    val userName = viewModel.getCurrentUserName()
+
+    val userImage = avatarViewModel.avatarUrl.collectAsState().value
+    var showDialog by remember { mutableStateOf(false) }
+
     val groups by viewModel.userGroups.collectAsState()
     // 获取最近两笔交易记录
     val transactions by viewModel.userTransactions.collectAsState()
     var filteredRecords by remember { mutableStateOf(transactions) }
 
     var selectedChart by remember { mutableStateOf("結餘") }
-    val user by viewModel.user.collectAsState()
+
     fun filtered(){
         val filtered = transactions.filter {
             it.updatedAt != null
@@ -184,7 +196,6 @@ fun HomeScreen(
                 .padding(16.dp)
                 .background(Color(0xFFD9C2A7))
         ) {
-            val userName = "getUserName()"
             val income = filteredIncome
             val expense = filteredExpense
             val total = income + expense
@@ -237,34 +248,26 @@ fun HomeScreen(
                             modifier = Modifier.fillMaxSize(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .aspectRatio(1f)
-                                    .padding(8.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(150.dp) // Adjust the size as needed
+                                        .padding(8.dp)
+                                        .align(Alignment.CenterHorizontally)
                                 ) {
-                                    Image(
-                                        painter = painterResource(R.drawable.avatar_placeholder_2),
-                                        contentDescription = "Character Avatar",
+                                    AsyncImage(
+                                        model = coil.request.ImageRequest.Builder(LocalContext.current)
+                                            .data(userImage)
+                                            .crossfade(true)
+                                            .build(),
+                                        placeholder = painterResource(R.drawable.ic_user_place_holder),
+                                        contentDescription = "User Image",
                                         contentScale = ContentScale.Crop,
-                                        modifier = Modifier
-                                            .size(80.dp) // 設置頭像大小
-                                            .clip(CircleShape) // 設置頭像為圓形
-                                            .background(Color.Gray) // 頭像背景顏色
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = "AMY",
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black
+                                        modifier = Modifier.clip(CircleShape)
                                     )
                                 }
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(user!!.name)
                             }
 
                             Box(
@@ -681,16 +684,6 @@ fun EmptyGroupSlot() {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenPreview() {
-    // Create a mock NavController
-    val navController = rememberNavController()
-    // Create a mock or default MainViewModel
-    val viewModel = MainViewModel() // You may need to provide required parameters or use a factory if necessary
-    HomeScreen(navController = navController, onOpenDrawer = {}, viewModel = viewModel)
-    // HomeScreen(navController = navController, onOpenDrawer = {})
-}
 
 @Preview(showBackground = true)
 @Composable

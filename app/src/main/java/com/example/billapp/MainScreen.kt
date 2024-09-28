@@ -151,6 +151,7 @@ fun MainScreen(
                             scope.launch { drawerState.open() }
                         },
                         viewModel = viewModel,
+                        avatarViewModel = avatarViewModel
                     )
                 }
                 composable("main") {
@@ -160,6 +161,7 @@ fun MainScreen(
                             scope.launch { drawerState.open() }
                         },
                         viewModel = viewModel,
+                        avatarViewModel = avatarViewModel
                     )
                 }
 

@@ -296,6 +296,10 @@ class MainViewModel : ViewModel() {
         return FirebaseRepository.getUserName(userId)
     }
 
+    fun getCurrentUserName(): String {
+        return user.value?.name ?: ""
+    }
+
     // Groups Function //
     fun loadUserGroups() {
         viewModelScope.launch {
