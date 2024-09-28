@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.pager.HorizontalPager
@@ -50,12 +51,15 @@ import com.example.billapp.group.GroupList
 import com.example.billapp.models.Group
 import com.example.billapp.models.User
 import com.example.billapp.models.GroupTransaction
+import com.example.billapp.models.TransactionCategory
 import com.example.billapp.personal.PersonalTransactionList
 import com.example.billapp.ui.theme.BoxBackgroundColor
 import com.example.billapp.ui.theme.MainBackgroundColor
 import com.example.billapp.ui.theme.MainCardRedColor
 import com.example.billapp.viewModel.MainViewModel
 import java.util.Calendar
+
+
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -103,6 +107,72 @@ fun HomeScreen(
     val pagerState = rememberPagerState(pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
 
+    var year by remember { mutableStateOf(Calendar.getInstance().get(Calendar.YEAR)) }
+    var month by remember { mutableStateOf(Calendar.getInstance().get(Calendar.MONTH) + 1) }
+    var day by remember { mutableStateOf(Calendar.getInstance().get(Calendar.DAY_OF_MONTH)) }
+
+    var dateType by remember { mutableStateOf("月") }
+    var filteredIncome by remember { mutableStateOf(0f) }
+    var filteredExpense by remember { mutableStateOf(0f) }
+    var startDate by remember { mutableStateOf<Long?>(null) }
+    var endDate by remember { mutableStateOf<Long?>(null) }
+
+    // 根據選中的類型過濾記錄
+    fun filterRecords() {
+        val filtered = transactions.filter { transaction ->
+            val calendar =
+                Calendar.getInstance().apply { timeInMillis = transaction.date!!.toDate().time }
+            when (dateType) {
+                "年" -> calendar.get(Calendar.YEAR) == year
+                "月" -> calendar.get(Calendar.YEAR) == year && calendar.get(Calendar.MONTH) + 1 == month
+                "日" -> calendar.get(Calendar.YEAR) == year && calendar.get(Calendar.MONTH) + 1 == month && calendar.get(
+                    Calendar.DAY_OF_MONTH
+                ) == day
+
+                "自訂" -> startDate?.let { calendar.timeInMillis >= it } == true && endDate?.let { calendar.timeInMillis <= it } == true
+
+                else -> true
+            }
+        }
+        filteredRecords = filtered.filter { transaction ->
+            when (selectedChart) {
+                "支出" -> transaction.type == "支出"
+                "收入" -> transaction.type == "收入"
+                "結餘" -> true
+                else -> true
+            }
+        }
+        filteredIncome = filtered.filter { it.type == "收入" }.sumOf { it.amount }.toFloat()
+        filteredExpense = filtered.filter { it.type == "支出" }.sumOf { it.amount }.toFloat()
+    }
+
+    LaunchedEffect(user) {
+        user?.let {
+            viewModel.loadUserTransactions()
+            filterRecords()
+        }
+    }
+    LaunchedEffect(transactions) {
+        filterRecords()
+    }
+
+    // 更新日期
+    fun updateDate(increment: Int) {
+        val calendar = Calendar.getInstance()
+        calendar.set(year, month - 1, day)
+        when (dateType) {
+            "年" -> calendar.add(Calendar.YEAR, increment)
+            "月" -> calendar.add(Calendar.MONTH, increment)
+            "日" -> calendar.add(Calendar.DAY_OF_MONTH, increment)
+        }
+        year = calendar.get(Calendar.YEAR)
+        month = calendar.get(Calendar.MONTH) + 1
+        day = calendar.get(Calendar.DAY_OF_MONTH)
+
+        // 更新數據
+        filterRecords()  // 過濾記錄
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -115,10 +185,13 @@ fun HomeScreen(
                 .background(Color(0xFFD9C2A7))
         ) {
             val userName = "getUserName()"
-            val income = viewModel.getUserIncome()
-            val expense = viewModel.getUserExpense()
+            val income = filteredIncome
+            val expense = filteredExpense
             val total = income + expense
             val balance = income - expense
+
+            val level = viewModel.getUserLevel()
+            val trustLevel = viewModel.getUserTrustLevel()
 
             HorizontalPager(
                 state = pagerState,
@@ -203,27 +276,27 @@ fun HomeScreen(
                             ) {
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.SpaceEvenly
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    ParallelogramProgressBar(
+                                    RoundedCornerProgressBar(
                                         TargetProgress = 1f,
-                                        text = "信譽等級: 5/5",
+                                        text = "信譽點數: $trustLevel/100",
                                         color = Color.Green,
-                                        modifier = Modifier.fillMaxWidth(0.8f)
+                                        modifier = Modifier.padding(4.dp)
                                     )
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    ParallelogramProgressBar(
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    RoundedCornerProgressBar(
                                         TargetProgress = 0.5f,
-                                        text = "社交值: 等級: LV50/100",
+                                        text = "社交值: 等級: lv.$level",
                                         color = Color.Blue,
-                                        modifier = Modifier.fillMaxWidth(0.8f)
+                                        modifier = Modifier.padding(4.dp)
                                     )
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    ParallelogramProgressBar(
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    RoundedCornerProgressBar(
                                         TargetProgress = 0.083f,
                                         text = "血條: 2500/30000",
                                         color = Color.Red,
-                                        modifier = Modifier.fillMaxWidth(0.8f)
+                                        modifier = Modifier.padding(4.dp)
                                     )
                                 }
                             }
@@ -300,8 +373,7 @@ fun HomeScreen(
                                 modifier = Modifier
                                     .weight(1f)
                                     .aspectRatio(1f) // 確保 Box 是正方形
-                                    .padding(8.dp)
-                                    .clickable { navController.navigate("personal") },
+                                    .padding(8.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 PieChart(
@@ -366,7 +438,7 @@ fun HomeScreen(
                                         horizontalArrangement = Arrangement.Center
                                     ) {
                                         IconButton(
-                                            onClick = { /*TODO*/ }
+                                            onClick = { updateDate(-1) }
                                         ) {
                                             Icon(
                                                 painter = painterResource(id = R.drawable.baseline_navigate_before_24),
@@ -381,14 +453,14 @@ fun HomeScreen(
                                                 .padding(4.dp) // 內部 padding
                                         ) {
                                             Text(
-                                                text = "2024/09",
+                                                text = "$year/$month",
                                                 fontSize = 12.sp,
-                                                fontWeight = FontWeight.Medium
+                                                fontWeight = FontWeight.Bold
                                             )
                                         }
 
                                         IconButton(
-                                            onClick = { /*TODO*/ }
+                                            onClick = { updateDate(1) }
                                         ) {
                                             Icon(
                                                 painter = painterResource(id = R.drawable.baseline_navigate_next_24),
@@ -541,22 +613,17 @@ fun HomeScreen(
                     }
                 }
 
-                // 顯示時間最近的 4 個 Group，並利用 4 宮格顯示
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
+                // 顯示時間最近的 4 個 Group，並利用水平滑動顯示
+                LazyRow(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.height(320.dp)  // Adjust the height as needed
+                    modifier = Modifier.height(320.dp)  // 調整高度
                 ) {
-                    items(4) { index ->
-                        if (index < groups.size) {
-                            GroupItem(group = groups[index], onItemClick = {
-                                navController.navigate("groupDetail/${groups[index].id}")
-                            })
-                        } else {
-                            EmptyGroupSlot()
-                        }
+                    items(groups.take(4).size) { index ->  // 使用 size 獲取前 4 個群組的數量
+                        val group = groups[index]  // 根據索引獲取群組
+                        GroupItem(group = group, onItemClick = {
+                            navController.navigate("groupDetail/${group.id}")
+                        })
                     }
                 }
             }
