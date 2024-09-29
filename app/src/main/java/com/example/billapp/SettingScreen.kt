@@ -1,5 +1,6 @@
 package com.example.billapp
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.Image
@@ -144,6 +145,20 @@ fun SettingScreen(
                 text = "關於",
                 icon = painterResource(id = R.drawable.baseline_speaker_notes_24),
                 onClick = { navController.navigate("about") }
+            )
+            SettingButton(
+                text = "Line Pay",
+                icon = painterResource(id = R.drawable.baseline_wallet_24),
+                onClick = {
+                    val linePayUri = Uri.parse("linepay://")
+                    val linePayIntent = Intent(Intent.ACTION_VIEW, linePayUri)
+                    try {
+                        context.startActivity(linePayIntent)
+                    } catch (e: ActivityNotFoundException) {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://pay.line.me/portal/tw/main"))
+                        context.startActivity(intent)
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.weight(1f)) // 将登出按钮推至底部
