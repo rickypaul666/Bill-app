@@ -17,8 +17,8 @@ import androidx.compose.ui.Modifier
 
 @Composable
 fun DeptRelationsScreen(viewModel: MainViewModel, groupId: String, onBackPress: () -> Unit) {
-    val deptRelation by viewModel.deptRelations.collectAsState()
-    val groupIdDeptRelations by viewModel.groupIdDeptRelations.collectAsState()
+    val deptRelation by viewModel.debtRelations.collectAsState()
+    val groupIdDeptRelations by viewModel.groupIdDebtRelations.collectAsState()
 
     // Load transactions and calculate dept relations when the screen is opened
     LaunchedEffect(groupId) {
@@ -39,7 +39,7 @@ fun DeptRelationsScreen(viewModel: MainViewModel, groupId: String, onBackPress: 
     ) { innerPadding ->
         DeptRelationList(
             viewModel = viewModel,
-            deptRelations = groupIdDeptRelations,
+            debtRelations = groupIdDeptRelations,
             groupId = groupId,
             modifier = Modifier.padding(innerPadding)
         )

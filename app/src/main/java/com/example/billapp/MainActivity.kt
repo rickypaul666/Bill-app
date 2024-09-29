@@ -3,6 +3,7 @@ package com.example.billapp
 
 import DailyExperienceWorker
 import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -19,7 +20,8 @@ import com.example.billapp.viewModel.MainViewModel
 import com.example.billapp.ui.theme.custom_jf_Typography
 import java.util.concurrent.TimeUnit
 import androidx.work.Constraints
-
+import com.google.firebase.Firebase
+import com.google.firebase.messaging.messaging
 
 
 class MainActivity : ComponentActivity() {
@@ -37,6 +39,23 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        }
+
+        // Initialize Firebase
+        Firebase.messaging.isAutoInitEnabled = true
+
+        // Request the FCM token (optional if you want to do some operation with it)
+        Firebase.messaging.token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                // Do something with the token (e.g., send it to your server)
+            } else {
+                // Handle failure to retrieve token
+            }
+        }
         // 禁止螢幕旋轉
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         installSplashScreen()
