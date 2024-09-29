@@ -142,6 +142,14 @@ class MainViewModel : ViewModel() {
         return user.value?.trustLevel ?: 0
     }
 
+    fun getUserBudget(): Int {
+        return user.value?.budget ?: 0
+    }
+
+    fun updateUserBudget(budget: Int) {
+        FirebaseRepository.updateUserBudget(budget)
+    }
+
     private fun checkCurrentUser() {
         viewModelScope.launch {
             val currentUser = FirebaseAuth.getInstance().currentUser

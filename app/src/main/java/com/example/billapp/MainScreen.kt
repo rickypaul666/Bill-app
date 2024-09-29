@@ -200,6 +200,7 @@ fun MainScreen(
                     SettingScreen(
                         navController = navController,
                         viewModel = viewModel,
+                        avatarViewModel = avatarViewModel
                     )
                 }
                 composable("profile") {
