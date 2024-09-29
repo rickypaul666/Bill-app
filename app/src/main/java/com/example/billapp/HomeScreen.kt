@@ -201,8 +201,10 @@ fun HomeScreen(
             val total = income + expense
             val balance = income - expense
 
-            val level = viewModel.getUserLevel()
-            val trustLevel = viewModel.getUserTrustLevel()
+            val level by remember { mutableStateOf(viewModel.getUserLevel())}
+            val trustLevel by remember { mutableStateOf(viewModel.getUserTrustLevel())}
+            val budget by remember { mutableStateOf(viewModel.getUserBudget().toString()) } // Add budget state
+
 
             HorizontalPager(
                 state = pagerState,
@@ -216,7 +218,6 @@ fun HomeScreen(
                             .fillMaxWidth()
                             .height(200.dp)
                             .background(BoxBackgroundColor)
-//                    .padding(horizontal = 16.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
                     ) {
@@ -297,7 +298,7 @@ fun HomeScreen(
                                     Spacer(modifier = Modifier.height(4.dp))
                                     RoundedCornerProgressBar(
                                         TargetProgress = 0.083f,
-                                        text = "血條: 2500/30000",
+                                        text = "預算: ____/$budget",
                                         color = Color.Red,
                                         modifier = Modifier.padding(4.dp)
                                     )
@@ -310,7 +311,6 @@ fun HomeScreen(
                             .fillMaxWidth()
                             .height(200.dp)
                             .background(BoxBackgroundColor)
-//                    .padding(horizontal = 16.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
                     ) {
