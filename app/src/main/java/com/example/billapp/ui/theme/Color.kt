@@ -50,7 +50,7 @@ val Brown6 = Color(0xFFBFA588)
 
 val BlueGray = Color(0xFF8EB7D2)
 
-val Red = Color(0xFFE71E38)
+val Red = Color(0xFFFF415C)
 
-val Green = Color(0xFF7AC068)
+val Green = Color(0xFF93F37C)
 
