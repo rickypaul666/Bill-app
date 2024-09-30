@@ -81,11 +81,16 @@ import androidx.compose.material.icons.filled.ArrowBack as ArrowB
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.Button
 import androidx.compose.ui.draw.shadow
 import com.example.billapp.ui.theme.Brown4
 import com.example.billapp.ui.theme.HightlightWhiteColor
 import com.example.billapp.ui.theme.PieGreenColor
 import com.example.billapp.ui.theme.PieRedColor
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -633,6 +638,7 @@ fun HomeScreenPersonalTransactionList(
     val endIndex = minOf(startIndex + itemsPerPage, transactions.size)
     val pageTransactions = transactions.subList(startIndex, endIndex)
 
+
     Column {
         pageTransactions.forEach { transaction ->
             TransactionItem(transaction, navController, viewModel)
@@ -647,6 +653,13 @@ fun TransactionItem(
     navController: NavController,
     viewModel: MainViewModel
 ) {
+    // Format the timestamp to a readable date format
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val date = transaction.date?.toDate() // Convert Firebase Timestamp to Java Date
+    val formattedDate = date?.let { dateFormat.format(it) } ?: "Unknown Date"
+
+    var showDialog by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -668,7 +681,7 @@ fun TransactionItem(
                     color = VeryDarkGray
                 )
                 Text(
-                    text = transaction.date?.toDate()?.toString() ?: "",
+                    text = formattedDate,
                     fontSize = 12.sp,
                     color = Gray
                 )
@@ -679,15 +692,47 @@ fun TransactionItem(
                 color = if (transaction.type == "收入") Green else Red
             )
             Spacer(modifier = Modifier.width(16.dp))
-            IconButton(onClick = { /* Edit action */ }) {
+            IconButton(onClick = { navController.navigate("editTransaction/${transaction.transactionId}")}) {
                 Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Brown1)
             }
-            IconButton(onClick = { /* Delete action */ }) {
+            IconButton(onClick = { showDialog = true  }) {
                 Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Red)
             }
         }
     }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { androidx.compose.material.Text(text = "確認刪除") },
+            text = { androidx.compose.material.Text(text = "你確定要刪除此交易紀錄嗎？") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDelete(viewModel, transaction)
+                        showDialog = false
+                    }
+                ) {
+                    androidx.compose.material.Text("確定")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        showDialog = false
+                    }
+                ) {
+                    androidx.compose.material.Text("取消")
+                }
+            }
+        )
+    }
 }
+
+fun onDelete(viewModel: MainViewModel, transaction: PersonalTransaction) {
+    viewModel.deleteTransaction(transaction.transactionId, transaction.type, transaction.amount)
+}
+
 
 //@Composable
 //fun GroupList(groups: List<Group>, navController: NavController) {
