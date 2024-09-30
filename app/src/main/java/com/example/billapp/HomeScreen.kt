@@ -85,6 +85,7 @@ import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.ui.draw.shadow
 import com.example.billapp.ui.theme.Brown4
+import com.example.billapp.ui.theme.DarkerGray
 import com.example.billapp.ui.theme.HightlightWhiteColor
 import com.example.billapp.ui.theme.PieGreenColor
 import com.example.billapp.ui.theme.PieRedColor
@@ -156,6 +157,8 @@ fun HomeScreen(
     var filteredExpense by remember { mutableStateOf(0f) }
     var startDate by remember { mutableStateOf<Long?>(null) }
     var endDate by remember { mutableStateOf<Long?>(null) }
+
+
 
 
 
@@ -653,13 +656,9 @@ fun TransactionItem(
     navController: NavController,
     viewModel: MainViewModel
 ) {
-    // Format the timestamp to a readable date format
     val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     val date = transaction.date?.toDate() // Convert Firebase Timestamp to Java Date
     val formattedDate = date?.let { dateFormat.format(it) } ?: "Unknown Date"
-
-    var showDialog by remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -677,13 +676,14 @@ fun TransactionItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = transaction.name,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = VeryDarkGray
                 )
                 Text(
                     text = formattedDate,
                     fontSize = 12.sp,
-                    color = Gray
+                    color = DarkerGray
                 )
             }
             Text(
@@ -896,6 +896,7 @@ fun GroupItemPreview(){
     )
     GroupItem(group = group, onItemClick = {})
 }
+
 
 
 
