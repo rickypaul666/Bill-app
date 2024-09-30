@@ -47,6 +47,7 @@ val Brown3 = Color(0xFFD9C2A7)
 val Brown4 = Color(0xFF8A7059)
 val Brown5 = Color(0xFF7B533E)
 val Brown6 = Color(0xFFBFA588)
+val Brown7 = Color(0xFFFFFAF1)
 
 val BlueGray = Color(0xFF8EB7D2)
 
