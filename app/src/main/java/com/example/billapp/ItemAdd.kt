@@ -48,6 +48,7 @@ import com.example.billapp.viewModel.MainViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
@@ -245,6 +246,9 @@ fun ItemAdd(
     val dividers by viewModel.dividers.collectAsState()
     val payers by viewModel.payers.collectAsState()
     val groupMembers by viewModel.groupMembers.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    var showSnackbar by remember { mutableStateOf(false) }
+    var showCustomBottomSheet by remember { mutableStateOf(false) }
 
     var expandedShareMethod by remember { mutableStateOf(false) }
     var expandedDividers by remember { mutableStateOf(false) }
@@ -520,6 +524,7 @@ fun ItemAdd(
 
             if (personalOrGroup == "群組") {
 
+                // Payers selection
                 ExposedDropdownMenuBox(
                     expanded = expandedPayers,
                     onExpandedChange = { expandedPayers = !expandedPayers }
@@ -547,47 +552,75 @@ fun ItemAdd(
                     }
                 }
 
-                // 分帳三個按鈕
-                Row(
+                // Dividers selection
+                ExposedDropdownMenuBox(
+                    expanded = expandedDividers,
+                    onExpandedChange = { expandedDividers = !expandedDividers }
+                ) {
+                    StylishTextField(
+                        readOnly = true,
+                        value = dividers.joinToString(", ") { getUserNameById(it) },
+                        onValueChange = { },
+                        label = "分帳的人",
+                        modifier = Modifier.menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedDividers,
+                        onDismissRequest = { expandedDividers = false }
+                    ) {
+                        groupMembers.forEach { user ->
+                            val isSelected = dividers.contains(user.id)
+                            DropdownMenuItem(
+                                text = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Checkbox(
+                                            checked = isSelected,
+                                            onCheckedChange = {
+                                                viewModel.toggleDivider(user.id)
+                                            }
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(user.name)
+                                    }
+                                },
+                                onClick = {
+                                    viewModel.toggleDivider(user.id)
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Share method selection
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                        .padding(8.dp)
+                        .border(2.dp, colorResource(id = R.color.colorAccent), RoundedCornerShape(8.dp))
+                        .background(colorResource(id = R.color.colorLight))
+                        .clickable {
+                            if (amountInput.isNotBlank() && dividers.isNotEmpty() && payers.isNotEmpty()) {
+                                showCustomBottomSheet = true
+                            } else {
+                                showSnackbar = true
+                            }
+                        }
                 ) {
-                    Button(
-                        onClick = { splitMethod = "平均分攤" },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (splitMethod == "平均分攤") colorResource(id = R.color.colorAccent) else colorResource(id = R.color.primary_text_color)
-                        ),
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 4.dp)
-                    ) {
-                        Text("平均分攤")
-                    }
+                    Text(
+                        text = if (shareMethod.isNotBlank()) "分帳方式 : $shareMethod" else "分帳方式 : 未選擇",
+                        modifier = Modifier.padding(16.dp),
+                        style = TextStyle(
+                            fontSize = 15.sp,
+                            fontFamily = FontFamily.Cursive,
+                            color = Color.DarkGray
+                        )
+                    )
+                }
 
-                    Button(
-                        onClick = { splitMethod = "填入金額" },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (splitMethod == "填入金額") colorResource(id = R.color.colorAccent) else colorResource(id = R.color.primary_text_color)
-                        ),
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 4.dp)
-                    ) {
-                        Text("填入金額")
-                    }
-
-                    Button(
-                        onClick = { splitMethod = "填入份額" },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (splitMethod == "填入份額") colorResource(id = R.color.colorAccent) else colorResource(id = R.color.primary_text_color)
-                        ),
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 4.dp)
-                    ) {
-                        Text("填入份額")
+                if (showSnackbar) {
+                    LaunchedEffect(snackbarHostState) {
+                        snackbarHostState.showSnackbar("請填寫所有必要的欄位")
+                        showSnackbar = false
                     }
                 }
             }

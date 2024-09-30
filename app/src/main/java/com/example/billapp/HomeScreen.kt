@@ -106,7 +106,7 @@ fun HomeScreen(
     val userName = viewModel.getCurrentUserName()
 
     val userImage = avatarViewModel.avatarUrl.collectAsState().value
-    var showDialog by remember { mutableStateOf(false) }
+
 
     val groups by viewModel.userGroups.collectAsState()
     // 获取最近两笔交易记录
@@ -659,6 +659,7 @@ fun TransactionItem(
     val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     val date = transaction.date?.toDate() // Convert Firebase Timestamp to Java Date
     val formattedDate = date?.let { dateFormat.format(it) } ?: "Unknown Date"
+    var showDialog by remember { mutableStateOf(false) }
     Card(
         modifier = Modifier
             .fillMaxWidth()
