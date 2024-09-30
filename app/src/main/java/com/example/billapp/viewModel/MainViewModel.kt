@@ -19,15 +19,20 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.UUID
 
 class MainViewModel : ViewModel() {
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user.asStateFlow()
+
+    private val _totalDebtMap = MutableStateFlow<Map<String, Double>>(emptyMap())
+    val totalDebtMap: StateFlow<Map<String, Double>> = _totalDebtMap
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -267,17 +272,17 @@ class MainViewModel : ViewModel() {
     }
 
     // 負的代表自己欠錢，正的代表別人欠錢
-    fun calculateTotalDept(groupId: String): Double {
+    suspend fun calculateTotalDept(groupId: String): Double {
         val userId = getCurrentUserID()
         var totalDebt = 0.0
 
-        viewModelScope.launch {
-
+        // 使用 withContext(Dispatchers.IO) 確保在協程內執行
+        withContext(Dispatchers.IO) {
             val groupIdDeptRelations = FirebaseRepository.getGroupDeptRelations(groupId)
-            // Flatten the lists of DebtRelation into a single list
+            // 展開所有的債務關係
             val allDebtRelations = groupIdDeptRelations.values.flatten()
 
-            // Iterate over each DebtRelation and calculate the debt
+            // 遍歷所有的債務關係並計算總金額
             allDebtRelations.forEach { debtRelation ->
                 // 如果是user欠別人的錢，將金額減去
                 if (debtRelation.from == userId) {
@@ -293,6 +298,14 @@ class MainViewModel : ViewModel() {
         return totalDebt
     }
 
+    fun calculateTotalDeptForGroup(groupId: String) {
+        viewModelScope.launch {
+            val totalDebt = calculateTotalDept(groupId)
+            _totalDebtMap.value = _totalDebtMap.value.toMutableMap().apply {
+                this[groupId] = totalDebt
+            }
+        }
+    }
 
 
 

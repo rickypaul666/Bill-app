@@ -14,9 +14,15 @@ import androidx.compose.runtime.getValue
 import com.example.billapp.viewModel.MainViewModel
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
+import com.example.billapp.viewModel.AvatarViewModel
 
 @Composable
-fun DeptRelationsScreen(viewModel: MainViewModel, groupId: String, onBackPress: () -> Unit) {
+fun DeptRelationsScreen(
+    avatarViewModel: AvatarViewModel,
+    viewModel: MainViewModel,
+    groupId: String,
+    onBackPress: () -> Unit
+) {
     val deptRelation by viewModel.debtRelations.collectAsState()
     val groupIdDeptRelations by viewModel.groupIdDebtRelations.collectAsState()
 
@@ -38,6 +44,7 @@ fun DeptRelationsScreen(viewModel: MainViewModel, groupId: String, onBackPress: 
         }
     ) { innerPadding ->
         DeptRelationList(
+            avatarViewModel = avatarViewModel,
             viewModel = viewModel,
             debtRelations = groupIdDeptRelations,
             groupId = groupId,

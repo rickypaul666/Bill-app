@@ -7,11 +7,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.billapp.models.DebtRelation
+import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
 
 @Composable
 fun DeptRelationList(
     viewModel: MainViewModel,
+    avatarViewModel: AvatarViewModel,
     debtRelations: Map<String, List<DebtRelation>>,
     groupId: String,
     modifier: Modifier
@@ -29,16 +31,22 @@ fun DeptRelationList(
             item {
                 var fromName by remember { mutableStateOf("") }
                 var toName by remember { mutableStateOf("") }
+                var fromUrl by remember { mutableStateOf("") }
+                var toUrl by remember { mutableStateOf("") }
 
                 LaunchedEffect(pair.first, pair.second) {
                     fromName = viewModel.getUserName(pair.first)
                     toName = viewModel.getUserName(pair.second)
+                    fromUrl = avatarViewModel.loadAvatar(pair.first).toString()
+                    toUrl = avatarViewModel.loadAvatar(pair.second).toString()
                 }
 
                 GroupedDeptRelationItem(
                     viewModel = viewModel,
                     fromName = fromName,
                     toName = toName,
+                    fromUrl = pair.first,
+                    toUrl = pair.second,
                     totalAmount = amount,
                     debtRelations = debtRelations.values.flatten().filter {
                         (it.from == pair.first && it.to == pair.second) ||

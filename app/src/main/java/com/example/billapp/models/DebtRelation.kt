@@ -8,7 +8,7 @@ import com.google.firebase.Timestamp
 data class DebtRelation(
     val id: String = "",
     val name: String = "",
-    val groupTransactionId: String = "",
+    var groupTransactionId: String = "",
     val from: String = "",
     val to: String = "",
     val amount: Double = 0.0,

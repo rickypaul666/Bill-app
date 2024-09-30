@@ -58,6 +58,7 @@ import com.example.billapp.ui.theme.MainBackgroundColor
 import com.example.billapp.ui.theme.Orange1
 import com.example.billapp.ui.theme.HightlightWhiteColor
 import com.example.billapp.ui.theme.Brown5
+import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
 
 
@@ -66,6 +67,7 @@ fun GroupSettingScreen(
     groupId: String,
     viewModel: MainViewModel,
     totalDebt: Double,
+    avatarViewModel: AvatarViewModel,
     navController: NavController
 ) {
     // State for managing the visibility of the bottom sheet
@@ -208,6 +210,47 @@ fun GroupSettingScreen(
                             )
                         }
                     }
+
+//                     val relevantDeptRelations = deptRelations.values.flatten()
+//                         .filter { it.from == currentUserId || it.to == currentUserId }
+//                         .take(2)
+
+//                     relevantDeptRelations.forEach { relation ->
+//                         var fromName by remember { mutableStateOf("") }
+//                         var toName by remember { mutableStateOf("") }
+//                         var fromUrl by remember { mutableStateOf("") }
+//                         var toUrl by remember { mutableStateOf("") }
+
+//                         LaunchedEffect(relation.from, relation.to) {
+//                             fromName = viewModel.getUserName(relation.from)
+//                             toName = viewModel.getUserName(relation.to)
+//                             fromUrl = avatarViewModel.loadAvatar(relation.from).toString()
+//                             toUrl = avatarViewModel.loadAvatar(relation.to).toString()
+//                         }
+
+//                         GroupedDeptRelationItem(
+//                             viewModel = viewModel,
+//                             fromName = fromName,
+//                             toName = toName,
+//                             fromUrl = relation.from,
+//                             toUrl = relation.to,
+//                             totalAmount = relation.amount,
+//                             debtRelations = listOf(relation),
+//                             groupId = groupId
+//                         )
+//                     }
+
+//                     // Button to view all debt relations
+//                     Button(
+//                         onClick = {
+//                             navController.navigate("deptRelationsScreen/$groupId")
+//                         },
+//                         modifier = Modifier
+//                             .fillMaxWidth()
+//                             .padding(top = 8.dp)
+//                     ) {
+//                         Text("查看所有債務關係")
+//                     }
                 }
             }
 
@@ -346,24 +389,4 @@ fun ManagementBottomSheet(
             }
         }
     }
-}
-
-
-
-@Preview(showBackground = true)
-@Composable
-fun GroupSettingScreenPreview() {
-    // Create a mock NavController
-    val navController = rememberNavController()
-
-    // Create a mock or default MainViewModel
-    val viewModel = MainViewModel() // You may need to provide required parameters or use a factory if necessary
-
-    // Call the composable you want to preview
-    GroupSettingScreen(
-        groupId = "mockGroupId",
-        viewModel = viewModel,
-        totalDebt = 10000.0,
-        navController = navController
-    )
 }

@@ -271,6 +271,7 @@ fun MainScreen(
                             groupId = it,
                             viewModel = viewModel,
                             totalDebt = viewModel.calculateTotalDept(groupId),
+                            avatarViewModel = avatarViewModel,
                             navController = navController
                         )
                     }
@@ -299,6 +300,7 @@ fun MainScreen(
                 composable("deptRelationsScreen/{groupId}") { backStackEntry ->
                     val groupId = backStackEntry.arguments?.getString("groupId") ?: return@composable
                     DeptRelationsScreen(
+                        avatarViewModel = avatarViewModel,
                         viewModel = viewModel,
                         groupId = groupId,
                         onBackPress = { navController.popBackStack() }
