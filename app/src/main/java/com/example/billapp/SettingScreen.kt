@@ -134,6 +134,13 @@ fun ProfileCard(
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.clip(CircleShape)
                         )
+                    }else {
+                        Image(
+                            painter = painterResource(R.drawable.ic_user_place_holder),
+                            contentDescription = "User Image",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.clip(CircleShape)
+                        )
                     }
                 }
                 Spacer(modifier = Modifier.width(32.dp))

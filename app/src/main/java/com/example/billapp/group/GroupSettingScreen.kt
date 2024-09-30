@@ -38,12 +38,14 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.billapp.R
 import com.example.billapp.dept_relation.GroupedDeptRelationItem
+import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
 
 @Composable
 fun GroupSettingScreen(
     groupId: String,
     viewModel: MainViewModel,
+    avatarViewModel: AvatarViewModel,
     navController: NavController
 ) {
     val group by viewModel.getGroup(groupId).collectAsState(initial = null)
@@ -130,16 +132,22 @@ fun GroupSettingScreen(
                     relevantDeptRelations.forEach { relation ->
                         var fromName by remember { mutableStateOf("") }
                         var toName by remember { mutableStateOf("") }
+                        var fromUrl by remember { mutableStateOf("") }
+                        var toUrl by remember { mutableStateOf("") }
 
                         LaunchedEffect(relation.from, relation.to) {
                             fromName = viewModel.getUserName(relation.from)
                             toName = viewModel.getUserName(relation.to)
+                            fromUrl = avatarViewModel.loadAvatar(relation.from).toString()
+                            toUrl = avatarViewModel.loadAvatar(relation.to).toString()
                         }
 
                         GroupedDeptRelationItem(
                             viewModel = viewModel,
                             fromName = fromName,
                             toName = toName,
+                            fromUrl = relation.from,
+                            toUrl = relation.to,
                             totalAmount = relation.amount,
                             debtRelations = listOf(relation),
                             groupId = groupId
@@ -227,22 +235,4 @@ fun GroupSettingScreen(
             }
         }
     }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun GroupSettingScreenPreview() {
-    // Create a mock NavController
-    val navController = rememberNavController()
-
-    // Create a mock or default MainViewModel
-    val viewModel = MainViewModel() // You may need to provide required parameters or use a factory if necessary
-
-    // Call the composable you want to preview
-    GroupSettingScreen(
-        groupId = "mockGroupId",
-        viewModel = viewModel,
-        navController = navController
-    )
 }

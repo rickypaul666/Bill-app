@@ -270,6 +270,7 @@ fun MainScreen(
                         GroupSettingScreen(
                             groupId = it,
                             viewModel = viewModel,
+                            avatarViewModel = avatarViewModel,
                             navController = navController
                         )
                     }
@@ -298,6 +299,7 @@ fun MainScreen(
                 composable("deptRelationsScreen/{groupId}") { backStackEntry ->
                     val groupId = backStackEntry.arguments?.getString("groupId") ?: return@composable
                     DeptRelationsScreen(
+                        avatarViewModel = avatarViewModel,
                         viewModel = viewModel,
                         groupId = groupId,
                         onBackPress = { navController.popBackStack() }
