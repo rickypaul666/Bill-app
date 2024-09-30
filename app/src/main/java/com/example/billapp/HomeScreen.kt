@@ -826,16 +826,6 @@ fun GroupItem(group: Group, onItemClick: () -> Unit) {
 //}
 //
 
-
-
-
-
-
-
-
-
-
-
 @Composable
 fun EmptyGroupSlot() {
     Card(

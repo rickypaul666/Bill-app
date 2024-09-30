@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -55,22 +56,18 @@ fun GroupItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 15.dp, vertical = 8.dp)
+            .padding(horizontal = 40.dp, vertical = 8.dp)
             .clickable(onClick = onClick),
-            /*
-            .border(
-                width = 2.dp,  // Border thickness
-                color = VeryDarkGray,  // Border color
-                shape = RoundedCornerShape(8.dp)   // Apply the same rounded corner shape to the border
-            ),
-             */
-        shape = RoundedCornerShape(16.dp), // Rounded corners
-        elevation = CardDefaults.cardElevation(10.dp)
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFBBB0A2)) // Card background color
+                .background(Color(0xFFBBB0A2))
+                .padding(top = 8.dp, start = 8.dp, end = 8.dp, bottom = 8.dp),
+
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Spacer(modifier = Modifier.width(16.dp))
             Image(
@@ -94,70 +91,49 @@ fun GroupItem(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.width(24.dp))
-
-                // Group name and created by text
-                Column {
-                    BasicText(
-                        text = groupName,
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontSize = MaterialTheme.typography.headlineSmall.fontSize // Larger font size
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp, bottom = 0.dp)
-                    )
-                    /*
-                    BasicText(
-                        text = "created by : $createdBy",
-                        style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    */
-                }
+                BasicText(
+                    text = "created by : $createdBy",
+                    style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
+        }
 
-            Spacer(modifier = Modifier.height(0.dp)) // Optional: space between sections
+        //Spacer(modifier = Modifier.height(0.dp)) // 縮短距離，根據需要調整此值
 
-
-            Row(
+        Row(
+            modifier = Modifier
+                .fillMaxWidth() // 填滿整個寬度
+                .background(Color(0xFFBBB0A2))
+                .padding(1.dp), // 外邊距
+            horizontalArrangement = Arrangement.End // 內容向右對齊
+        ) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth() // 填滿整個寬度
-                    .background(Color(0xFFBBB0A2))
-                    .padding(1.dp), // 外邊距
-                horizontalArrangement = Arrangement.End // 內容向右對齊
-            ) {
-                Box(
-                    modifier = Modifier
-                        .width(100.dp) // Fixed width
-                        .height(50.dp)
-                        .padding(top = 4.dp, start = 4.dp, end = 4.dp, bottom = 4.dp) // Inner padding
-                        .shadow(
-                            elevation = 8.dp,  // Shadow elevation height
-                            shape = RoundedCornerShape(8.dp),  // Shape of the shadow (same as Box)
-                            clip = false  // Whether to clip the content inside the shadow
-                        )
-                        .background(
-                            color = when {
-                                totalDebt < 0 -> Color(0xF3FF8B8B) // 負數時為紅色
-                                totalDebt > 0 -> Green // 正數時為綠色
-                                else -> Orange4 // 0 為淺黃色
-                            },
-                            shape = RoundedCornerShape(8.dp) // 圓角背景
-                        ),
-                    contentAlignment = Alignment.BottomStart
-                ) {
-                    Text(
-                        text = when {
-                            totalDebt < 0 -> "應付 : ${-totalDebt}" // 負數時為紅色
-                            totalDebt > 0 -> "應收 : $totalDebt" // 正數時為綠色
-                            else -> "帳務已結清" // 0 為淺黃色
+                    .width(150.dp) // 固定寬度
+                    .padding(4.dp) // 調整內邊距
+                    .background(
+                        color = when {
+                            totalDebt < 0 -> Color(0xF3FF8B8B) // 負數時為紅色
+                            totalDebt > 0 -> Green // 正數時為綠色
+                            else -> Orange4 // 0 為淺黃色
                         },
-                        style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
-                        modifier = Modifier.padding(8.dp) // 調整文字的內邊距
-                    )
-                }
+                        shape = RoundedCornerShape(8.dp) // 圓角背景
+                    ),
+                contentAlignment = Alignment.BottomStart
+            ) {
+                Text(
+                    text = when {
+                        totalDebt < 0 -> "應付 : ${-totalDebt}" // 負數時為紅色
+                        totalDebt > 0 -> "應收 : $totalDebt" // 正數時為綠色
+                        else -> "帳務已結清" // 0 為淺黃色
+                    },
+                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
+                    modifier = Modifier.padding(8.dp) // 調整文字的內邊距
+                )
             }
+
+
         }
     }
 }
@@ -186,5 +162,16 @@ fun GroupList(
                 )
             }
         }
+    }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun GroupItemPreview() {
+    Column {
+        GroupItem("1","Test","Amy",1000.0,{},1)
+        GroupItem("1","Test","Amy",-1000.0,{},3)
+        GroupItem("1","Test","Amy",0.0,{},2)
     }
 }

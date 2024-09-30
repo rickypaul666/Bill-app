@@ -101,10 +101,6 @@ fun MainScreen(
                         drawerState.close()
                     }
                 }
-                DrawerContent(navController, onCloseDrawer, {
-                    viewModel.logOut()
-                    navController.navigate("intro")
-                }, viewModel, avatarViewModel)
             }
         }
     ) {
