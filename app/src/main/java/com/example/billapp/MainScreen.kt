@@ -270,6 +270,7 @@ fun MainScreen(
                         GroupSettingScreen(
                             groupId = it,
                             viewModel = viewModel,
+                            totalDebt = viewModel.calculateTotalDept(groupId),
                             navController = navController
                         )
                     }
