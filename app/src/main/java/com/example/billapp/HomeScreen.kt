@@ -2,6 +2,7 @@ package com.example.billapp
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -55,6 +56,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -63,6 +65,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.billapp.group.getImageResourceById
 import com.example.billapp.models.Group
 import com.example.billapp.models.PersonalTransaction
 import com.example.billapp.models.User
@@ -75,6 +78,7 @@ import com.example.billapp.ui.theme.MainBackgroundColor
 import com.example.billapp.ui.theme.MainCardRedColor
 import com.example.billapp.ui.theme.PieGreenColor
 import com.example.billapp.ui.theme.PieRedColor
+import com.example.billapp.ui.theme.Purple40
 import com.example.billapp.ui.theme.Red
 import com.example.billapp.ui.theme.VeryDarkGray
 import com.example.billapp.viewModel.AvatarViewModel
@@ -148,8 +152,9 @@ fun HomeScreen(
     var startDate by remember { mutableStateOf<Long?>(null) }
     var endDate by remember { mutableStateOf<Long?>(null) }
 
-
-
+    val level by remember { mutableStateOf(viewModel.getUserLevel()) }
+    val trustLevel by remember { mutableStateOf(viewModel.getUserTrustLevel()) }
+    val budget by remember { mutableStateOf(viewModel.getUserBudget()) } // Add budget state
 
 
     // 根據選中的類型過濾記錄
@@ -220,9 +225,6 @@ fun HomeScreen(
         val total = income + expense
         val balance = income - expense
 
-        val level = viewModel.getUserLevel()
-        val trustLevel = viewModel.getUserTrustLevel()
-
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -237,7 +239,7 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxSize()
             ) { page ->
                 when(page) {
-                    0 -> BusinessCardFront(user!!, userImage, level, trustLevel)
+                    0 -> BusinessCardFront(user!!, userImage, level, trustLevel, expense, budget)
                     1 -> BusinessCardBack(income, expense, balance, total, year, month, onUpdateDate = { updateDate(it) })
                 }
             }
@@ -398,50 +400,16 @@ fun HomeScreen(
         }
     }
 }
-//        Spacer(modifier = Modifier.height(8.dp))
-
-
-
-//// 只用於主頁
-//@Composable
-//fun GroupItem(group: Group, onItemClick: () -> Unit) {
-//    Card(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .aspectRatio(1f)
-//            .clickable(onClick = onItemClick),
-//        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-//    ) {
-//        Column(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(8.dp),
-//            verticalArrangement = Arrangement.Center,
-//            horizontalAlignment = Alignment.CenterHorizontally
-//        ) {
-//            AsyncImage(
-//                model = group.image,
-//                contentDescription = "Group Image",
-//                modifier = Modifier
-//                    .size(80.dp)
-//                    .clip(CircleShape),
-//                contentScale = ContentScale.Crop
-//            )
-//            Spacer(modifier = Modifier.height(8.dp))
-//            Text(
-//                text = group.name,
-//                fontWeight = FontWeight.Bold,
-//                textAlign = TextAlign.Center,
-//                maxLines = 2,
-//                overflow = TextOverflow.Ellipsis
-//            )
-//        }
-//    }
-//}
-
 
 @Composable
-fun BusinessCardFront(user: User, userImage: String?, level: Int, trustLevel: Int) {
+fun BusinessCardFront(
+    user: User,
+    userImage: String?,
+    level: Int,
+    trustLevel: Int,
+    expense: Float,
+    budget: Int
+) {
     Box(modifier = Modifier.fillMaxSize()) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val pathLeft = Path().apply {
@@ -501,7 +469,7 @@ fun BusinessCardFront(user: User, userImage: String?, level: Int, trustLevel: In
                 Spacer(modifier = Modifier.height(8.dp))
                 ProgressBar("社交值", level, 100, Brown2)
                 Spacer(modifier = Modifier.height(8.dp))
-                ProgressBar("血條", 25, 100, Red)
+                ProgressBar("血條", expense.toInt(), budget, Red)
             }
         }
     }
@@ -679,15 +647,17 @@ fun TransactionItem(
             Text(
                 text = "${if (transaction.type == "收入") "+" else "-"}${transaction.amount}",
                 fontWeight = FontWeight.Bold,
-                color = if (transaction.type == "收入") Green else Red
+                fontSize = 20.sp,  // 增加字體大小
+                color = if (transaction.type == "收入") Color(0xFF228B22) else Red  // 使用較深的綠色
             )
-            Spacer(modifier = Modifier.width(16.dp))
+
+            Spacer(modifier = Modifier.width(24.dp))
             IconButton(onClick = { navController.navigate("editTransaction/${transaction.transactionId}")}) {
                 Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Brown1)
             }
-            IconButton(onClick = { showDialog = true  }) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Red)
-            }
+//            IconButton(onClick = { showDialog = true  }) {
+//                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Red)
+//            }
         }
     }
 
@@ -724,74 +694,6 @@ fun onDelete(viewModel: MainViewModel, transaction: PersonalTransaction) {
 }
 
 
-//@Composable
-//fun GroupList(groups: List<Group>, navController: NavController) {
-//    Column(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .padding(16.dp)
-//    ) {
-//        Text(
-//            text = "您的群組",
-//            fontSize = 20.sp,
-//            fontWeight = FontWeight.Bold,
-//            color = VeryDarkGray,
-//            modifier = Modifier.padding(bottom = 16.dp)
-//        )
-//        LazyRow(
-//            horizontalArrangement = Arrangement.spacedBy(16.dp)
-//        ) {
-//            items(groups.take(4)) { group ->
-//                GroupItem(group = group) {
-//                    navController.navigate("groupDetail/${group.id}")
-//                }
-//            }
-//        }
-//    }
-//}
-
-//@Composable
-//fun GroupItem(group: Group, onItemClick: () -> Unit) {
-//    Card(
-//        modifier = Modifier
-//            .width(120.dp)
-//            .aspectRatio(0.75f)
-//            .clickable(onClick = onItemClick)
-//            .background(color = BoxBackgroundColor),
-//        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-//        shape = RoundedCornerShape(8.dp)
-//    ) {
-//        Column(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(8.dp),
-//            horizontalAlignment = Alignment.CenterHorizontally,
-//            verticalArrangement = Arrangement.Center
-//        ) {
-//            AsyncImage(
-//                model = group.image,
-//                contentDescription = "Group Image",
-//                modifier = Modifier
-//                    .size(80.dp)
-//                    .clip(CircleShape)
-//                    .border(2.dp, Color.White, CircleShape),
-//                contentScale = ContentScale.Crop
-//            )
-//            Spacer(modifier = Modifier.height(8.dp))
-//            Text(
-//                text = group.name,
-//                fontWeight = FontWeight.Bold,
-//                fontSize = 14.sp,
-//                color = VeryDarkGray,
-//                textAlign = TextAlign.Center,
-//                maxLines = 2,
-//                overflow = TextOverflow.Ellipsis
-//            )
-//        }
-//    }
-//}
-
-//2
 @Composable
 fun GroupItem(group: Group, onItemClick: () -> Unit) {
     Column(
@@ -800,9 +702,9 @@ fun GroupItem(group: Group, onItemClick: () -> Unit) {
             .clickable(onClick = onItemClick),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        AsyncImage(
-            model = group.image,
-            contentDescription = "Group Image",
+        Image(
+            painter = painterResource(id = getImageResourceById(group.imageId)),
+            contentDescription = stringResource(id = R.string.image_contentDescription),
             modifier = Modifier
                 .size(80.dp)
                 .clip(CircleShape)
