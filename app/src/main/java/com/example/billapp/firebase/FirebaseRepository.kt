@@ -439,6 +439,7 @@ object FirebaseRepository {
 
         // 添加債務關係
         for (deptRelation in debtRelations) {
+            deptRelation.groupTransactionId = transactionId
             getFirestoreInstance().collection(Constants.GROUPS)
                 .document(groupId)
                 .collection("deptRelations")

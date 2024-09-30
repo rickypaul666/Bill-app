@@ -48,6 +48,8 @@ import com.example.billapp.viewModel.MainViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
@@ -242,6 +244,7 @@ fun ItemAdd(
     //Group
     val groups by viewModel.userGroups.collectAsState()
     var selectedGroup by remember { mutableStateOf(groups.firstOrNull()?.name ?: "groups") }
+    var selectedGroupId by remember { mutableStateOf(groups.firstOrNull()?.id ?: "groups") }
     val shareMethod by viewModel.shareMethod.collectAsState()
     val dividers by viewModel.dividers.collectAsState()
     val payers by viewModel.payers.collectAsState()
@@ -296,6 +299,7 @@ fun ItemAdd(
                 .background(Color(0xFFD9C9BA))  // 背景顏色
                 .padding(innerPadding)
                 .padding(top = 23.dp, start = 16.dp, end = 16.dp, bottom = 7.dp)
+                .verticalScroll(rememberScrollState())
 //                .clickable {
 //                    if (isBottomSheetVisible) {
 //                        coroutineScope.launch {
@@ -361,6 +365,7 @@ fun ItemAdd(
                                 text = { Text(text = group.name) },
                                 onClick = {
                                     selectedGroup = group.name
+                                    selectedGroupId = group.id
                                     expandedGroup = false
                                 }
                             )
@@ -614,6 +619,21 @@ fun ItemAdd(
                             fontFamily = FontFamily.Cursive,
                             color = Color.DarkGray
                         )
+                    )
+                }
+
+                CustomBottomSheet(
+                    isVisible = showCustomBottomSheet,
+                    onDismiss = { showCustomBottomSheet = false }
+                ) {
+                    SeparateBottomSheetContent(
+                        viewModel = viewModel,
+                        groupId = selectedGroupId,
+                        amount = amount.toFloat(),
+                        onDismiss = { showCustomBottomSheet = false },
+                        onComplete = {
+                            showCustomBottomSheet = false
+                        }
                     )
                 }
 

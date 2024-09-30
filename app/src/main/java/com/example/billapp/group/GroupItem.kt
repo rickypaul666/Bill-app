@@ -23,6 +23,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -46,13 +50,23 @@ import com.example.billapp.viewModel.MainViewModel
 
 @Composable
 fun GroupItem(
+    viewModel: MainViewModel,
     groupId: String,
     groupName: String,
     createdBy: String,
-    totalDebt: Double,
     onClick: () -> Unit,
     imageId: Int
 ) {
+    val totalDebt by viewModel.totalDebtMap.collectAsState()
+
+    // LaunchedEffect 確保在組件啟動時執行計算
+    LaunchedEffect(groupId) {
+        viewModel.calculateTotalDeptForGroup(groupId)
+    }
+
+    // 獲取該群組的債務總額，如果尚未計算出來則顯示 0
+    val groupTotalDebt = totalDebt[groupId] ?: 0.0
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -65,7 +79,7 @@ fun GroupItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color(0xFFBBB0A2))
-                .padding(top = 8.dp, start = 8.dp, end = 8.dp, bottom = 8.dp),
+                .padding(top = 16.dp, start = 8.dp, end = 8.dp, bottom = 4.dp),
 
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -86,16 +100,16 @@ fun GroupItem(
                 BasicText(
                     text = groupName,
                     style = MaterialTheme.typography.titleLarge.copy(
-                        fontSize = MaterialTheme.typography.headlineMedium.fontSize
+                        fontSize = MaterialTheme.typography.headlineMedium.fontSize,
+                        fontWeight = FontWeight.Bold
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
-
-                BasicText(
-                    text = "created by : $createdBy",
-                    style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
-                    modifier = Modifier.fillMaxWidth()
-                )
+//                BasicText(
+//                    text = "created by : $createdBy",
+//                    style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
+//                    modifier = Modifier.fillMaxWidth()
+//                )
             }
         }
 
@@ -114,8 +128,8 @@ fun GroupItem(
                     .padding(4.dp) // 調整內邊距
                     .background(
                         color = when {
-                            totalDebt < 0 -> Color(0xF3FF8B8B) // 負數時為紅色
-                            totalDebt > 0 -> Green // 正數時為綠色
+                            groupTotalDebt < 0 -> Color(0xF3FF8B8B) // 負數時為紅色
+                            groupTotalDebt > 0 -> Green // 正數時為綠色
                             else -> Orange4 // 0 為淺黃色
                         },
                         shape = RoundedCornerShape(8.dp) // 圓角背景
@@ -124,16 +138,14 @@ fun GroupItem(
             ) {
                 Text(
                     text = when {
-                        totalDebt < 0 -> "應付 : ${-totalDebt}" // 負數時為紅色
-                        totalDebt > 0 -> "應收 : $totalDebt" // 正數時為綠色
+                        groupTotalDebt < 0.0 -> "應付 : ${-groupTotalDebt}" // 負數時為紅色
+                        groupTotalDebt > 0.0 -> "應收 : $groupTotalDebt" // 正數時為綠色
                         else -> "帳務已結清" // 0 為淺黃色
                     },
                     style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
                     modifier = Modifier.padding(8.dp) // 調整文字的內邊距
                 )
             }
-
-
         }
     }
 }
@@ -153,25 +165,14 @@ fun GroupList(
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(groupItems) { groupItem ->
                 GroupItem(
+                    viewModel = viewModel,
                     groupId = groupItem.id,
                     groupName = groupItem.name,
                     createdBy = groupItem.createdBy,
-                    totalDebt = viewModel.calculateTotalDept(groupItem.id),
                     onClick = { onGroupClick(groupItem.id) },
                     imageId = groupItem.imageId
                 )
             }
         }
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun GroupItemPreview() {
-    Column {
-        GroupItem("1","Test","Amy",1000.0,{},1)
-        GroupItem("1","Test","Amy",-1000.0,{},3)
-        GroupItem("1","Test","Amy",0.0,{},2)
     }
 }
