@@ -123,16 +123,18 @@ fun ProfileCard(
                         .size(100.dp) // Adjust the size as needed
                         .padding(8.dp)
                 ) {
-                    AsyncImage(
-                        model = coil.request.ImageRequest.Builder(LocalContext.current)
-                            .data(userImage)
-                            .crossfade(true)
-                            .build(),
-                        placeholder = painterResource(R.drawable.ic_user_place_holder),
-                        contentDescription = "User Image",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.clip(CircleShape)
-                    )
+                    if (userImage != null) {
+                        AsyncImage(
+                            model = coil.request.ImageRequest.Builder(LocalContext.current)
+                                .data(userImage)
+                                .crossfade(true)
+                                .build(),
+                            placeholder = painterResource(R.drawable.ic_user_place_holder),
+                            contentDescription = "User Image",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.clip(CircleShape)
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.width(32.dp))
                 Text(
@@ -306,8 +308,11 @@ fun LogoutButton(viewModel: MainViewModel?, navController: NavController?, onClo
                     onClick = {
                         showDialog = false
                         onCloseDrawer()
-                        viewModel?.logOut() // Safeguard against null
-                        navController?.navigate("intro") // Safeguard against null
+                        viewModel?.logOut {
+                            navController?.navigate("intro") {
+                                popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            }
+                        }
                     }
                 ) {
                     Text("Yes")

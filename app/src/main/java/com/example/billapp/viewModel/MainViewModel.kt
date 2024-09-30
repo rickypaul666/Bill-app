@@ -17,6 +17,7 @@ import com.example.billapp.utils.Constants
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -178,11 +179,14 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun logOut() {
-        FirebaseRepository.signOut()
-        clearData()
-        _authState.value = AuthState.Initial
-        _isUserLoggedIn.value = false
+    fun logOut(onComplete: () -> Unit) {
+        viewModelScope.launch {
+            clearData()
+            FirebaseRepository.signOut()
+            _authState.value = AuthState.Initial
+            _isUserLoggedIn.value = false
+            onComplete()
+        }
     }
 
     fun signIn(email: String, password: String) {
@@ -226,7 +230,6 @@ class MainViewModel : ViewModel() {
         _groupCreationStatus.value = GroupCreationStatus.IDLE
         _groupIdDebtRelations.value = emptyMap()
         currentGroup.value = null
-        _user.value = null
         _userTransactions.value = emptyList()
         _groupTransactions.value = emptyList()
         _debtRelations.value = emptyList()

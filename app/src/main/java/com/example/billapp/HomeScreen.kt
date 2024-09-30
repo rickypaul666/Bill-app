@@ -81,12 +81,15 @@ import androidx.compose.material.icons.filled.ArrowBack as ArrowB
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.Button
 import androidx.compose.ui.draw.shadow
 import com.example.billapp.ui.theme.Brown4
 import com.example.billapp.ui.theme.DarkerGray
 import com.example.billapp.ui.theme.HightlightWhiteColor
 import com.example.billapp.ui.theme.PieGreenColor
 import com.example.billapp.ui.theme.PieRedColor
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -638,6 +641,7 @@ fun HomeScreenPersonalTransactionList(
     val endIndex = minOf(startIndex + itemsPerPage, transactions.size)
     val pageTransactions = transactions.subList(startIndex, endIndex)
 
+
     Column {
         pageTransactions.forEach { transaction ->
             TransactionItem(transaction, navController, viewModel)
@@ -688,15 +692,47 @@ fun TransactionItem(
                 color = if (transaction.type == "收入") Green else Red
             )
             Spacer(modifier = Modifier.width(16.dp))
-            IconButton(onClick = { /* Edit action */ }) {
+            IconButton(onClick = { navController.navigate("editTransaction/${transaction.transactionId}")}) {
                 Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Brown1)
             }
-            IconButton(onClick = { /* Delete action */ }) {
+            IconButton(onClick = { showDialog = true  }) {
                 Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Red)
             }
         }
     }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { androidx.compose.material.Text(text = "確認刪除") },
+            text = { androidx.compose.material.Text(text = "你確定要刪除此交易紀錄嗎？") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDelete(viewModel, transaction)
+                        showDialog = false
+                    }
+                ) {
+                    androidx.compose.material.Text("確定")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        showDialog = false
+                    }
+                ) {
+                    androidx.compose.material.Text("取消")
+                }
+            }
+        )
+    }
 }
+
+fun onDelete(viewModel: MainViewModel, transaction: PersonalTransaction) {
+    viewModel.deleteTransaction(transaction.transactionId, transaction.type, transaction.amount)
+}
+
 
 //@Composable
 //fun GroupList(groups: List<Group>, navController: NavController) {
@@ -834,16 +870,6 @@ fun GroupItem(group: Group, onItemClick: () -> Unit) {
 //    }
 //}
 //
-
-
-
-
-
-
-
-
-
-
 
 @Composable
 fun EmptyGroupSlot() {
