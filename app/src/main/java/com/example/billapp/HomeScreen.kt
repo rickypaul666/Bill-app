@@ -116,6 +116,7 @@ fun HomeScreen(
         filtered()
     }
 
+
     val pagerState = rememberPagerState(pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
 
@@ -190,309 +191,50 @@ fun HomeScreen(
             .fillMaxWidth()
             .background(MainBackgroundColor)
     ) {
-        Column(
+
+        val income = filteredIncome
+        val expense = filteredExpense
+        val total = income + expense
+        val balance = income - expense
+
+        val level = viewModel.getUserLevel()
+        val trustLevel = viewModel.getUserTrustLevel()
+
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(220.dp)
                 .padding(16.dp)
-                .background(Color(0xFFD9C2A7))
+                .background(BoxBackgroundColor, RoundedCornerShape(16.dp))
+                .border(6.dp, Brown1, RoundedCornerShape(16.dp))
+                .shadow(elevation = 16.dp, shape = RoundedCornerShape(16.dp))
         ) {
-            val income = filteredIncome
-            val expense = filteredExpense
-            val total = income + expense
-            val balance = income - expense
-
-            val level by remember { mutableStateOf(viewModel.getUserLevel())}
-            val trustLevel by remember { mutableStateOf(viewModel.getUserTrustLevel())}
-            val budget by remember { mutableStateOf(viewModel.getUserBudget().toString()) } // Add budget state
-
-
             HorizontalPager(
                 state = pagerState,
-                modifier =Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-            ) {page ->
-                when(page){
-                    0 -> Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                            .background(BoxBackgroundColor)
-                            .clip(RoundedCornerShape(8.dp))
-                            .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
-                    ) {
-                        Canvas(modifier = Modifier.fillMaxSize()) {
-                            val pathLeft = Path().apply {
-                                moveTo(0f, 0f)
-                                lineTo(size.width * 0.5f, 0f)
-                                lineTo(size.width * 0.4f, size.height)
-                                lineTo(0f, size.height)
-                                close()
-                            }
-                            val pathRight = Path().apply {
-                                moveTo(size.width * 0.5f, 0f)
-                                lineTo(size.width, 0f)
-                                lineTo(size.width, size.height)
-                                lineTo(size.width * 0.4f, size.height)
-                                close()
-                            }
-                            drawPath(pathLeft, BoxBackgroundColor)
-                            drawPath(pathRight, MainCardRedColor)
-                            drawLine(
-                                color = Color.Gray,
-                                start = Offset(size.width * 0.5f, 0f),
-                                end = Offset(size.width * 0.4f, size.height),
-                                strokeWidth = 4f
-                            )
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(150.dp) // Adjust the size as needed
-                                        .padding(8.dp)
-                                        .align(Alignment.CenterHorizontally)
-                                ) {
-                                    AsyncImage(
-                                        model = coil.request.ImageRequest.Builder(LocalContext.current)
-                                            .data(userImage)
-                                            .crossfade(true)
-                                            .build(),
-                                        placeholder = painterResource(R.drawable.ic_user_place_holder),
-                                        contentDescription = "User Image",
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier.clip(CircleShape)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text(user!!.name)
-                            }
-
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .aspectRatio(1f)
-                                    .padding(8.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    RoundedCornerProgressBar(
-                                        TargetProgress = 1f,
-                                        text = "信譽點數: $trustLevel/100",
-                                        color = Color.Green,
-                                        modifier = Modifier.padding(4.dp)
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    RoundedCornerProgressBar(
-                                        TargetProgress = 0.5f,
-                                        text = "社交值: 等級: lv.$level",
-                                        color = Color.Blue,
-                                        modifier = Modifier.padding(4.dp)
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    RoundedCornerProgressBar(
-                                        TargetProgress = 0.083f,
-                                        text = "預算: ____/$budget",
-                                        color = Color.Red,
-                                        modifier = Modifier.padding(4.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    1 -> Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                            .background(BoxBackgroundColor)
-                            .clip(RoundedCornerShape(8.dp))
-                            .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
-                    ) {
-                        Canvas(modifier = Modifier.fillMaxSize()) {
-                            val pathLeft = Path().apply {
-                                moveTo(0f, 0f)
-                                lineTo(size.width * 0.5f, 0f)
-                                lineTo(size.width * 0.4f, size.height)
-                                lineTo(0f, size.height)
-                                close()
-                            }
-                            val pathRight = Path().apply {
-                                moveTo(size.width * 0.5f, 0f)
-                                lineTo(size.width, 0f)
-                                lineTo(size.width, size.height)
-                                lineTo(size.width * 0.4f, size.height)
-                                close()
-                            }
-                            drawPath(pathLeft, BoxBackgroundColor)
-                            drawPath(pathRight, MainCardRedColor)
-                            drawLine(
-                                color = Color.Gray,
-                                start = Offset(size.width * 0.5f, 0f),
-                                end = Offset(size.width * 0.4f, size.height),
-                                strokeWidth = 4f
-                            )
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .aspectRatio(1f)
-                                    .padding(8.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
-                                ) {
-                                    Image(
-                                        painter = painterResource(R.drawable.avatar_placeholder_2),
-                                        contentDescription = "Character Avatar",
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier
-                                            .size(80.dp) // 設置頭像大小
-                                            .clip(CircleShape) // 設置頭像為圓形
-                                            .background(Color.Gray) // 頭像背景顏色
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = "AMY",
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black
-                                    )
-                                }
-                            }
-
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .aspectRatio(1f) // 確保 Box 是正方形
-                                    .padding(8.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                PieChart(
-                                    income = income,
-                                    expense = expense,
-                                    balance = balance,
-                                    total = total,
-                                    modifier = Modifier.size(80.dp) // 調整圓餅圖大小
-                                )
-
-                                // 顯示支出、收入和結餘
-                                Box(
-                                    modifier = Modifier
-                                        .align(Alignment.TopStart)
-                                        .padding(start = 4.dp, top = 4.dp) // 調整位置
-                                        .background(Color.White, RoundedCornerShape(4.dp))
-                                        .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
-                                        .padding(4.dp)
-                                ) {
-                                    Text(
-                                        text = "支出: $expense",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .align(Alignment.TopEnd)
-                                        .padding(end = 4.dp, top = 4.dp) // 調整位置
-                                        .background(Color.White, RoundedCornerShape(4.dp))
-                                        .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
-                                        .padding(4.dp)
-                                ) {
-                                    Text(
-                                        text = "收入: $income",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .align(Alignment.BottomStart)
-                                        .offset(x = (-16).dp,y=(-32).dp)
-                                        .padding(start = 4.dp, bottom = 4.dp) // 調整位置
-                                        .background(Color.White, RoundedCornerShape(4.dp))
-                                        .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
-                                        .padding(4.dp)
-                                ) {
-                                    Text(
-                                        text = "結餘: $balance",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .align(Alignment.BottomEnd)
-                                        .offset(x = (16).dp,y=(8).dp)
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center
-                                    ) {
-                                        IconButton(
-                                            onClick = { updateDate(-1) }
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(id = R.drawable.baseline_navigate_before_24),
-                                                contentDescription = "Previous Page"
-                                            )
-                                        }
-
-                                        Box(
-                                            modifier = Modifier
-                                                .background(Color.White, RoundedCornerShape(4.dp))
-                                                .border(1.dp, Color.Gray, RoundedCornerShape(4.dp))
-                                                .padding(4.dp) // 內部 padding
-                                        ) {
-                                            Text(
-                                                text = "$year/$month",
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        }
-
-                                        IconButton(
-                                            onClick = { updateDate(1) }
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(id = R.drawable.baseline_navigate_next_24),
-                                                contentDescription = "Next Page"
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                modifier = Modifier.fillMaxSize()
+            ) { page ->
+                when(page) {
+                    0 -> BusinessCardFront(user!!, userImage, level, trustLevel)
+                    1 -> BusinessCardBack(income, expense, balance, total, year, month, onUpdateDate = { updateDate(it) })
                 }
             }
         }
+
+        // Pager indicator
         Row(
             Modifier
-                .wrapContentHeight()
                 .fillMaxWidth()
                 .padding(bottom = 8.dp),
             horizontalArrangement = Arrangement.Center
         ) {
             repeat(pagerState.pageCount) { iteration ->
-                val color = if (pagerState.currentPage == iteration) Color.DarkGray else Color.LightGray
+                val color = if (pagerState.currentPage == iteration) Brown1 else Brown2
                 Box(
                     modifier = Modifier
                         .padding(2.dp)
                         .clip(CircleShape)
                         .background(color)
-                        .size(16.dp)
+                        .size(8.dp)
                 )
             }
         }
