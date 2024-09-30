@@ -1,51 +1,41 @@
 package com.example.billapp.dept_relation
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.billapp.models.DeptRelation
+import com.example.billapp.models.DebtRelation
 import com.example.billapp.viewModel.MainViewModel
+import com.google.firebase.Timestamp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeptRelationDetailItem(
     viewModel: MainViewModel,
-    deptRelation: DeptRelation,
+    debtRelation: DebtRelation,
     groupId: String,
 ) {
     var showBottomSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState()
+    var showRemindConfirmation by remember { mutableStateOf(false) }
+    var lastRemindTime by remember { mutableStateOf(debtRelation.lastRemindTimestamp) }
+    val context = LocalContext.current
 
     var fromName by remember { mutableStateOf("") }
     var toName by remember { mutableStateOf("") }
+    val canRemind = lastRemindTime == null || (System.currentTimeMillis() - lastRemindTime!!.toDate().time) > 86400000 // 24 hours in ms
 
-    LaunchedEffect(deptRelation) {
-        fromName = viewModel.getUserName(deptRelation.from)
-        toName = viewModel.getUserName(deptRelation.to)
+
+    // Get user names in a coroutine
+    LaunchedEffect(debtRelation.from, debtRelation.to) {
+        fromName = viewModel.getUserName(debtRelation.from)
+        toName = viewModel.getUserName(debtRelation.to)
     }
 
     Row(
@@ -56,22 +46,31 @@ fun DeptRelationDetailItem(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column {
-            //Text(text = "Transaction ID: ${deptRelation.groupTransactionId}")
-            Text(text = "Transaction Name: ${deptRelation.name}")
-            Text(text = "from:${fromName} -> to:${toName}")
-            Text(text = "$${String.format("%.2f", deptRelation.amount)}")
+            Text(text = "交易名稱: ${debtRelation.name}", style = MaterialTheme.typography.titleMedium)
+            Text(text = "from: $fromName -> to: $toName", style = MaterialTheme.typography.bodyMedium)
+            Text(text = "$${String.format("%.2f", debtRelation.amount)}", style = MaterialTheme.typography.bodyLarge)
         }
-        IconButton(onClick = {
-            showBottomSheet = true
-        }) {
-            Icon(Icons.Default.Clear, contentDescription = "Clear Debt")
+        Row {
+            IconButton(onClick = { showBottomSheet = true }) {
+                Icon(Icons.Default.Clear, contentDescription = "Clear Debt")
+            }
+            IconButton(onClick = {
+                if (canRemind) {
+                    viewModel.sendDebtReminder(context, debtRelation)  // Send notification via ViewModel
+                    lastRemindTime = Timestamp.now()  // 更新最後催債時間
+                    showRemindConfirmation = true
+                } else {
+                    // 提示用戶一天只能催一次
+                }
+            }) {
+                Icon(Icons.Default.Notifications, contentDescription = "催債")
+            }
         }
     }
 
     if (showBottomSheet) {
         ModalBottomSheet(
-            onDismissRequest = { showBottomSheet = false },
-            sheetState = sheetState
+            onDismissRequest = { showBottomSheet = false }
         ) {
             Column(
                 modifier = Modifier
@@ -90,7 +89,7 @@ fun DeptRelationDetailItem(
                         Text("Cancel")
                     }
                     Button(onClick = {
-                        viewModel.deleteDeptRelation(groupId = groupId, deptRelationId = deptRelation.id)
+                        viewModel.deleteDeptRelation(groupId = groupId, deptRelationId = debtRelation.id)
                         viewModel.loadGroupDeptRelations(groupId)
                         showBottomSheet = false
                     }) {
@@ -100,5 +99,34 @@ fun DeptRelationDetailItem(
             }
         }
     }
+
+    if (showRemindConfirmation) {
+        // 可在此顯示催債通知確認的對話框或提示
+        AlertDialog(
+            onDismissRequest = { showRemindConfirmation = false },
+            title = { Text("催債通知已發送") },
+            text = { Text("已成功發送催債通知給 $toName。") },
+            confirmButton = {
+                Button(onClick = { showRemindConfirmation = false }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
 }
 
+
+@Preview(showBackground = true)
+@Composable
+fun DeptRelationDetailItemPreview() {
+    val viewModel = MainViewModel()
+    val debtRelation = DebtRelation(
+        from = "user1",
+        to = "user2",
+        id = "1",
+        name = "test",
+        amount = 100.0,
+        groupTransactionId = "1"
+    )
+    DeptRelationDetailItem(viewModel = viewModel, debtRelation = debtRelation, groupId = "1")
+}

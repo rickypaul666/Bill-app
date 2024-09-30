@@ -32,19 +32,28 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.billapp.R
 import com.example.billapp.models.Group
 import com.example.billapp.ui.theme.ButtonRedColor
-import com.example.billapp.ui.theme.Purple40
 import com.example.billapp.ui.theme.Green
-import com.example.billapp.ui.theme.Gray
-import com.example.billapp.ui.theme.ButtonRedColor
-import com.example.billapp.ui.theme.VeryDarkGray
+import com.example.billapp.ui.theme.Orange4
+import com.example.billapp.ui.theme.Purple40
+import com.example.billapp.ui.theme.Red
+import com.example.billapp.viewModel.MainViewModel
+
 
 
 @Composable
-fun GroupItem(groupName: String, createdBy: String, totalDebt: Float, onClick: () -> Unit) {
+fun GroupItem(
+    groupId: String,
+    groupName: String,
+    createdBy: String,
+    totalDebt: Double,
+    onClick: () -> Unit,
+    imageId: Int
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -65,23 +74,26 @@ fun GroupItem(groupName: String, createdBy: String, totalDebt: Float, onClick: (
                 .fillMaxWidth()
                 .background(Color(0xFFBBB0A2)) // Card background color
         ) {
-            // First Row for image and group name
-            Row(
+            Spacer(modifier = Modifier.width(16.dp))
+            Image(
+                painter = painterResource(id = getImageResourceById(imageId)),
+                contentDescription = stringResource(id = R.string.image_contentDescription),
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 32.dp, start = 32.dp, bottom = 0.dp),
-                horizontalArrangement = Arrangement.Center, // Horizontally center the content
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Circular ImageView
-                Image(
-                    painter = painterResource(id = R.drawable.ic_board_place_holder),
-                    contentDescription = stringResource(id = R.string.image_contentDescription),
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
-                        .background(color = Purple40),
-                    contentScale = ContentScale.Crop
+                    .size(60.dp)
+                    .clip(CircleShape)
+                    .background(color = Purple40),
+                contentScale = ContentScale.Crop
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column {
+                BasicText(
+                    text = groupName,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontSize = MaterialTheme.typography.headlineMedium.fontSize
+                    ),
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.width(24.dp))
@@ -109,45 +121,53 @@ fun GroupItem(groupName: String, createdBy: String, totalDebt: Float, onClick: (
 
             Spacer(modifier = Modifier.height(0.dp)) // Optional: space between sections
 
-            // Second Row for "總欠債"
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(4.dp), // Outer padding
-                horizontalArrangement = Arrangement.End // Align content to the right
-            ) {
-                Box(
-                    modifier = Modifier
-                        .width(100.dp) // Fixed width
-                        .height(50.dp)
-                        .padding(top = 4.dp, start = 4.dp, end = 4.dp, bottom = 4.dp) // Inner padding
-                        .shadow(
-                            elevation = 8.dp,  // Shadow elevation height
-                            shape = RoundedCornerShape(8.dp),  // Shape of the shadow (same as Box)
-                            clip = false  // Whether to clip the content inside the shadow
-                        )
-                        .background(
-                            color = when {
-                                totalDebt > 0 -> Green      // Green if totalDebt is greater than 0
-                                totalDebt == 0f -> Gray      // Gray if totalDebt is 0
-                                else -> ButtonRedColor                 // Red if totalDebt is less than 0
-                            },
-                            shape = RoundedCornerShape(8.dp)    // Rounded background color
-                        ),
-                    contentAlignment = Alignment.Center   // Align content to the center
-                ) {
-                    Text(
-                        text = "總欠債:\n$totalDebt NTD",
-                        style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black)
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth() // 填滿整個寬度
+                .background(Color(0xFFBBB0A2))
+                .padding(1.dp), // 外邊距
+            horizontalArrangement = Arrangement.End // 內容向右對齊
+        ) {
+            Box(
+                modifier = Modifier     
+                    .width(100.dp) // Fixed width
+                    .height(50.dp)
+                    .padding(top = 4.dp, start = 4.dp, end = 4.dp, bottom = 4.dp) // Inner padding
+                    .shadow(
+                        elevation = 8.dp,  // Shadow elevation height
+                        shape = RoundedCornerShape(8.dp),  // Shape of the shadow (same as Box)
+                        clip = false  // Whether to clip the content inside the shadow
                     )
-                }
+                    .background(
+                        color = when {
+                            totalDebt < 0 -> Color(0xF3FF8B8B) // 負數時為紅色
+                            totalDebt > 0 -> Green // 正數時為綠色
+                            else -> Orange4 // 0 為淺黃色
+                        },
+                        shape = RoundedCornerShape(8.dp) // 圓角背景
+                    ),
+                contentAlignment = Alignment.BottomStart
+            ) {
+                Text(
+                    text = when {
+                        totalDebt < 0 -> "應付 : ${-totalDebt}" // 負數時為紅色
+                        totalDebt > 0 -> "應收 : $totalDebt" // 正數時為綠色
+                        else -> "帳務已結清" // 0 為淺黃色
+                    },
+                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
+                    modifier = Modifier.padding(8.dp) // 調整文字的內邊距
+                )
             }
+
+
         }
     }
 }
 
 @Composable
 fun GroupList(
+    viewModel: MainViewModel,
     groupItems: List<Group>,
     onGroupClick: (String) -> Unit,
     navController: NavController
@@ -160,28 +180,14 @@ fun GroupList(
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(groupItems) { groupItem ->
                 GroupItem(
+                    groupId = groupItem.id,
                     groupName = groupItem.name,
                     createdBy = groupItem.createdBy,
-                    totalDebt = 0f, // 假設你有這個數據，這裡使用示例值
-                    onClick = { onGroupClick(groupItem.id) }
+                    totalDebt = viewModel.calculateTotalDept(groupItem.id),
+                    onClick = { onGroupClick(groupItem.id) },
+                    imageId = groupItem.imageId
                 )
             }
-            /*
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = {
-                    navController.navigate("CreateGroupScreen")
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-                    .padding(vertical = 4.dp)
-            ) {
-                Text("新增群組")
-            }
-        }
-        */
         }
     }
 }
@@ -190,5 +196,9 @@ fun GroupList(
 @Composable
 fun GroupItemPreview()
 {
-    GroupItem("Travel","Jason",10000f,{})
+    Column {
+        GroupItem("1","Travel","Jason",1000.0,{},1)
+        GroupItem("1","Travel","Jason",-1000.0,{},1)
+        GroupItem("1","Travel","Jason",0.0,{},1)
+    }
 }

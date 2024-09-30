@@ -75,6 +75,7 @@ dependencies {
     implementation(libs.volley)
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.play.services.nearby)
 
     val compose_version = "1.5.1"
     implementation ("androidx.compose.material:material:$compose_version")
@@ -140,6 +141,11 @@ dependencies {
 
     implementation("androidx.core:core-splashscreen:1.0.0")
 
+    // Add the dependencies for the Firebase Cloud Messaging and Analytics libraries
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation("com.google.firebase:firebase-messaging")
+
+    implementation("androidx.compose.material:material-icons-extended:1.5.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

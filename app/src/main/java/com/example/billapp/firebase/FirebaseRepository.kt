@@ -1,7 +1,16 @@
 package com.example.billapp.firebase
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.util.Log
-import com.example.billapp.models.DeptRelation
+import androidx.core.app.NotificationCompat
+import com.example.billapp.MainActivity
+import com.example.billapp.R
+import com.example.billapp.models.DebtRelation
 import com.example.billapp.models.Group
 import com.example.billapp.models.GroupTransaction
 import com.example.billapp.models.PersonalTransaction
@@ -13,12 +22,15 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+import com.google.firebase.messaging.RemoteMessage
+import org.json.JSONObject
 
 object FirebaseRepository {
 
@@ -39,6 +51,7 @@ object FirebaseRepository {
                         .addOnFailureListener { e ->
                             continuation.resumeWithException(e)
                         }
+                    updateUserFCMToken(getAuthInstance().currentUser!!.uid)
                 } else {
                     continuation.resumeWithException(task.exception ?: Exception("Sign in failed"))
                 }
@@ -64,11 +77,134 @@ object FirebaseRepository {
                         .addOnFailureListener { e ->
                             continuation.resumeWithException(e)
                         }
+                    updateUserFCMToken(firebaseUser.uid)
                 } else {
                     continuation.resumeWithException(task.exception ?: Exception("Sign up failed"))
                 }
             }
     }
+
+    fun updateUserBudget(budget: Int) {
+        val currentUser = getAuthInstance().currentUser
+        if (currentUser != null) {
+            getFirestoreInstance().collection(Constants.USERS)
+                .document(currentUser.uid)
+                .update("budget", budget)
+        }
+    }
+
+    fun updateUserFCMToken(userId: String) {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                getFirestoreInstance().collection(Constants.USERS).document(userId)
+                    .update("fcmToken", token)
+            }
+        }
+    }
+
+    //////
+
+    suspend fun sendDebtReminder(context: Context, debtRelation: DebtRelation) = withContext(Dispatchers.IO) {
+        val currentDate = Timestamp.now()
+
+        if (debtRelation.lastRemindTimestamp == null || canSendReminder(currentDate, debtRelation.lastRemindTimestamp)) {
+            // 發送推送通知
+            sendPushNotification(
+                debtRelation.to,
+                "債務提醒",
+                "您有一筆 ${debtRelation.amount} 元的債務需要償還給 ${debtRelation.name}"
+            )
+
+            // 發送應用內通知
+            sendInAppNotification(context, debtRelation)
+
+            // 更新用戶經驗值和信任等級
+            updateUserExperience(debtRelation.from, 5)
+            updateUserTrustLevel(debtRelation.to, -1)
+
+            return@withContext true
+        } else {
+            return@withContext false
+        }
+    }
+
+    private fun canSendReminder(currentDate: Timestamp, lastReminderDate: Timestamp): Boolean {
+        val oneDayInMillis = 24 * 60 * 60 * 1000
+        return currentDate.toDate().time - lastReminderDate.toDate().time >= oneDayInMillis
+    }
+
+    private fun sendInAppNotification(context: Context, debtRelation: DebtRelation) {
+        val context: Context = context
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = "debt_reminder_channel"
+
+        // 創建通知通道
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(channelId, "債務提醒", NotificationManager.IMPORTANCE_DEFAULT)
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        // 創建意圖以響應通知點擊
+        val intent = Intent(context, MainActivity::class.java)  // 替換為你的活動
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+
+        // 創建通知
+        val notification = NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(R.drawable.ic_notification)  // 替換為你的圖標
+            .setContentTitle("債務提醒")
+            .setContentText("您有一筆 ${debtRelation.amount} 元的債務需要償還給 ${debtRelation.name}")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+
+        // 發送通知
+        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+    }
+
+    private suspend fun sendPushNotification(userId: String, title: String, message: String) {
+        try {
+            // 獲取用戶的 FCM token
+            val userToken = getUserFCMToken(userId)
+
+            if (userToken != null) {
+                // Create data payload
+                val remoteMessage = RemoteMessage.Builder(userToken)
+                    .setMessageId(System.currentTimeMillis().toString())  // Unique message ID
+                    .setData(mapOf(
+                        "title" to title,
+                        "message" to message,
+                        "userId" to userId
+                    ))  // Add custom data
+                    .build()
+
+                // Send the message
+                FirebaseMessaging.getInstance().send(remoteMessage)
+                Log.d("FCM", "Successfully sent message to user: $userId")
+            } else {
+                // 用戶 FCM token 不存在
+                Log.e("FCM", "User token not found for userId: $userId")
+            }
+        } catch (e: Exception) {
+            // 捕捉發送推送消息時的異常
+            Log.e("FCM", "Error sending FCM message", e)
+        }
+    }
+
+
+    private suspend fun getUserFCMToken(userId: String): String? {
+        return try {
+            val user = getFirestoreInstance().collection("users").document(userId).get().await()
+            user.getString("fcmToken")
+        } catch (e: Exception) {
+            Log.e("FCM", "Error getting user FCM token", e)
+            null
+        }
+    }
+
+    //////
 
 
     suspend fun updateUserExperience(userId: String, amount: Int) {
@@ -284,7 +420,7 @@ object FirebaseRepository {
     }
 
     // 新增一筆群組交易紀錄
-    suspend fun addGroupTransaction(groupId: String, transaction: GroupTransaction, deptRelations: List<DeptRelation>) = withContext(Dispatchers.IO) {
+    suspend fun addGroupTransaction(groupId: String, transaction: GroupTransaction, debtRelations: List<DebtRelation>) = withContext(Dispatchers.IO) {
         val transactionId = getFirestoreInstance().collection(Constants.GROUPS)
             .document(groupId)
             .collection("transactions")
@@ -302,7 +438,7 @@ object FirebaseRepository {
             .await()
 
         // 添加債務關係
-        for (deptRelation in deptRelations) {
+        for (deptRelation in debtRelations) {
             getFirestoreInstance().collection(Constants.GROUPS)
                 .document(groupId)
                 .collection("deptRelations")
@@ -312,15 +448,15 @@ object FirebaseRepository {
         }
     }
 
-    suspend fun getGroupDeptRelations(groupId: String): Map<String, List<DeptRelation>> = withContext(Dispatchers.IO) {
-        val deptRelations = getFirestoreInstance().collection(Constants.GROUPS)
+    suspend fun getGroupDeptRelations(groupId: String): Map<String, List<DebtRelation>> = withContext(Dispatchers.IO) {
+        val debtRelations = getFirestoreInstance().collection(Constants.GROUPS)
             .document(groupId)
             .collection("deptRelations")
             .get()
             .await()
-            .toObjects(DeptRelation::class.java)
+            .toObjects(DebtRelation::class.java)
 
-        return@withContext deptRelations.groupBy { it.groupTransactionId }
+        return@withContext debtRelations.groupBy { it.groupTransactionId }
     }
 
     // 取得群組成員
@@ -336,10 +472,10 @@ object FirebaseRepository {
         }
     }
 
-    suspend fun updateGroupDeptRelations(groupId: String, deptRelations: List<DeptRelation>) = withContext(Dispatchers.IO) {
+    suspend fun updateGroupDeptRelations(groupId: String, debtRelations: List<DebtRelation>) = withContext(Dispatchers.IO) {
         getFirestoreInstance().collection(Constants.GROUPS)
             .document(groupId)
-            .update("deptRelations", deptRelations)
+            .update("deptRelations", debtRelations)
             .await()
     }
 

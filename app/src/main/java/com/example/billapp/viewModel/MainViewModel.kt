@@ -4,14 +4,10 @@ import AvatarRepository
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.billapp.firebase.FirebaseRepository
-import com.example.billapp.models.DeptRelation
+import com.example.billapp.models.DebtRelation
 import com.example.billapp.models.Group
 import com.example.billapp.models.GroupTransaction
 import com.example.billapp.models.PersonalTransaction
@@ -22,13 +18,10 @@ import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
 import java.util.UUID
 
 class MainViewModel : ViewModel() {
@@ -56,12 +49,12 @@ class MainViewModel : ViewModel() {
     val groupTransactions: StateFlow<List<GroupTransaction>> = _groupTransactions.asStateFlow()
 
     // Dept relations (List)
-    private val _deptRelations = MutableStateFlow<List<DeptRelation>>(emptyList())
-    val deptRelations: StateFlow<List<DeptRelation>> = _deptRelations.asStateFlow()
+    private val _debtRelations = MutableStateFlow<List<DebtRelation>>(emptyList())
+    val debtRelations: StateFlow<List<DebtRelation>> = _debtRelations.asStateFlow()
 
     // Dept relations (Map) grouped by Transaction ID
-    private val _groupIdDeptRelations = MutableStateFlow<Map<String, List<DeptRelation>>>(emptyMap())
-    val groupIdDeptRelations: StateFlow<Map<String, List<DeptRelation>>> = _groupIdDeptRelations.asStateFlow()
+    private val _groupIdDebtRelations = MutableStateFlow<Map<String, List<DebtRelation>>>(emptyMap())
+    val groupIdDebtRelations: StateFlow<Map<String, List<DebtRelation>>> = _groupIdDebtRelations.asStateFlow()
 
     // Transaction fields
     private val _transactionType = MutableStateFlow("支出")
@@ -82,7 +75,7 @@ class MainViewModel : ViewModel() {
     private val _name = MutableStateFlow("")
     val name: StateFlow<String> = _name.asStateFlow()
 
-    private val _shareMethod = MutableStateFlow("")
+    private val _shareMethod = MutableStateFlow("均分")
     val shareMethod: StateFlow<String> = _shareMethod
 
     private val _dividers = MutableStateFlow<List<String>>(emptyList())
@@ -147,6 +140,14 @@ class MainViewModel : ViewModel() {
 
     fun getUserTrustLevel(): Int {
         return user.value?.trustLevel ?: 0
+    }
+
+    fun getUserBudget(): Int {
+        return user.value?.budget ?: 0
+    }
+
+    fun updateUserBudget(budget: Int) {
+        FirebaseRepository.updateUserBudget(budget)
     }
 
     private fun checkCurrentUser() {
@@ -223,12 +224,12 @@ class MainViewModel : ViewModel() {
 
     fun clearData() {
         _groupCreationStatus.value = GroupCreationStatus.IDLE
-        _groupIdDeptRelations.value = emptyMap()
+        _groupIdDebtRelations.value = emptyMap()
         currentGroup.value = null
         _user.value = null
         _userTransactions.value = emptyList()
         _groupTransactions.value = emptyList()
-        _deptRelations.value = emptyList()
+        _debtRelations.value = emptyList()
         _isLoading.value = false
         _error.value = null
         _dividers.value = emptyList()
@@ -239,7 +240,7 @@ class MainViewModel : ViewModel() {
         _date.value = Timestamp.now()
         _category.value = ""
         _name.value = ""
-        _shareMethod.value = ""
+        _shareMethod.value = "均分"
         _groupMembers.value = emptyList()
         _transaction.value = null
         _updatetime.value = Timestamp.now()
@@ -261,6 +262,36 @@ class MainViewModel : ViewModel() {
             }
         }
     }
+
+    // 負的代表自己欠錢，正的代表別人欠錢
+    fun calculateTotalDept(groupId: String): Double {
+        val userId = getCurrentUserID()
+        var totalDebt = 0.0
+
+        viewModelScope.launch {
+
+            val groupIdDeptRelations = FirebaseRepository.getGroupDeptRelations(groupId)
+            // Flatten the lists of DebtRelation into a single list
+            val allDebtRelations = groupIdDeptRelations.values.flatten()
+
+            // Iterate over each DebtRelation and calculate the debt
+            allDebtRelations.forEach { debtRelation ->
+                // 如果是user欠別人的錢，將金額減去
+                if (debtRelation.from == userId) {
+                    totalDebt -= debtRelation.amount
+                }
+                // 如果是別人欠user的錢，將金額加上
+                if (debtRelation.to == userId) {
+                    totalDebt += debtRelation.amount
+                }
+            }
+        }
+
+        return totalDebt
+    }
+
+
+
 
     fun updateUserProfile(updatedUser: User) {
         viewModelScope.launch {
@@ -295,12 +326,16 @@ class MainViewModel : ViewModel() {
     }
 
     // Dept Functions //
-    fun getDeptRelations(groupId: String): MutableStateFlow<List<DeptRelation>> {
-        return _deptRelations
+    fun getDeptRelations(groupId: String): MutableStateFlow<List<DebtRelation>> {
+        return _debtRelations
     }
 
     suspend fun getUserName(userId: String): String {
         return FirebaseRepository.getUserName(userId)
+    }
+
+    fun getCurrentUserName(): String {
+        return user.value?.name ?: ""
     }
 
     // Groups Function //
@@ -350,6 +385,32 @@ class MainViewModel : ViewModel() {
             }
         }
     }
+
+    ///
+
+    private val _debtReminderStatus = MutableStateFlow<DebtReminderStatus>(DebtReminderStatus.IDLE)
+    val debtReminderStatus: StateFlow<DebtReminderStatus> = _debtReminderStatus.asStateFlow()
+
+    fun sendDebtReminder(context: Context,debtRelation: DebtRelation) {
+        viewModelScope.launch {
+            _debtReminderStatus.value = DebtReminderStatus.LOADING
+            try {
+                val reminderSent = FirebaseRepository.sendDebtReminder(context, debtRelation)
+                if (reminderSent) {
+                    _debtReminderStatus.value = DebtReminderStatus.SUCCESS
+                } else {
+                    _debtReminderStatus.value = DebtReminderStatus.ERROR("You can only send one reminder per day.")
+                }
+            } catch (e: Exception) {
+                _debtReminderStatus.value = DebtReminderStatus.ERROR(e.message ?: "Unknown error occurred")
+            }
+        }
+    }
+
+
+    ///
+
+
 
     fun deleteGroup(groupId: String) {
         viewModelScope.launch {
@@ -675,58 +736,58 @@ class MainViewModel : ViewModel() {
         _groupName.value = newName
     }
 
-    private fun calculateEvenSplitRelations(transaction: GroupTransaction): List<DeptRelation> {
-        val deptRelations = mutableListOf<DeptRelation>()
+    private fun calculateEvenSplitRelations(transaction: GroupTransaction): List<DebtRelation> {
+        val debtRelations = mutableListOf<DebtRelation>()
         val amountPerDivider = transaction.amount / transaction.divider.size
 
         transaction.divider.forEach { dividerId ->
             transaction.payer.forEach { payerId ->
                 if (dividerId != payerId) {
-                    deptRelations.add(
-                        DeptRelation(
+                    debtRelations.add(
+                        DebtRelation(
                             id = UUID.randomUUID().toString(),
                             name = transaction.name,
                             groupTransactionId = transaction.id,
                             from = dividerId,
                             to = payerId,
                             amount = amountPerDivider / transaction.payer.size,
-                            lastRemindTimestamp = Timestamp.now()
+                            lastRemindTimestamp = null
                         )
                     )
                 }
             }
         }
-        return deptRelations
+        return debtRelations
     }
 
-    private fun calculateProportionalRelations(transaction: GroupTransaction, userPercentages: Map<String, Float>): List<DeptRelation> {
-        val deptRelations = mutableListOf<DeptRelation>()
+    private fun calculateProportionalRelations(transaction: GroupTransaction, userPercentages: Map<String, Float>): List<DebtRelation> {
+        val debtRelations = mutableListOf<DebtRelation>()
         val totalPercentage = userPercentages.values.sum()
 
-        if (totalPercentage != 100f) return deptRelations // Ensure percentages sum to 100%
+        if (totalPercentage != 100f) return debtRelations // Ensure percentages sum to 100%
 
         transaction.payer.forEach { payerId ->
             userPercentages.forEach { (userId, percentage) ->
                 if (userId != payerId) {
                     val amountOwed = transaction.amount * (percentage / 100) / transaction.payer.size
-                    deptRelations.add(
-                        DeptRelation(
+                    debtRelations.add(
+                        DebtRelation(
                             id = UUID.randomUUID().toString(),
                             groupTransactionId = transaction.id,
                             from = userId,
                             to = payerId,
                             amount = amountOwed,
-                            lastRemindTimestamp = Timestamp.now()
+                            lastRemindTimestamp = null
                         )
                     )
                 }
             }
         }
-        return deptRelations
+        return debtRelations
     }
 
-    private fun calculateAdjustableRelations(transaction: GroupTransaction, userAdjustments: Map<String, Float>): List<DeptRelation> {
-        val deptRelations = mutableListOf<DeptRelation>()
+    private fun calculateAdjustableRelations(transaction: GroupTransaction, userAdjustments: Map<String, Float>): List<DebtRelation> {
+        val debtRelations = mutableListOf<DebtRelation>()
         val totalAdjustment = userAdjustments.values.sum()
         val remainingAmount = transaction.amount - totalAdjustment
         val evenSplitAmount = remainingAmount / transaction.divider.size
@@ -736,68 +797,68 @@ class MainViewModel : ViewModel() {
                 if (dividerId != payerId) {
                     val adjustment = userAdjustments[dividerId] ?: 0f
                     val amountOwed = (adjustment + evenSplitAmount) / transaction.payer.size
-                    deptRelations.add(
-                        DeptRelation(
+                    debtRelations.add(
+                        DebtRelation(
                             id = UUID.randomUUID().toString(),
                             groupTransactionId = transaction.id,
                             from = dividerId,
                             to = payerId,
                             amount = amountOwed,
-                            lastRemindTimestamp = Timestamp.now()
+                            lastRemindTimestamp = null
                         )
                     )
                 }
             }
         }
-        return deptRelations
+        return debtRelations
     }
 
-    private fun calculateExactAmountRelations(transaction: GroupTransaction, userAmounts: Map<String, Float>): List<DeptRelation> {
-        val deptRelations = mutableListOf<DeptRelation>()
+    private fun calculateExactAmountRelations(transaction: GroupTransaction, userAmounts: Map<String, Float>): List<DebtRelation> {
+        val debtRelations = mutableListOf<DebtRelation>()
 
         transaction.payer.forEach { payerId ->
             userAmounts.forEach { (userId, amount) ->
                 if (userId != payerId) {
-                    deptRelations.add(
-                        DeptRelation(
+                    debtRelations.add(
+                        DebtRelation(
                             id = UUID.randomUUID().toString(),
                             groupTransactionId = transaction.id,
                             from = userId,
                             to = payerId,
                             amount = amount.toDouble() / transaction.payer.size,
-                            lastRemindTimestamp = Timestamp.now()
+                            lastRemindTimestamp = null
                         )
                     )
                 }
             }
         }
-        return deptRelations
+        return debtRelations
     }
 
-    private fun calculateSharesRelations(transaction: GroupTransaction, userShares: Map<String, Int>): List<DeptRelation> {
-        val deptRelations = mutableListOf<DeptRelation>()
+    private fun calculateSharesRelations(transaction: GroupTransaction, userShares: Map<String, Int>): List<DebtRelation> {
+        val debtRelations = mutableListOf<DebtRelation>()
         val totalShares = userShares.values.sum()
 
-        if (totalShares == 0) return deptRelations // Avoid division by zero
+        if (totalShares == 0) return debtRelations // Avoid division by zero
 
         transaction.payer.forEach { payerId ->
             userShares.forEach { (userId, shares) ->
                 if (userId != payerId) {
                     val amountOwed = transaction.amount * (shares.toDouble() / totalShares) / transaction.payer.size
-                    deptRelations.add(
-                        DeptRelation(
+                    debtRelations.add(
+                        DebtRelation(
                             id = UUID.randomUUID().toString(),
                             groupTransactionId = transaction.id,
                             from = userId,
                             to = payerId,
                             amount = amountOwed,
-                            lastRemindTimestamp = Timestamp.now()
+                            lastRemindTimestamp = null
                         )
                     )
                 }
             }
         }
-        return deptRelations
+        return debtRelations
     }
 
     // Functions to update state flows for different share methods
@@ -825,8 +886,8 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val groupIdDeptRelations = FirebaseRepository.getGroupDeptRelations(groupId)
-                _groupIdDeptRelations.value = groupIdDeptRelations
-                _deptRelations.value = groupIdDeptRelations.values.flatten()
+                _groupIdDebtRelations.value = groupIdDeptRelations
+                _debtRelations.value = groupIdDeptRelations.values.flatten()
             } catch (e: Exception) {
                 _error.value = e.message
             }
@@ -834,20 +895,20 @@ class MainViewModel : ViewModel() {
     }
 
     fun calculateTotalDebt(userId: String): Double {
-        return _deptRelations.value
+        return _debtRelations.value
             .filter { it.from == userId }
             .sumOf { it.amount }
     }
 
-    fun getGroupIdDeptRelations(groupId: String): Map<String, List<DeptRelation>> {
-        return _groupIdDeptRelations.value
+    fun getGroupIdDeptRelations(groupId: String): Map<String, List<DebtRelation>> {
+        return _groupIdDebtRelations.value
     }
 
     fun loadGroupIdRelation(groupId: String){
         viewModelScope.launch {
             try {
                 val deptRelations = FirebaseRepository.getGroupDeptRelations(groupId)
-                _groupIdDeptRelations.value = deptRelations
+                _groupIdDebtRelations.value = deptRelations
             } catch (e: Exception) {
                 _error.value = e.message
             }
@@ -872,23 +933,23 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val deptRelationsMap = FirebaseRepository.getGroupDeptRelations(groupId)
-                _groupIdDeptRelations.value = deptRelationsMap
+                _groupIdDebtRelations.value = deptRelationsMap
             } catch (e: Exception) {
                 Log.e("LoadGroupDeptRelations", "Error loading dept relations: ${e.message}", e)
             }
         }
     }
 
-    fun updateGroupDeptRelations(transactionId: String, newDeptRelations: List<DeptRelation>) {
+    fun updateGroupDeptRelations(transactionId: String, newDebtRelations: List<DebtRelation>) {
         viewModelScope.launch {
             try {
-                val currentRelations = _groupIdDeptRelations.value.toMutableMap()
+                val currentRelations = _groupIdDebtRelations.value.toMutableMap()
 
                 // 更新指定的交易ID的 DeptRelations
-                currentRelations[transactionId] = newDeptRelations
+                currentRelations[transactionId] = newDebtRelations
 
                 // 更新 StateFlow 的值
-                _groupIdDeptRelations.value = currentRelations
+                _groupIdDebtRelations.value = currentRelations
             } catch (e: Exception) {
                 Log.e("UpdateGroupDeptRelations", "Error updating dept relations: ${e.message}", e)
             }
@@ -926,4 +987,11 @@ class MainViewModel : ViewModel() {
 
 enum class GroupCreationStatus {
     IDLE, LOADING, SUCCESS, ERROR
+}
+
+sealed class DebtReminderStatus {
+    object IDLE : DebtReminderStatus()
+    object LOADING : DebtReminderStatus()
+    object SUCCESS : DebtReminderStatus()
+    data class ERROR(val message: String) : DebtReminderStatus()
 }

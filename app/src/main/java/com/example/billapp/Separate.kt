@@ -110,10 +110,20 @@ fun SeparateBottomSheetContent(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Button(onClick = onDismiss) {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF7A5B3C) // 更深的顏色
+                )
+            ) {
                 Text("取消")
             }
-            Button(onClick = onComplete) {
+            Button(
+                onClick = onComplete,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF7A5B3C) // 更深的顏色
+                )
+            ) {
                 Text("完成")
             }
         }
