@@ -15,6 +15,7 @@ val Pink40 = Color(0xFF7D5260)
 val MainBackgroundColor = Color(0xFFE4DFCB)
 val MainCardRedColor = Color(0xFFD47D4E)
 val BoxBackgroundColor = Color(0xFFBBB0A2)
+val ItemAddMainColor = Color(0xFFD9C9B9)
 val HightlightWhiteColor = Color(0xFFD6D7D2)
 val ButtonRedColor = Color(0xFFD4634E)
 val ButtonGreenColor = Color(0xFF90A171)
@@ -51,7 +52,7 @@ val Brown6 = Color(0xFFBFA588)
 
 val BlueGray = Color(0xFF8EB7D2)
 
-val Red = Color(0xFFE71E38)
+val Red = Color(0xFFFF415C)
 
-val Green = Color(0xFF7AC068)
+val Green = Color(0xFF93F37C)
 

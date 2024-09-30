@@ -142,6 +142,14 @@ class MainViewModel : ViewModel() {
         return user.value?.trustLevel ?: 0
     }
 
+    fun getUserBudget(): Int {
+        return user.value?.budget ?: 0
+    }
+
+    fun updateUserBudget(budget: Int) {
+        FirebaseRepository.updateUserBudget(budget)
+    }
+
     private fun checkCurrentUser() {
         viewModelScope.launch {
             val currentUser = FirebaseAuth.getInstance().currentUser
@@ -254,6 +262,36 @@ class MainViewModel : ViewModel() {
             }
         }
     }
+
+    // 負的代表自己欠錢，正的代表別人欠錢
+    fun calculateTotalDept(groupId: String): Double {
+        val userId = getCurrentUserID()
+        var totalDebt = 0.0
+
+        viewModelScope.launch {
+
+            val groupIdDeptRelations = FirebaseRepository.getGroupDeptRelations(groupId)
+            // Flatten the lists of DebtRelation into a single list
+            val allDebtRelations = groupIdDeptRelations.values.flatten()
+
+            // Iterate over each DebtRelation and calculate the debt
+            allDebtRelations.forEach { debtRelation ->
+                // 如果是user欠別人的錢，將金額減去
+                if (debtRelation.from == userId) {
+                    totalDebt -= debtRelation.amount
+                }
+                // 如果是別人欠user的錢，將金額加上
+                if (debtRelation.to == userId) {
+                    totalDebt += debtRelation.amount
+                }
+            }
+        }
+
+        return totalDebt
+    }
+
+
+
 
     fun updateUserProfile(updatedUser: User) {
         viewModelScope.launch {
