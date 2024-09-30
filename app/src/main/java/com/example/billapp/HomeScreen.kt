@@ -83,9 +83,12 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.draw.shadow
 import com.example.billapp.ui.theme.Brown4
+import com.example.billapp.ui.theme.DarkerGray
 import com.example.billapp.ui.theme.HightlightWhiteColor
 import com.example.billapp.ui.theme.PieGreenColor
 import com.example.billapp.ui.theme.PieRedColor
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -151,6 +154,8 @@ fun HomeScreen(
     var filteredExpense by remember { mutableStateOf(0f) }
     var startDate by remember { mutableStateOf<Long?>(null) }
     var endDate by remember { mutableStateOf<Long?>(null) }
+
+
 
 
 
@@ -647,6 +652,9 @@ fun TransactionItem(
     navController: NavController,
     viewModel: MainViewModel
 ) {
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val date = transaction.date?.toDate() // Convert Firebase Timestamp to Java Date
+    val formattedDate = date?.let { dateFormat.format(it) } ?: "Unknown Date"
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -664,13 +672,14 @@ fun TransactionItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = transaction.name,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = VeryDarkGray
                 )
                 Text(
-                    text = transaction.date?.toDate()?.toString() ?: "",
+                    text = formattedDate,
                     fontSize = 12.sp,
-                    color = Gray
+                    color = DarkerGray
                 )
             }
             Text(
