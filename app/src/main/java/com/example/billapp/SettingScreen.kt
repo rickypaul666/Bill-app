@@ -278,7 +278,7 @@ fun SettingsListItem(item: SettingsItem) {
 }
 
 @Composable
-fun LogoutButton(viewModel: MainViewModel, navController: NavController, onCloseDrawer: () -> Unit) {
+fun LogoutButton(viewModel: MainViewModel?, navController: NavController?, onCloseDrawer: () -> Unit) {
     var showDialog by remember { mutableStateOf(false) }
     Button(
         onClick = { showDialog = true },
@@ -290,7 +290,6 @@ fun LogoutButton(viewModel: MainViewModel, navController: NavController, onClose
         Text("登出", color = MaterialTheme.colorScheme.onError)
     }
 
-    // Logout Confirmation Dialog
     if (showDialog) {
         AlertDialog(
             onDismissRequest = {
@@ -307,9 +306,8 @@ fun LogoutButton(viewModel: MainViewModel, navController: NavController, onClose
                     onClick = {
                         showDialog = false
                         onCloseDrawer()
-                        viewModel.logOut()
-                        navController.navigate("intro")
-
+                        viewModel?.logOut() // Safeguard against null
+                        navController?.navigate("intro") // Safeguard against null
                     }
                 ) {
                     Text("Yes")
@@ -327,6 +325,7 @@ fun LogoutButton(viewModel: MainViewModel, navController: NavController, onClose
         )
     }
 }
+
 
 @Composable
 fun ProgressBar(label: String, progress: Float, text: String, color: Color) {

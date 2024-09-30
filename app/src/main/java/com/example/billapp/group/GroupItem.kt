@@ -43,8 +43,6 @@ import com.example.billapp.ui.theme.Purple40
 import com.example.billapp.ui.theme.Red
 import com.example.billapp.viewModel.MainViewModel
 
-
-
 @Composable
 fun GroupItem(
     groupId: String,
@@ -57,7 +55,7 @@ fun GroupItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 40.dp, vertical = 8.dp)
+            .padding(horizontal = 15.dp, vertical = 8.dp)
             .clickable(onClick = onClick),
             /*
             .border(
@@ -122,45 +120,44 @@ fun GroupItem(
             Spacer(modifier = Modifier.height(0.dp)) // Optional: space between sections
 
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth() // 填滿整個寬度
-                .background(Color(0xFFBBB0A2))
-                .padding(1.dp), // 外邊距
-            horizontalArrangement = Arrangement.End // 內容向右對齊
-        ) {
-            Box(
-                modifier = Modifier     
-                    .width(100.dp) // Fixed width
-                    .height(50.dp)
-                    .padding(top = 4.dp, start = 4.dp, end = 4.dp, bottom = 4.dp) // Inner padding
-                    .shadow(
-                        elevation = 8.dp,  // Shadow elevation height
-                        shape = RoundedCornerShape(8.dp),  // Shape of the shadow (same as Box)
-                        clip = false  // Whether to clip the content inside the shadow
-                    )
-                    .background(
-                        color = when {
-                            totalDebt < 0 -> Color(0xF3FF8B8B) // 負數時為紅色
-                            totalDebt > 0 -> Green // 正數時為綠色
-                            else -> Orange4 // 0 為淺黃色
-                        },
-                        shape = RoundedCornerShape(8.dp) // 圓角背景
-                    ),
-                contentAlignment = Alignment.BottomStart
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth() // 填滿整個寬度
+                    .background(Color(0xFFBBB0A2))
+                    .padding(1.dp), // 外邊距
+                horizontalArrangement = Arrangement.End // 內容向右對齊
             ) {
-                Text(
-                    text = when {
-                        totalDebt < 0 -> "應付 : ${-totalDebt}" // 負數時為紅色
-                        totalDebt > 0 -> "應收 : $totalDebt" // 正數時為綠色
-                        else -> "帳務已結清" // 0 為淺黃色
-                    },
-                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
-                    modifier = Modifier.padding(8.dp) // 調整文字的內邊距
-                )
+                Box(
+                    modifier = Modifier
+                        .width(100.dp) // Fixed width
+                        .height(50.dp)
+                        .padding(top = 4.dp, start = 4.dp, end = 4.dp, bottom = 4.dp) // Inner padding
+                        .shadow(
+                            elevation = 8.dp,  // Shadow elevation height
+                            shape = RoundedCornerShape(8.dp),  // Shape of the shadow (same as Box)
+                            clip = false  // Whether to clip the content inside the shadow
+                        )
+                        .background(
+                            color = when {
+                                totalDebt < 0 -> Color(0xF3FF8B8B) // 負數時為紅色
+                                totalDebt > 0 -> Green // 正數時為綠色
+                                else -> Orange4 // 0 為淺黃色
+                            },
+                            shape = RoundedCornerShape(8.dp) // 圓角背景
+                        ),
+                    contentAlignment = Alignment.BottomStart
+                ) {
+                    Text(
+                        text = when {
+                            totalDebt < 0 -> "應付 : ${-totalDebt}" // 負數時為紅色
+                            totalDebt > 0 -> "應收 : $totalDebt" // 正數時為綠色
+                            else -> "帳務已結清" // 0 為淺黃色
+                        },
+                        style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
+                        modifier = Modifier.padding(8.dp) // 調整文字的內邊距
+                    )
+                }
             }
-
-
         }
     }
 }
@@ -189,16 +186,5 @@ fun GroupList(
                 )
             }
         }
-    }
-}
-
-@Preview
-@Composable
-fun GroupItemPreview()
-{
-    Column {
-        GroupItem("1","Travel","Jason",1000.0,{},1)
-        GroupItem("1","Travel","Jason",-1000.0,{},1)
-        GroupItem("1","Travel","Jason",0.0,{},1)
     }
 }
