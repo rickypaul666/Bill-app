@@ -2,6 +2,7 @@ package com.example.billapp.group
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,44 +25,54 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.billapp.R
 import com.example.billapp.models.Group
 import com.example.billapp.ui.theme.ButtonRedColor
+import com.example.billapp.ui.theme.Green
+import com.example.billapp.ui.theme.Orange4
 import com.example.billapp.ui.theme.Purple40
-
+import com.example.billapp.ui.theme.Red
+import com.example.billapp.viewModel.MainViewModel
 
 @Composable
 fun GroupItem(
     groupId: String,
     groupName: String,
     createdBy: String,
-    totalDebt: Float,
+    totalDebt: Double,
     onClick: () -> Unit,
     imageId: Int
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 40.dp, vertical = 8.dp)
+            .padding(horizontal = 15.dp, vertical = 8.dp)
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
+            /*
+            .border(
+                width = 2.dp,  // Border thickness
+                color = VeryDarkGray,  // Border color
+                shape = RoundedCornerShape(8.dp)   // Apply the same rounded corner shape to the border
+            ),
+             */
+        shape = RoundedCornerShape(16.dp), // Rounded corners
+        elevation = CardDefaults.cardElevation(10.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFBBB0A2))
-                .padding(top = 8.dp, start = 8.dp, end = 8.dp, bottom = 8.dp),
-
-            verticalAlignment = Alignment.CenterVertically
+                .background(Color(0xFFBBB0A2)) // Card background color
         ) {
+            Spacer(modifier = Modifier.width(16.dp))
             Image(
                 painter = painterResource(id = getImageResourceById(imageId)),
                 contentDescription = stringResource(id = R.string.image_contentDescription),
@@ -78,39 +89,74 @@ fun GroupItem(
                 BasicText(
                     text = groupName,
                     style = MaterialTheme.typography.titleLarge.copy(
-                        fontSize = MaterialTheme.typography.headlineSmall.fontSize
+                        fontSize = MaterialTheme.typography.headlineMedium.fontSize
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                BasicText(
-                    text = "created by : $createdBy",
-                    style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Spacer(modifier = Modifier.width(24.dp))
+
+                // Group name and created by text
+                Column {
+                    BasicText(
+                        text = groupName,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontSize = MaterialTheme.typography.headlineSmall.fontSize // Larger font size
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp, bottom = 0.dp)
+                    )
+                    /*
+                    BasicText(
+                        text = "created by : $createdBy",
+                        style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    */
+                }
             }
-        }
 
-        //Spacer(modifier = Modifier.height(0.dp)) // 縮短距離，根據需要調整此值
+            Spacer(modifier = Modifier.height(0.dp)) // Optional: space between sections
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth() // 填滿整個寬度
-                .background(Color(0xFFBBB0A2))
-                .padding(4.dp), // 外邊距
-            horizontalArrangement = Arrangement.End // 內容向右對齊
-        ) {
-            Box(
+
+            Row(
                 modifier = Modifier
-                    .width(150.dp) // 固定寬度
-                    .padding(top = 16.dp, start = 4.dp, end = 4.dp, bottom = 4.dp) // 加入上方的內邊距
-                    .background(color = ButtonRedColor, shape = RoundedCornerShape(8.dp)), // 圓角背景顏色
-                contentAlignment = Alignment.BottomStart // 內容對齊到左下角
+                    .fillMaxWidth() // 填滿整個寬度
+                    .background(Color(0xFFBBB0A2))
+                    .padding(1.dp), // 外邊距
+                horizontalArrangement = Arrangement.End // 內容向右對齊
             ) {
-                Text(
-                    text = "總欠債: $totalDebt NTD",
-                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black)
-                )
+                Box(
+                    modifier = Modifier
+                        .width(100.dp) // Fixed width
+                        .height(50.dp)
+                        .padding(top = 4.dp, start = 4.dp, end = 4.dp, bottom = 4.dp) // Inner padding
+                        .shadow(
+                            elevation = 8.dp,  // Shadow elevation height
+                            shape = RoundedCornerShape(8.dp),  // Shape of the shadow (same as Box)
+                            clip = false  // Whether to clip the content inside the shadow
+                        )
+                        .background(
+                            color = when {
+                                totalDebt < 0 -> Color(0xF3FF8B8B) // 負數時為紅色
+                                totalDebt > 0 -> Green // 正數時為綠色
+                                else -> Orange4 // 0 為淺黃色
+                            },
+                            shape = RoundedCornerShape(8.dp) // 圓角背景
+                        ),
+                    contentAlignment = Alignment.BottomStart
+                ) {
+                    Text(
+                        text = when {
+                            totalDebt < 0 -> "應付 : ${-totalDebt}" // 負數時為紅色
+                            totalDebt > 0 -> "應收 : $totalDebt" // 正數時為綠色
+                            else -> "帳務已結清" // 0 為淺黃色
+                        },
+                        style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
+                        modifier = Modifier.padding(8.dp) // 調整文字的內邊距
+                    )
+                }
             }
         }
     }
@@ -118,6 +164,7 @@ fun GroupItem(
 
 @Composable
 fun GroupList(
+    viewModel: MainViewModel,
     groupItems: List<Group>,
     onGroupClick: (String) -> Unit,
     navController: NavController
@@ -133,34 +180,11 @@ fun GroupList(
                     groupId = groupItem.id,
                     groupName = groupItem.name,
                     createdBy = groupItem.createdBy,
-                    totalDebt = 10000f, // 假設你有這個數據，這裡使用示例值
+                    totalDebt = viewModel.calculateTotalDept(groupItem.id),
                     onClick = { onGroupClick(groupItem.id) },
                     imageId = groupItem.imageId
                 )
             }
-            /*
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = {
-                    navController.navigate("CreateGroupScreen")
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-                    .padding(vertical = 4.dp)
-            ) {
-                Text("新增群組")
-            }
-        }
-        */
         }
     }
-}
-
-@Preview
-@Composable
-fun GroupItemPreview()
-{
-    GroupItem("1","Travel","Jason",10000f,{},1)
 }
