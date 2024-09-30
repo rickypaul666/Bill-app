@@ -167,5 +167,9 @@ fun GroupList(
 @Composable
 fun GroupItemPreview()
 {
-    GroupItem("1","Travel","Jason",0.0,{},1)
+    Column {
+        GroupItem("1","Travel","Jason",1000.0,{},1)
+        GroupItem("1","Travel","Jason",-1000.0,{},1)
+        GroupItem("1","Travel","Jason",0.0,{},1)
+    }
 }
