@@ -1,112 +1,77 @@
 package com.example.billapp.group
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
 import com.example.billapp.CustomBottomSheet
 import com.example.billapp.R
-import com.example.billapp.dept_relation.GroupedDeptRelationItem
-import com.example.billapp.ui.theme.Green
-import com.example.billapp.ui.theme.Orange4
-import com.example.billapp.ui.theme.Purple40
-import com.example.billapp.ui.theme.BoxBackgroundColor
-import com.example.billapp.ui.theme.BottomBackgroundColor
-import com.example.billapp.ui.theme.MainBackgroundColor
-import com.example.billapp.ui.theme.Orange1
-import com.example.billapp.ui.theme.HightlightWhiteColor
-import com.example.billapp.ui.theme.Brown5
+import com.example.billapp.models.Group
+import com.example.billapp.models.User
+import com.example.billapp.ui.theme.*
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupSettingScreen(
     groupId: String,
     viewModel: MainViewModel,
-    totalDebt: Double,
     avatarViewModel: AvatarViewModel,
     navController: NavController
 ) {
-    // State for managing the visibility of the bottom sheet
     val isBottomSheetVisible = remember { mutableStateOf(false) }
-
     val group by viewModel.getGroup(groupId).collectAsState(initial = null)
     val deptRelations by viewModel.groupIdDebtRelations.collectAsState()
     val currentUser by viewModel.user.collectAsState()
-    val currentUserId = currentUser?.id ?: ""
+    val totalDebt by viewModel.totalDebtMap.collectAsState()
+    val userImage = avatarViewModel.avatarUrl.collectAsState().value
+    val user by viewModel.user.collectAsState()
 
     LaunchedEffect(groupId) {
         viewModel.getGroupDeptRelations(groupId)
+        viewModel.calculateTotalDeptForGroup(groupId)
     }
+
+    val groupTotalDebt = totalDebt[groupId] ?: 0.0
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            androidx.compose.material.TopAppBar(
-                title = { androidx.compose.material.Text(group?.name ?: "Group Detail", color = Color.White) },
+            TopAppBar(
+                title = { Text(group?.name ?: "Group Detail", color = Color.White, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    androidx.compose.material.IconButton(onClick = { navController.navigateUp() }) {
-                        androidx.compose.material.Icon(
-                            Icons.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },
                 actions = {
-                    // "管理" button on the right
-                    Button(
-                        onClick = { isBottomSheetVisible.value = true }, // Set this to toggle bottom sheet visibility
-                        colors = ButtonDefaults.buttonColors(
-                            contentColor = Color.White // Set button text color to white
-                        )
-                    ) {
-                        Text(text = "管理")
+                    IconButton(onClick = { isBottomSheetVisible.value = true }) {
+                        Icon(Icons.Default.Edit, contentDescription = "Manage", tint = Color.White)
                     }
                 },
-                backgroundColor = Orange1
+                colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Orange1)
             )
         }
     ) { innerPadding ->
@@ -115,206 +80,246 @@ fun GroupSettingScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(MainBackgroundColor)
+                .verticalScroll(rememberScrollState())
         ) {
-            // Row to hold Image and Card
+            UserInfoSection(user, userImage, groupTotalDebt) {
+                navController.navigate("deptRelationsScreen/$groupId")
+            }
+
+            MemberAvatarsSection(group, navController, groupId)
+
+            RecentTransactionsSection(navController, groupId)
+        }
+    }
+
+    ManagementBottomSheet(
+        isVisible = isBottomSheetVisible.value,
+        onDismiss = { isBottomSheetVisible.value = false },
+        groupId = groupId,
+        viewModel = viewModel,
+        navController = navController
+    )
+}
+
+@Composable
+fun UserInfoSection(user: User?, userImage: String?, groupTotalDebt: Double, onViewDebtRelations: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = BoxBackgroundColor)
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+        ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 8.dp)
+                verticalAlignment = Alignment.CenterVertically
             ) {
-
-                // Image with a circular frame
-                Image(
-                    painter = painterResource(id = getImageResourceById(1)), //要修改
-                    contentDescription = stringResource(id = R.string.image_contentDescription),
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(CircleShape)
-                        .border(
-                            BorderStroke(2.dp, Color.Gray), // Circular border with 2dp width and gray color
-                            shape = CircleShape
-                        )
-                        .background(color = Purple40),
-                    contentScale = ContentScale.Crop
-                )
-
-                Spacer(modifier = Modifier.width(8.dp)) // Space between image and card
-
-                // Debt Relationship Card
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f), // Let the Card take the remaining space
-                    elevation = 4.dp,
-                    shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(2.dp, Color.Gray),
-                    backgroundColor = BoxBackgroundColor
-                ) {
-                    Column(modifier = Modifier.padding(8.dp)) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            //Spacer(modifier = Modifier.weight(1f))
-                            Text(
-                                text = "您尚有",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontSize = 20.sp,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(start = 20.dp)
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .width(150.dp) // 固定寬度
-                                    .padding(4.dp) // 調整內邊距
-                                    .background(
-                                        color = when {
-                                            totalDebt < 0 -> Color(0xF3FF8B8B) // 負數時為紅色
-                                            totalDebt > 0 -> Green // 正數時為綠色
-                                            else -> Orange4 // 0 為淺黃色
-                                        },
-                                        shape = RoundedCornerShape(8.dp) // 圓角背景
-                                    ),
-                                contentAlignment = Alignment.BottomStart
-                            ) {
-                                Text(
-                                    text = when {
-                                        totalDebt < 0 -> "應付 : ${-totalDebt}" // 負數時為紅色
-                                        totalDebt > 0 -> "應收 : $totalDebt" // 正數時為綠色
-                                        else -> "帳務已結清" // 0 為淺黃色
-                                    },
-                                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
-                                    modifier = Modifier.padding(8.dp) // 調整文字的內邊距
-                                )
-                            }
-                        }
-
-                        Button(
-                            onClick = {
-                                navController.navigate("deptRelationsScreen/$groupId")
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = HightlightWhiteColor  // Use containerColor instead of backgroundColor
-                            ),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 8.dp)
-                        ) {
-                            Text(
-                                text = "查看所有債務關係",
-                                color = Color.Black
-                            )
-                        }
-                    }
-
-//                     val relevantDeptRelations = deptRelations.values.flatten()
-//                         .filter { it.from == currentUserId || it.to == currentUserId }
-//                         .take(2)
-
-//                     relevantDeptRelations.forEach { relation ->
-//                         var fromName by remember { mutableStateOf("") }
-//                         var toName by remember { mutableStateOf("") }
-//                         var fromUrl by remember { mutableStateOf("") }
-//                         var toUrl by remember { mutableStateOf("") }
-
-//                         LaunchedEffect(relation.from, relation.to) {
-//                             fromName = viewModel.getUserName(relation.from)
-//                             toName = viewModel.getUserName(relation.to)
-//                             fromUrl = avatarViewModel.loadAvatar(relation.from).toString()
-//                             toUrl = avatarViewModel.loadAvatar(relation.to).toString()
-//                         }
-
-//                         GroupedDeptRelationItem(
-//                             viewModel = viewModel,
-//                             fromName = fromName,
-//                             toName = toName,
-//                             fromUrl = relation.from,
-//                             toUrl = relation.to,
-//                             totalAmount = relation.amount,
-//                             debtRelations = listOf(relation),
-//                             groupId = groupId
-//                         )
-//                     }
-
-//                     // Button to view all debt relations
-//                     Button(
-//                         onClick = {
-//                             navController.navigate("deptRelationsScreen/$groupId")
-//                         },
-//                         modifier = Modifier
-//                             .fillMaxWidth()
-//                             .padding(top = 8.dp)
-//                     ) {
-//                         Text("查看所有債務關係")
-//                     }
-                }
-            }
-
-            // New Box with Title "近期交易" and Button in TopBar style
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 8.dp)
-                    .background(Color.LightGray) // Change background color as desired
-                    .border(
-                        BorderStroke(2.dp, Color.Gray), // Circular border with 2dp width and blue color
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .background(
-                        color = BoxBackgroundColor,
-                        shape = RoundedCornerShape(8.dp) // 圓角背景
-                    ),
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
+                UserAvatar(userImage)
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
                     Text(
-                        text = "近期交易",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontSize = 20.sp,
-                        color = Color.Black, // Text color, can be customized
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 56.dp)
+                        text = user?.name ?: "User Name",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "在這個群組",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            DebtInfoCard(groupTotalDebt, onViewDebtRelations)
+        }
+    }
+}
 
-                    Button(
-                        onClick = {
-                            navController.navigate("groupTest/$groupId")
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = HightlightWhiteColor
-                        ),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 4.dp)
-                            .fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "新增交易",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color.Black
-                        )
+@Composable
+fun UserAvatar(userImage: String?) {
+    Box(
+        modifier = Modifier
+            .size(80.dp)
+            .clip(CircleShape)
+            .border(2.dp, Orange1, CircleShape)
+    ) {
+        if (userImage != null) {
+            AsyncImage(
+                model = coil.request.ImageRequest.Builder(LocalContext.current)
+                    .data(userImage)
+                    .crossfade(true)
+                    .build(),
+                placeholder = painterResource(R.drawable.ic_user_place_holder),
+                contentDescription = "User Image",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            Image(
+                painter = painterResource(R.drawable.ic_user_place_holder),
+                contentDescription = "User Image",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    }
+}
+
+@Composable
+fun DebtInfoCard(groupTotalDebt: Double, onViewDebtRelations: () -> Unit) {
+    Column {
+        DebtAmountBox(groupTotalDebt)
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(
+            onClick = onViewDebtRelations,
+            colors = ButtonDefaults.buttonColors(containerColor = Orange1),
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("查看所有債務關係", color = Color.White)
+        }
+    }
+}
+
+@Composable
+fun DebtAmountBox(amount: Double) {
+    val (backgroundColor, textColor) = when {
+        amount < 0 -> Color(0xFFFFA8A8) to Color.Red
+        amount > 0 -> Color(0xFFC6FFD5) to Green
+        else -> Color(0xFFFFEEBB) to Orange4
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(backgroundColor, RoundedCornerShape(8.dp))
+            .padding(16.dp)
+    ) {
+        Text(
+            text = when {
+                amount < 0 -> "應付金額"
+                amount > 0 -> "應收金額"
+                else -> "帳務已結清"
+            },
+            style = MaterialTheme.typography.bodyLarge,
+            color = Color.Gray,
+            modifier = Modifier.align(Alignment.TopStart)
+        )
+        Text(
+            text = when {
+                amount != 0.0 -> "NT$ ${kotlin.math.abs(amount)}"
+                else -> "NT$ 0"
+            },
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = textColor,
+            modifier = Modifier.align(Alignment.BottomEnd)
+        )
+    }
+}
+
+@Composable
+fun MemberAvatarsSection(group: Group?, navController: NavController, groupId: String) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = BoxBackgroundColor)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                "群組成員",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(group?.assignedTo ?: emptyList()) { memberId ->
+                    MemberAvatar(memberId)
+                }
+                item {
+                    AddMemberButton {
+                        navController.navigate("Group_Invite/$groupId")
                     }
                 }
             }
-            // Add ManagementBottomSheet call here
-            ManagementBottomSheet(
-                isVisible = isBottomSheetVisible.value,
-                onDismiss = { isBottomSheetVisible.value = false }, // Set visibility to false to dismiss
-                groupId = groupId,
-                viewModel = viewModel,
-                navController = navController
+        }
+    }
+}
+
+@Composable
+fun MemberAvatar(memberId: String) {
+    Box(
+        modifier = Modifier
+            .size(60.dp)
+            .clip(CircleShape)
+            .border(2.dp, Orange1, CircleShape)
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_user_place_holder),
+            contentDescription = "Member Avatar",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+    }
+}
+
+@Composable
+fun AddMemberButton(onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(60.dp)
+            .clip(CircleShape)
+            .border(2.dp, Orange1, CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = "Add Member",
+            tint = Orange1,
+            modifier = Modifier.size(24.dp)
+        )
+    }
+}
+
+@Composable
+fun RecentTransactionsSection(navController: NavController, groupId: String) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = BoxBackgroundColor)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "近期交易",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 16.dp)
             )
+            Button(
+                onClick = { navController.navigate("groupTest/$groupId") },
+                colors = ButtonDefaults.buttonColors(containerColor = Orange1),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("新增交易", style = MaterialTheme.typography.bodyLarge, color = Color.White)
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            // Here you would add a list of recent transactions
+            Text("No recent transactions", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
         }
     }
 }
@@ -328,65 +333,62 @@ fun ManagementBottomSheet(
     navController: NavController
 ) {
     CustomBottomSheet(isVisible = isVisible, onDismiss = onDismiss) {
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
-                .background(Color.LightGray) // You can set the background color as desired
-                .border(BorderStroke(2.dp, Color.Gray), shape = RoundedCornerShape(8.dp)) // Optional border
-                .heightIn(min = 200.dp, max = 400.dp),// Set minimum and maximum height here
+                .padding(16.dp)
+                .background(Color.White, RoundedCornerShape(16.dp))
+                .border(BorderStroke(1.dp, Color.LightGray), RoundedCornerShape(16.dp))
         ) {
-
-            Button(
+            Text(
+                "群組管理",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(16.dp)
+            )
+            Divider()
+            BottomSheetButton(
+                text = "成員",
+                icon = Icons.Default.Add,
+                onClick = { navController.navigate("memberListScreen/$groupId") }
+            )
+            BottomSheetButton(
+                text = "群組邀請連結",
+                icon = Icons.Default.Add,
+                onClick = { navController.navigate("Group_Invite/$groupId") }
+            )
+            Divider()
+            BottomSheetButton(
+                text = "刪除群組",
+                icon = Icons.Default.Add,
                 onClick = {
-                    navController.navigate("memberListScreen/$groupId")
+                    viewModel.deleteGroup(groupId)
+                    navController.navigateUp()
                 },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Brown5
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 4.dp)
-            ) {
-                Text(text = "成員")
-            }
+                color = Color.Red
+            )
+        }
+    }
+}
 
-            Button(
-                onClick = {
-                    navController.navigate("Group_Invite/$groupId")
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Brown5
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = "群組邀請連結")
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = {
-                    groupId?.let {
-                        viewModel.deleteGroup(groupId)
-                        navController.navigateUp()
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Red,
-                    contentColor = Color.White
-                ),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_delete),
-                    contentDescription = "Delete Group"
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(text = "刪除群組")
-            }
+@Composable
+fun BottomSheetButton(
+    text: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    color: Color = Color.Black
+) {
+    TextButton(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(icon, contentDescription = null, tint = color)
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(text, color = color, style = MaterialTheme.typography.bodyLarge)
         }
     }
 }
