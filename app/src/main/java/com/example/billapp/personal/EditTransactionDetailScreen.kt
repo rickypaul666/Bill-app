@@ -47,10 +47,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -63,10 +66,17 @@ import com.example.billapp.evaluateExpression
 import com.example.billapp.models.PersonalTransaction
 import com.example.billapp.models.TransactionCategory
 import com.example.billapp.ui.theme.Black
+import com.example.billapp.ui.theme.Brown1
+import com.example.billapp.ui.theme.Brown3
+import com.example.billapp.ui.theme.Brown7
 import com.example.billapp.ui.theme.ButtonGrayColor
 import com.example.billapp.ui.theme.ButtonGreenColor
+import com.example.billapp.ui.theme.DarkGray
+import com.example.billapp.ui.theme.DarkerGray
 import com.example.billapp.ui.theme.MainBackgroundColor
+import com.example.billapp.ui.theme.Orange1
 import com.example.billapp.ui.theme.PrimaryFontColor
+import com.example.billapp.ui.theme.VeryDarkGray
 import com.example.billapp.viewModel.MainViewModel
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
@@ -133,8 +143,8 @@ fun EditTransactionDetailScreen(
                     }
                 },
                 colors = topAppBarColors(
-                    containerColor = MainBackgroundColor,
-                    titleContentColor = Black,
+                    containerColor = Brown7,
+                    titleContentColor = Color.Black,
                 )
             )
         },
@@ -152,7 +162,7 @@ fun EditTransactionDetailScreen(
                 .padding(innerPadding)
                 .background(MainBackgroundColor)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
+//            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Type Selection
@@ -163,25 +173,27 @@ fun EditTransactionDetailScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Button(
-                    onClick = { viewModel.setTransactionType("收入") },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (type == "收入") PrimaryFontColor else ButtonGrayColor
-                    ),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(text = "收入", color = Color.Black)
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Button(
                     onClick = { viewModel.setTransactionType("支出") },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor =  if(type == "支出") PrimaryFontColor else ButtonGrayColor
+                        containerColor = if (type == "支出") Orange1 else ButtonGrayColor
                     ),
+                    elevation = if (type == "支出") ButtonDefaults.buttonElevation(6.dp) else ButtonDefaults.buttonElevation(0.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(text = "支出", color = Color.Black)
+                    Text(text = "支出",color = if (type == "支出")  VeryDarkGray  else DarkGray,fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.width(7.dp))
+
+                Button(
+                    onClick = { viewModel.setTransactionType("收入") },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (type == "收入") Orange1 else ButtonGrayColor
+                    ),
+                    elevation =  if (type == "收入") ButtonDefaults.buttonElevation(6.dp) else ButtonDefaults.buttonElevation(0.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(text = "收入",color = if (type == "收入") VeryDarkGray  else DarkGray,fontWeight = FontWeight.Bold)
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -191,10 +203,10 @@ fun EditTransactionDetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
             ) {
-                TextField(
+                StylishTextField(
                     value = date.toDate().let { dateFormat.format(it) } ?: "",
                     onValueChange = { },
-                    label = { Text("Date") },
+                    label = "Date",
                     modifier = Modifier.fillMaxWidth(),
                     readOnly = true
                 )
@@ -212,7 +224,7 @@ fun EditTransactionDetailScreen(
             Box(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                TextField(
+                StylishTextField(
                     value = amountInput,
                     onValueChange = {
                         amountInput = it
@@ -226,8 +238,8 @@ fun EditTransactionDetailScreen(
                             }
                         }
                     },
-                    label = { Text("Amount") },
-                    modifier = Modifier.fillMaxWidth(),
+                    label = "Amount",
+                    readOnly = true
                 )
                 Box(
                     modifier = Modifier
@@ -283,24 +295,24 @@ fun EditTransactionDetailScreen(
 //            Text(text = "type: $type")
 
             // Note Field
-            TextField(
+            StylishTextField(
                 value = note,
                 onValueChange = { newNote ->
                     viewModel.setNote(newNote)
                 },
-                label = { Text("Note") },
-                modifier = Modifier.fillMaxWidth()
+                label = "Note",
+                readOnly = false
             )
             Spacer(modifier = Modifier.height(16.dp))
 
             // Name Field
-            TextField(
+            StylishTextField(
                 value = name,
                 onValueChange = { newName ->
                     viewModel.setName(newName)
                 },
-                label = { Text("Name") },
-                modifier = Modifier.fillMaxWidth()
+                label = "Name",
+                readOnly = false
             )
             Spacer(modifier = Modifier.height(16.dp))
 //            Text(text = "當前時間戳記: $currentTimestamp")
@@ -311,14 +323,12 @@ fun EditTransactionDetailScreen(
                 expanded = expanded,
                 onExpandedChange = { expanded = !expanded }
             ) {
-                TextField(
+                StylishTextField(
                     value = selectedCategory,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("選擇類別") },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                    },
+                    label = "選擇類別",
+
                     modifier = Modifier
                         .fillMaxWidth()
                         .menuAnchor()
@@ -373,7 +383,8 @@ fun EditTransactionDetailScreen(
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = ButtonGreenColor),
                 enabled = amountInput.isNotBlank() && name.isNotBlank() && amountInput.toDoubleOrNull() != 0.0,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
             ) {
                 Text("Save")
             }
