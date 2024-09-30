@@ -13,7 +13,7 @@ val Pink40 = Color(0xFF7D5260)
 
 //主要顏色們 Main color
 val MainBackgroundColor = Color(0xFFE4DFCB)
-val MainCardRedColor = Color(0xFFD47D4E)
+val MainCardRedColor = Color(0xFFD4634E)
 val BoxBackgroundColor = Color(0xFFBBB0A2)
 val ItemAddMainColor = Color(0xFFD9C9B9)
 val HightlightWhiteColor = Color(0xFFD6D7D2)
