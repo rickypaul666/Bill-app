@@ -2,7 +2,6 @@ package com.example.billapp.group
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -24,7 +23,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.billapp.CustomBottomSheet
@@ -57,7 +55,7 @@ fun GroupSettingScreen(
     val user by viewModel.user.collectAsState()
 
     LaunchedEffect(groupId) {
-        viewModel.getGroupDeptRelations(groupId)
+        viewModel.getGroupDebtRelations(groupId)
         viewModel.calculateTotalDeptForGroup(groupId)
     }
 

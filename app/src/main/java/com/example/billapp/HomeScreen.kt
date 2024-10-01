@@ -469,7 +469,7 @@ fun BusinessCardFront(
                 Spacer(modifier = Modifier.height(8.dp))
                 ProgressBar("社交值", level, 100, Brown2)
                 Spacer(modifier = Modifier.height(8.dp))
-                ProgressBar("血條", expense.toInt(), budget, Red)
+                ProgressBar("血條", budget-expense.toInt(), budget, Red)
             }
         }
     }

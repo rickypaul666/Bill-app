@@ -17,7 +17,6 @@ import com.example.billapp.utils.Constants
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +25,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 class MainViewModel : ViewModel() {
     private val _user = MutableStateFlow<User?>(null)
@@ -155,6 +155,49 @@ class MainViewModel : ViewModel() {
     fun updateUserBudget(budget: Int) {
         FirebaseRepository.updateUserBudget(budget)
     }
+
+    private val _debtCount = MutableStateFlow(0)
+    val debtCount: StateFlow<Int> = _debtCount
+
+    private val _totalTrustPenalty = MutableStateFlow(0)
+    val totalTrustPenalty: StateFlow<Int> = _totalTrustPenalty
+
+    fun checkUserDebtRelations(userId: String) {
+        viewModelScope.launch {
+            try {
+                val groups = FirebaseRepository.getUserGroups()
+                val now = System.currentTimeMillis()
+                val fiveDaysInMillis = TimeUnit.DAYS.toMillis(5)
+                var totalPenalty = 0
+                var unpaidDebtCount = 0
+
+                groups.forEach { group ->
+                    group.debtRelations.forEach { debtRelation ->
+                        if (debtRelation.to == userId) {
+                            debtRelation.lastRemindTimestamp?.let { lastRemindTime ->
+                                val timeDifference = now - lastRemindTime.toDate().time
+                                if (timeDifference > fiveDaysInMillis) {
+                                    unpaidDebtCount++
+                                    val daysOverdue = TimeUnit.MILLISECONDS.toDays(timeDifference) - 5
+                                    val trustPenalty = daysOverdue // 可以根據需要調整規則
+                                    totalPenalty += trustPenalty.toInt()
+                                    updateUserTrustLevel(userId, -trustPenalty.toInt())
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 更新State
+                _debtCount.value = unpaidDebtCount
+                _totalTrustPenalty.value = totalPenalty
+
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "Error checking debt relations", e)
+            }
+        }
+    }
+
 
     private fun checkCurrentUser() {
         viewModelScope.launch {
@@ -767,7 +810,7 @@ class MainViewModel : ViewModel() {
                             from = dividerId,
                             to = payerId,
                             amount = amountPerDivider / transaction.payer.size,
-                            lastRemindTimestamp = null
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -793,7 +836,7 @@ class MainViewModel : ViewModel() {
                             from = userId,
                             to = payerId,
                             amount = amountOwed,
-                            lastRemindTimestamp = null
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -820,7 +863,7 @@ class MainViewModel : ViewModel() {
                             from = dividerId,
                             to = payerId,
                             amount = amountOwed,
-                            lastRemindTimestamp = null
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -842,7 +885,7 @@ class MainViewModel : ViewModel() {
                             from = userId,
                             to = payerId,
                             amount = amount.toDouble() / transaction.payer.size,
-                            lastRemindTimestamp = null
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -868,7 +911,7 @@ class MainViewModel : ViewModel() {
                             from = userId,
                             to = payerId,
                             amount = amountOwed,
-                            lastRemindTimestamp = null
+                            lastRemindTimestamp = Timestamp.now()
                         )
                     )
                 }
@@ -898,7 +941,7 @@ class MainViewModel : ViewModel() {
         _shareMethod.value = method
     }
 
-    fun getGroupDeptRelations(groupId: String) {
+    fun getGroupDebtRelations(groupId: String) {
         viewModelScope.launch {
             try {
                 val groupIdDeptRelations = FirebaseRepository.getGroupDeptRelations(groupId)

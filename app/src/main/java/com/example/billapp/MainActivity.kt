@@ -9,7 +9,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
@@ -20,6 +29,9 @@ import com.example.billapp.viewModel.MainViewModel
 import com.example.billapp.ui.theme.custom_jf_Typography
 import java.util.concurrent.TimeUnit
 import androidx.work.Constraints
+import com.example.billapp.ui.theme.ButtonRedColor
+import com.example.billapp.ui.theme.MainBackgroundColor
+import com.example.billapp.ui.theme.PrimaryFontColor
 import com.google.firebase.Firebase
 import com.google.firebase.messaging.messaging
 
@@ -60,10 +72,11 @@ class MainActivity : ComponentActivity() {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         installSplashScreen()
         if (viewModel.isUserLoggedIn.value) {
+            viewModel.checkUserDebtRelations(viewModel.getCurrentUserID())
             setupDailyExperienceWork()
         }
         setContent {
-            MaterialTheme (
+            MaterialTheme(
                 typography = custom_jf_Typography
             ) {
                 MainScreen(
@@ -73,6 +86,22 @@ class MainActivity : ComponentActivity() {
                         requestPermissionLauncher.launch(permission)
                     }
                 )
+
+                // 觀察 debtCount 和 totalTrustPenalty
+                val debtCount by viewModel.debtCount.collectAsState()
+                val totalTrustPenalty by viewModel.totalTrustPenalty.collectAsState()
+
+                // 管理對話框的顯示狀態
+                var isDialogVisible by remember { mutableStateOf(true) }
+
+                // 當 debtCount 大於 0 且 isDialogVisible 時顯示對話框
+                if (debtCount > 0 && isDialogVisible) {
+                    DebtReminderDialog(
+                        debtCount = debtCount,
+                        totalTrustPenalty = totalTrustPenalty,
+                        onDismiss = { isDialogVisible = false } // 關閉對話框
+                    )
+                }
             }
         }
     }
@@ -89,6 +118,38 @@ class MainActivity : ComponentActivity() {
             "dailyExperienceIncrease",
             ExistingPeriodicWorkPolicy.KEEP,
             dailyWorkRequest
+        )
+    }
+}
+
+@Composable
+fun DebtReminderDialog(debtCount: Int, totalTrustPenalty: Int, onDismiss: () -> Unit) {
+    if (debtCount > 0) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                Text(
+                    text = "提醒",
+                    color = PrimaryFontColor
+                )
+            },
+            text = {
+                Text(
+                    text = "目前有 $debtCount 筆債務未償還，信任值扣除 $totalTrustPenalty 點",
+                    color = PrimaryFontColor
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = onDismiss,
+                    colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
+                        contentColor = ButtonRedColor
+                    )
+                ) {
+                    Text("確認")
+                }
+            },
+            containerColor = MainBackgroundColor // 使用主背景色
         )
     }
 }
