@@ -1,9 +1,13 @@
 package com.example.billapp.dept_relation
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -89,17 +93,48 @@ fun DeptRelationDetailItem(
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button(onClick = { showBottomSheet = false }) {
-                        Text("Cancel")
+                    IconButton(
+                        onClick = {
+                            val linePayUri = Uri.parse("linepay://")
+                            val linePayIntent = Intent(Intent.ACTION_VIEW, linePayUri)
+                            try {
+                                context.startActivity(linePayIntent)
+                            } catch (e: ActivityNotFoundException) {
+                                val webIntent = Intent(
+                                    Intent.ACTION_VIEW,
+                                    Uri.parse("https://pay.line.me/portal/tw/main")
+                                )
+                                context.startActivity(webIntent)
+                            }
+                        }
+                    ) {
+                        Icon(
+                            Icons.Default.Payment,
+                            contentDescription = "Line Pay",
+                            tint = Color(0xFF00B900) // Line's brand green color
+                        )
                     }
-                    Button(onClick = {
-                        viewModel.deleteDeptRelation(groupId = groupId, deptRelationId = debtRelation.id)
-                        viewModel.loadGroupDeptRelations(groupId)
-                        showBottomSheet = false
-                    }) {
-                        Text("Confirm")
+
+                    Row {
+                        Button(
+                            onClick = { showBottomSheet = false },
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            Text("Cancel")
+                        }
+                        Button(onClick = {
+                            viewModel.deleteDeptRelation(
+                                groupId = groupId,
+                                deptRelationId = debtRelation.id
+                            )
+                            viewModel.loadGroupDeptRelations(groupId)
+                            showBottomSheet = false
+                        }) {
+                            Text("Confirm")
+                        }
                     }
                 }
             }
