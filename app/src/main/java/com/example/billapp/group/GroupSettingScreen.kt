@@ -2,6 +2,7 @@ package com.example.billapp.group
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -10,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,10 +30,15 @@ import coil.compose.AsyncImage
 import com.example.billapp.CustomBottomSheet
 import com.example.billapp.R
 import com.example.billapp.models.Group
+import com.example.billapp.models.GroupTransaction
 import com.example.billapp.models.User
 import com.example.billapp.ui.theme.*
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
+import com.google.accompanist.pager.ExperimentalPagerApi
+import com.google.accompanist.pager.HorizontalPager
+import com.google.accompanist.pager.HorizontalPagerIndicator
+import com.google.accompanist.pager.rememberPagerState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,7 +95,7 @@ fun GroupSettingScreen(
 
             MemberAvatarsSection(group, navController, groupId)
 
-            RecentTransactionsSection(navController, groupId)
+            RecentTransactionsSection(navController, groupId, viewModel)
         }
     }
 
@@ -126,12 +133,12 @@ fun UserInfoSection(user: User?, userImage: String?, groupTotalDebt: Double, onV
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "在這個群組",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Gray
-                    )
+//                    Spacer(modifier = Modifier.height(4.dp))
+//                    Text(
+//                        text = "在這個群組",
+//                        style = MaterialTheme.typography.bodyMedium,
+//                        color = Color.Gray
+//                    )
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -224,7 +231,11 @@ fun DebtAmountBox(amount: Double) {
 }
 
 @Composable
-fun MemberAvatarsSection(group: Group?, navController: NavController, groupId: String) {
+fun MemberAvatarsSection(
+    group: Group?,
+    navController: NavController,
+    groupId: String
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -234,12 +245,28 @@ fun MemberAvatarsSection(group: Group?, navController: NavController, groupId: S
         colors = CardDefaults.cardColors(containerColor = BoxBackgroundColor)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                "群組成員",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "群組成員",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Button(
+                    onClick = { navController.navigate("memberListScreen/$groupId") },
+                    colors = ButtonDefaults.buttonColors(containerColor = Orange1),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(Icons.Filled.List, contentDescription = "Member List")
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("詳細列表", style = MaterialTheme.typography.bodyMedium, color = Color.White)
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -292,8 +319,21 @@ fun AddMemberButton(onClick: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
-fun RecentTransactionsSection(navController: NavController, groupId: String) {
+fun RecentTransactionsSection(
+    navController: NavController,
+    groupId: String,
+    viewModel: MainViewModel
+) {
+    val transactions by viewModel.groupTransactions.collectAsState()
+    val pagerState = rememberPagerState()
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(groupId) {
+        viewModel.loadGroupTransactions(groupId)
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -303,23 +343,105 @@ fun RecentTransactionsSection(navController: NavController, groupId: String) {
         colors = CardDefaults.cardColors(containerColor = BoxBackgroundColor)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "近期交易",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            Button(
-                onClick = { navController.navigate("groupTest/$groupId") },
-                colors = ButtonDefaults.buttonColors(containerColor = Orange1),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxWidth()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("新增交易", style = MaterialTheme.typography.bodyLarge, color = Color.White)
+                Text(
+                    text = "近期交易",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Button(
+                    onClick = { navController.navigate("groupTest/$groupId") },
+                    colors = ButtonDefaults.buttonColors(containerColor = Orange1),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = "Add Transaction")
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("新增交易", style = MaterialTheme.typography.bodyMedium, color = Color.White)
+                }
             }
             Spacer(modifier = Modifier.height(16.dp))
-            // Here you would add a list of recent transactions
-            Text("No recent transactions", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (transactions.isNotEmpty()) {
+                HorizontalPager(
+                    count = transactions.size,
+                    state = pagerState,
+                    modifier = Modifier.height(150.dp)
+                ) { page ->
+                    TransactionItem(transactions[page], viewModel)
+                }
+
+                HorizontalPagerIndicator(
+                    pagerState = pagerState,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(16.dp),
+                )
+            } else {
+                Text(
+                    "No transactions yet",
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun TransactionItem(transaction: GroupTransaction, viewModel: MainViewModel) {
+    var payerName by remember { mutableStateOf("") }
+
+    LaunchedEffect(transaction.payer) {
+        if (transaction.payer.isNotEmpty()) {
+            payerName = viewModel.getUserName(transaction.payer[0])
+        }
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8D8)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = transaction.name,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "付款人: $payerName",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "日期: ${transaction.date?.toDate()?.toString() ?: "N/A"}",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "¥${transaction.amount}",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = transaction.type,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (transaction.type == "收入") Color.Green else Color.Red
+                )
+            }
         }
     }
 }
