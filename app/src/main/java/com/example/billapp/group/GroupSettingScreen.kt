@@ -93,7 +93,7 @@ fun GroupSettingScreen(
                 navController.navigate("deptRelationsScreen/$groupId")
             }
 
-            MemberAvatarsSection(group, navController, groupId)
+            MemberAvatarsSection(avatarViewModel, group, navController, groupId)
 
             RecentTransactionsSection(navController, groupId, viewModel)
         }
@@ -197,7 +197,7 @@ fun DebtInfoCard(groupTotalDebt: Double, onViewDebtRelations: () -> Unit) {
 fun DebtAmountBox(amount: Double) {
     val (backgroundColor, textColor) = when {
         amount < 0 -> Color(0xFFFFA8A8) to Color.Red
-        amount > 0 -> Color(0xFFC6FFD5) to Green
+        amount > 0 -> Color(0xFFC6FFD5) to Color(0xFF228B22)
         else -> Color(0xFFFFEEBB) to Orange4
     }
 
@@ -232,6 +232,7 @@ fun DebtAmountBox(amount: Double) {
 
 @Composable
 fun MemberAvatarsSection(
+    avatarViewModel: AvatarViewModel,
     group: Group?,
     navController: NavController,
     groupId: String
@@ -271,7 +272,7 @@ fun MemberAvatarsSection(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(group?.assignedTo ?: emptyList()) { memberId ->
-                    MemberAvatar(memberId)
+                    MemberAvatar(avatarViewModel, memberId)
                 }
                 item {
                     AddMemberButton {
@@ -284,19 +285,45 @@ fun MemberAvatarsSection(
 }
 
 @Composable
-fun MemberAvatar(memberId: String) {
+fun MemberAvatar(avatarViewModel: AvatarViewModel, memberId: String) {
     Box(
         modifier = Modifier
             .size(60.dp)
             .clip(CircleShape)
             .border(2.dp, Orange1, CircleShape)
     ) {
-        Image(
-            painter = painterResource(R.drawable.ic_user_place_holder),
-            contentDescription = "Member Avatar",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
+        var imageUrl by remember { mutableStateOf("") }
+
+        LaunchedEffect(memberId) {
+            imageUrl = avatarViewModel.loadAvatar(memberId).toString()
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(CircleShape)
+        ) {
+            if (imageUrl.isNotEmpty()) {
+                AsyncImage(
+                    model = coil.request.ImageRequest.Builder(LocalContext.current)
+                        .data(imageUrl)
+                        .crossfade(true)
+                        .build(),
+                    placeholder = painterResource(R.drawable.ic_user_place_holder),
+                    contentDescription = "User Image",
+                    error = painterResource(R.drawable.ic_user_place_holder),
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Image(
+                    painter = painterResource(R.drawable.ic_user_place_holder),
+                    contentDescription = "User Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
     }
 }
 
