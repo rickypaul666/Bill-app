@@ -64,6 +64,9 @@ fun GroupTest(
     var isBottomSheetVisible by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
+    val currentUser = viewModel.user.collectAsState().value
+    val userId by remember { mutableStateOf(currentUser?.id ?: "") }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -290,6 +293,7 @@ fun GroupTest(
                     viewModel.addGroupTransaction(groupId)
                     viewModel.loadGroupTransactions(groupId)
                     viewModel.loadGroupDebtRelations(groupId)
+                    viewModel.updateUserExperience(userId,5)
                     navController.popBackStack()
                 },
                 colors = ButtonDefaults.buttonColors(

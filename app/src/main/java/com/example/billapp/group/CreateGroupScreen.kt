@@ -32,6 +32,8 @@ fun CreateGroup(
     var groupName by remember { mutableStateOf("") }
     var selectedImageId by remember { mutableStateOf(0) }
     var showBottomSheet by remember { mutableStateOf(false) }
+    val user by viewModel.user.collectAsState()
+    val userId by remember { mutableStateOf(user?.id ?: "") }
 
     val groupCreationStatus by viewModel.groupCreationStatus.collectAsState()
 
@@ -85,7 +87,8 @@ fun CreateGroup(
 
             Button(
                 onClick = {
-                    viewModel.createGroupWtihImageId(groupName, selectedImageId)
+                    viewModel.createGroupWithImageId(groupName, selectedImageId)
+                    viewModel.updateUserExperience(userId,10)
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {

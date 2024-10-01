@@ -17,5 +17,6 @@ data class DebtRelation(
     @PropertyName("amount")
     val amount: Double = 0.0,
     @PropertyName("lastRemindTimestamp")
-    val lastRemindTimestamp: Timestamp? = null
+    val lastRemindTimestamp: Timestamp? = null,
+    val lastPenaltyDate: Timestamp? = null
 ) : Parcelable

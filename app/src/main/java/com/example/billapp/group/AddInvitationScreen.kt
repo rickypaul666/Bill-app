@@ -29,6 +29,8 @@ fun AddInvitationScreen(
     var isError by remember { mutableStateOf(false) }
     val currentUser = viewModel.user.collectAsState().value
 
+    val userId by remember { mutableStateOf(currentUser?.id ?: "") }
+
 
     Scaffold(
         topBar = {
@@ -85,6 +87,7 @@ fun AddInvitationScreen(
                     if (groupLink.isNotBlank()) {
                         // 根據 grouplink(groupid) 將當前的User新增到該群組的 assignedTo
                         viewModel.assignUserToGroup(groupLink, currentUser?.id ?: "")
+                        viewModel.updateUserExperience(userId,10)
                         navController.popBackStack()
                     } else {
                         isError = true

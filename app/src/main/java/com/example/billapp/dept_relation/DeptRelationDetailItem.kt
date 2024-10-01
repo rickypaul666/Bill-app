@@ -36,6 +36,9 @@ fun DeptRelationDetailItem(
     var toName by remember { mutableStateOf("") }
     val canRemind = lastRemindTime == null || (System.currentTimeMillis() - lastRemindTime!!.toDate().time) > 86400000 // 24 hours in ms
 
+    val currentUser = viewModel.user.collectAsState().value
+    val userId by remember { mutableStateOf(currentUser?.id ?: "") }
+
     LaunchedEffect(debtRelation.from, debtRelation.to) {
         fromName = viewModel.getUserName(debtRelation.from)
         toName = viewModel.getUserName(debtRelation.to)
@@ -131,6 +134,7 @@ fun DeptRelationDetailItem(
                                 debtRelationId = debtRelation.id
                             )
                             viewModel.loadGroupDebtRelations(groupId)
+                            viewModel.updateUserExperience(userId,5)
                             showBottomSheet = false
                         }) {
                             Text("Confirm")

@@ -156,23 +156,32 @@ class MainViewModel : ViewModel() {
         FirebaseRepository.updateUserBudget(budget)
     }
 
+    private val _lastCheckTimestamp = MutableStateFlow(0L)
     private val _debtCount = MutableStateFlow(0)
     val debtCount: StateFlow<Int> = _debtCount
-
     private val _totalTrustPenalty = MutableStateFlow(0)
     val totalTrustPenalty: StateFlow<Int> = _totalTrustPenalty
 
     fun checkUserDebtRelations(userId: String) {
         viewModelScope.launch {
             try {
+                val currentTime = System.currentTimeMillis()
+                val lastCheck = _lastCheckTimestamp.value
+
+                // 如果距離上次檢查不到24小時，則跳過
+                if (currentTime - lastCheck < TimeUnit.HOURS.toMillis(24)) {
+                    Log.d("MainViewModel", "距離上次檢查未滿24小時，跳過檢查")
+                    return@launch
+                }
+
                 Log.d("MainViewModel", "開始檢查用戶債務關係，用戶ID: $userId")
                 val groups = FirebaseRepository.getUserGroups()
                 Log.d("MainViewModel", "成功獲取用戶群組：${groups.size}")
 
-                val now = System.currentTimeMillis()
                 val fiveDaysInMillis = TimeUnit.DAYS.toMillis(5)
-                var totalPenalty = 0
-                var unpaidDebtCount = 0
+                var newUnpaidDebtCount = 0
+                var newTotalPenalty = 0
+
 
                 groups.forEachIndexed { index, group ->
                     Log.d("MainViewModel", "檢查群組 ${index + 1}/${groups.size}: ${group.name}")
@@ -180,24 +189,26 @@ class MainViewModel : ViewModel() {
 
                     group.debtRelations.forEach { debtRelation ->
                         Log.d("MainViewModel", "債務關係詳情：從 ${debtRelation.from} 到 ${debtRelation.to}，金額：${debtRelation.amount}")
+                        val lastPenaltyTime = debtRelation.lastPenaltyDate?.toDate()?.time
 
                         if (debtRelation.from == userId) {
                             Log.d("MainViewModel", "找到當前用戶的債務")
                             debtRelation.lastRemindTimestamp?.let { lastRemindTime ->
-                                val timeDifference = now - lastRemindTime.toDate().time
+                                val timeDifference = currentTime - lastRemindTime.toDate().time
                                 val daysOverdue = TimeUnit.MILLISECONDS.toDays(timeDifference)
                                 Log.d("MainViewModel", "上次提醒時間：${lastRemindTime.toDate()}, 超過天數：$daysOverdue")
 
-                                if (timeDifference > fiveDaysInMillis) {
-                                    unpaidDebtCount++
+                                if (timeDifference > fiveDaysInMillis && lastRemindTime.toDate().time > lastCheck && currentTime - lastPenaltyTime!! > TimeUnit.HOURS.toMillis(24)) {
+                                    newUnpaidDebtCount++
                                     val daysForPenalty = daysOverdue - 5
-                                    val trustPenalty = daysForPenalty
-                                    totalPenalty += trustPenalty.toInt()
-                                    Log.d("MainViewModel", "新增未付債務，當前未付總數：$unpaidDebtCount，新增懲罰：$trustPenalty，總懲罰：$totalPenalty")
+                                    val trustPenalty = daysForPenalty.toInt()
+                                    newTotalPenalty += trustPenalty
+                                    Log.d("MainViewModel", "新增未付債務，當前新增未付總數：$newUnpaidDebtCount，新增懲罰：$trustPenalty，新增總懲罰：$newTotalPenalty")
 
-                                    updateUserTrustLevel(userId, -trustPenalty.toInt())
+                                    updateUserTrustLevel(userId, -trustPenalty)
+                                    updateDebtLastPenaltyDate(group.id, debtRelation.id, currentTime)
                                 } else {
-                                    Log.d("MainViewModel", "債務未超過5天，不計入懲罰")
+                                    Log.d("MainViewModel", "債務未超過5天或已在上次檢查中計算過，不計入懲罰")
                                 }
                             } ?: Log.d("MainViewModel", "該債務關係沒有最後提醒時間")
                         }
@@ -205,9 +216,11 @@ class MainViewModel : ViewModel() {
                 }
 
                 // 更新State
-                _debtCount.value = unpaidDebtCount
-                _totalTrustPenalty.value = totalPenalty
-                Log.d("MainViewModel", "完成檢查，最終結果：未付債務數量=${_debtCount.value}，總懲罰=${_totalTrustPenalty.value}")
+                _debtCount.value += newUnpaidDebtCount
+                _totalTrustPenalty.value += newTotalPenalty
+                _lastCheckTimestamp.value = currentTime
+
+                Log.d("MainViewModel", "完成檢查，最終結果：未付債務總數=${_debtCount.value}，總懲罰=${_totalTrustPenalty.value}")
             } catch (e: Exception) {
                 Log.e("MainViewModel", "檢查用戶債務關係時出錯", e)
                 e.printStackTrace()
@@ -215,6 +228,15 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    private suspend fun updateDebtLastPenaltyDate(groupId: String, debtId: String, timestamp: Long) {
+        try {
+            FirebaseRepository.updateDebtLastPenaltyDate(groupId, debtId, timestamp)
+            Log.d("MainViewModel", "成功更新債務最後懲罰日期。群組ID: $groupId, 債務ID: $debtId")
+        } catch (e: Exception) {
+            Log.e("MainViewModel", "更新債務最後懲罰日期時發生錯誤", e)
+            // 這裡您可以選擇重試、顯示錯誤消息給用戶，或者採取其他錯誤處理策略
+        }
+    }
 
     private fun checkCurrentUser() {
         viewModelScope.launch {
@@ -228,7 +250,7 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    private fun loadUserData(userId: String) {
+    fun loadUserData(userId: String) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
@@ -572,7 +594,7 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun createGroupWtihImageId(groupName: String, imageId: Int) {
+    fun createGroupWithImageId(groupName: String, imageId: Int) {
         viewModelScope.launch {
             _groupCreationStatus.value = GroupCreationStatus.LOADING
             try {

@@ -92,6 +92,39 @@ object FirebaseRepository {
         }
     }
 
+    private const val GROUPS_COLLECTION = "groups"
+    private const val DEBT_RELATIONS_COLLECTION = "debtRelations"
+
+    suspend fun updateDebtLastPenaltyDate(groupId: String, debtId: String, timestamp: Long) {
+        try {
+            val db = FirebaseFirestore.getInstance()
+            val debtRelationRef = db.collection(GROUPS_COLLECTION)
+                .document(groupId)
+                .collection(DEBT_RELATIONS_COLLECTION)
+                .document(debtId)
+
+            // 使用 transaction 確保數據一致性
+            db.runTransaction { transaction ->
+                val snapshot = transaction.get(debtRelationRef)
+                if (snapshot.exists()) {
+                    Log.d("FirebaseRepository", "找到債務關係文檔，準備更新懲罰日期。債務ID: $debtId") // 確認是否找到匹配的文檔
+
+                    val updates = hashMapOf<String, Any>(
+                        "lastPenaltyDate" to Timestamp(timestamp / 1000, 0) // 將毫秒轉換為秒
+                    )
+                    transaction.update(debtRelationRef, updates)
+                } else {
+                    Log.w("FirebaseRepository", "未找到債務關係文檔，無法更新。債務ID: $debtId")
+                }
+            }.await()
+
+            Log.d("FirebaseRepository", "成功更新債務最後懲罰日期。群組ID: $groupId, 債務ID: $debtId")
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "更新債務最後懲罰日期時發生錯誤", e)
+            throw e
+        }
+    }
+
     fun updateUserFCMToken(userId: String) {
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (task.isSuccessful) {

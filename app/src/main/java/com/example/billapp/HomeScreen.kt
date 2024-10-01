@@ -465,9 +465,9 @@ fun BusinessCardFront(
                     .weight(1f)
                     .padding(16.dp)
             ) {
-                ProgressBar("信譽點數", trustLevel, 100, Brown1)
+                ProgressBar("信譽點數", trustLevel, 100, Color(0xFF1D8D1D))
                 Spacer(modifier = Modifier.height(8.dp))
-                ProgressBar("社交值", level, 100, Brown2)
+                ProgressBar("社交值", level, 100, Color(0xFFF86D80))
                 Spacer(modifier = Modifier.height(8.dp))
                 ProgressBar("血條", budget-expense.toInt(), budget, Red)
             }
