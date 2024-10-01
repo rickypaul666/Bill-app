@@ -172,7 +172,7 @@ fun DebtReminderDialog(debtCount: Int, totalTrustPenalty: Int, onDismiss: () -> 
             },
             text = {
                 Text(
-                    text = "目前有 $debtCount 筆債務未償還，信任值扣除 $totalTrustPenalty 點",
+                    text = "目前有 $debtCount 筆債務未償還，信譽點數扣除 $totalTrustPenalty 點",
                     color = PrimaryFontColor
                 )
             },
