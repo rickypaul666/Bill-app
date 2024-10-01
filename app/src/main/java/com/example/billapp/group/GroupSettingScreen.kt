@@ -212,7 +212,7 @@ fun DebtAmountBox(amount: Double) {
                 else -> "帳務已結清"
             },
             style = MaterialTheme.typography.bodyLarge,
-            color = Color.Gray,
+            color = Color.Black,
             modifier = Modifier.align(Alignment.TopStart)
         )
         Text(
