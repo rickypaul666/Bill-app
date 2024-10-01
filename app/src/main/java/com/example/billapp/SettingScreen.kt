@@ -32,6 +32,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
+import com.example.billapp.models.User
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
 import kotlinx.coroutines.launch
@@ -103,68 +104,151 @@ fun ProfileCard(
 
     val level by remember { mutableStateOf(viewModel.getUserLevel()) }
     val trustLevel by remember { mutableStateOf(viewModel.getUserTrustLevel()) }
-    val budget by remember { mutableStateOf(viewModel.getUserBudget().toString()) } // Add budget state
+    val budget by remember { mutableStateOf(viewModel.getUserBudget().toString()) }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .border(2.dp, lightBrown, RoundedCornerShape(8.dp)), // Add border with color and shape
-        colors = CardDefaults.cardColors(containerColor = Color(0xD2FFF3E6)), // Set card background color here
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .border(
+                width = 2.dp,
+                color = lightBrown,
+                shape = RoundedCornerShape(16.dp)
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xD2FFF3E6)
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 6.dp,
+            pressedElevation = 8.dp
+        ),
+        shape = RoundedCornerShape(16.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(100.dp) // Adjust the size as needed
-                        .padding(8.dp)
-                ) {
-                    if (userImage != null) {
-                        AsyncImage(
-                            model = coil.request.ImageRequest.Builder(LocalContext.current)
-                                .data(userImage)
-                                .crossfade(true)
-                                .build(),
-                            placeholder = painterResource(R.drawable.ic_user_place_holder),
-                            contentDescription = "User Image",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.clip(CircleShape)
-                        )
-                    }else {
-                        Image(
-                            painter = painterResource(R.drawable.ic_user_place_holder),
-                            contentDescription = "User Image",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.clip(CircleShape)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.width(32.dp))
-                Text(
-                    text = user!!.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                ProfileImage(userImage)
+                Spacer(modifier = Modifier.width(16.dp))
+                UserInfo(
+                    user = user,
+                    trustLevel = trustLevel,
+                    budget = budget,
+                    onEditClick = { navController.navigate("profile") }
                 )
-                IconButton(onClick = { navController.navigate("profile") }) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit Profile"
-                    )
-                }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            ProgressBar("信譽點數", trustLevel.toFloat() / 100, "$trustLevel/100", MaterialTheme.colorScheme.primary)
-            Spacer(modifier = Modifier.height(8.dp))
-            ProgressBar("社交等級", level.toFloat() / 100, "等級: LV$level", MaterialTheme.colorScheme.secondary)
-            Spacer(modifier = Modifier.height(8.dp))
-            ProgressBar("血條", 1 / budget.toFloat(), "____/$budget", MaterialTheme.colorScheme.error)
         }
+    }
+}
+
+@Composable
+private fun ProfileImage(userImage: String?) {
+    Box(
+        modifier = Modifier
+            .size(100.dp)
+            .clip(CircleShape)
+    ) {
+        if (userImage != null) {
+            AsyncImage(
+                model = coil.request.ImageRequest.Builder(LocalContext.current)
+                    .data(userImage)
+                    .crossfade(true)
+                    .build(),
+                placeholder = painterResource(R.drawable.ic_user_place_holder),
+                contentDescription = "User Image",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            Image(
+                painter = painterResource(R.drawable.ic_user_place_holder),
+                contentDescription = "User Image",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    }
+}
+
+@Composable
+private fun UserInfo(
+    user: User?,
+    trustLevel: Int,
+    budget: String,
+    onEditClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = user?.name ?: "",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            IconButton(
+                onClick = onEditClick,
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(lightBrown.copy(alpha = 0.1f))
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit Profile",
+                    tint = lightBrown
+                )
+            }
+        }
+
+        TrustLevelIndicator(trustLevel)
+
+        Text(
+            text = "預算(血量上限)：$budget",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
+        )
+    }
+}
+
+@Composable
+private fun TrustLevelIndicator(trustLevel: Int) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "信譽點數",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "$trustLevel/100",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        LinearProgressIndicator(
+            progress = trustLevel / 100f,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp)),
+            color = when {
+                trustLevel >= 80 -> Color.Green
+                trustLevel >= 50 -> Color.Yellow
+                else -> Color.Red
+            }
+        )
     }
 }
 
