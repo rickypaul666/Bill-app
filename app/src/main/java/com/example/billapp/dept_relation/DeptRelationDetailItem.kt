@@ -126,11 +126,11 @@ fun DeptRelationDetailItem(
                             Text("Cancel")
                         }
                         Button(onClick = {
-                            viewModel.deleteDeptRelation(
+                            viewModel.deleteDebtRelation(
                                 groupId = groupId,
-                                deptRelationId = debtRelation.id
+                                debtRelationId = debtRelation.id
                             )
-                            viewModel.loadGroupDeptRelations(groupId)
+                            viewModel.loadGroupDebtRelations(groupId)
                             showBottomSheet = false
                         }) {
                             Text("Confirm")

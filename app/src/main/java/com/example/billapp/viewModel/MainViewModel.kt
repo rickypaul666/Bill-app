@@ -54,11 +54,11 @@ class MainViewModel : ViewModel() {
     private val _groupTransactions = MutableStateFlow<List<GroupTransaction>>(emptyList())
     val groupTransactions: StateFlow<List<GroupTransaction>> = _groupTransactions.asStateFlow()
 
-    // Dept relations (List)
+    // Debt relations (List)
     private val _debtRelations = MutableStateFlow<List<DebtRelation>>(emptyList())
     val debtRelations: StateFlow<List<DebtRelation>> = _debtRelations.asStateFlow()
 
-    // Dept relations (Map) grouped by Transaction ID
+    // Debt relations (Map) grouped by Transaction ID
     private val _groupIdDebtRelations = MutableStateFlow<Map<String, List<DebtRelation>>>(emptyMap())
     val groupIdDebtRelations: StateFlow<Map<String, List<DebtRelation>>> = _groupIdDebtRelations.asStateFlow()
 
@@ -165,25 +165,41 @@ class MainViewModel : ViewModel() {
     fun checkUserDebtRelations(userId: String) {
         viewModelScope.launch {
             try {
+                Log.d("MainViewModel", "開始檢查用戶債務關係，用戶ID: $userId")
                 val groups = FirebaseRepository.getUserGroups()
+                Log.d("MainViewModel", "成功獲取用戶群組：${groups.size}")
+
                 val now = System.currentTimeMillis()
                 val fiveDaysInMillis = TimeUnit.DAYS.toMillis(5)
                 var totalPenalty = 0
                 var unpaidDebtCount = 0
 
-                groups.forEach { group ->
+                groups.forEachIndexed { index, group ->
+                    Log.d("MainViewModel", "檢查群組 ${index + 1}/${groups.size}: ${group.name}")
+                    Log.d("MainViewModel", "該群組的債務關係數量: ${group.debtRelations.size}")
+
                     group.debtRelations.forEach { debtRelation ->
-                        if (debtRelation.to == userId) {
+                        Log.d("MainViewModel", "債務關係詳情：從 ${debtRelation.from} 到 ${debtRelation.to}，金額：${debtRelation.amount}")
+
+                        if (debtRelation.from == userId) {
+                            Log.d("MainViewModel", "找到當前用戶的債務")
                             debtRelation.lastRemindTimestamp?.let { lastRemindTime ->
                                 val timeDifference = now - lastRemindTime.toDate().time
+                                val daysOverdue = TimeUnit.MILLISECONDS.toDays(timeDifference)
+                                Log.d("MainViewModel", "上次提醒時間：${lastRemindTime.toDate()}, 超過天數：$daysOverdue")
+
                                 if (timeDifference > fiveDaysInMillis) {
                                     unpaidDebtCount++
-                                    val daysOverdue = TimeUnit.MILLISECONDS.toDays(timeDifference) - 5
-                                    val trustPenalty = daysOverdue // 可以根據需要調整規則
+                                    val daysForPenalty = daysOverdue - 5
+                                    val trustPenalty = daysForPenalty
                                     totalPenalty += trustPenalty.toInt()
+                                    Log.d("MainViewModel", "新增未付債務，當前未付總數：$unpaidDebtCount，新增懲罰：$trustPenalty，總懲罰：$totalPenalty")
+
                                     updateUserTrustLevel(userId, -trustPenalty.toInt())
+                                } else {
+                                    Log.d("MainViewModel", "債務未超過5天，不計入懲罰")
                                 }
-                            }
+                            } ?: Log.d("MainViewModel", "該債務關係沒有最後提醒時間")
                         }
                     }
                 }
@@ -191,9 +207,10 @@ class MainViewModel : ViewModel() {
                 // 更新State
                 _debtCount.value = unpaidDebtCount
                 _totalTrustPenalty.value = totalPenalty
-
+                Log.d("MainViewModel", "完成檢查，最終結果：未付債務數量=${_debtCount.value}，總懲罰=${_totalTrustPenalty.value}")
             } catch (e: Exception) {
-                Log.e("MainViewModel", "Error checking debt relations", e)
+                Log.e("MainViewModel", "檢查用戶債務關係時出錯", e)
+                e.printStackTrace()
             }
         }
     }
@@ -315,15 +332,15 @@ class MainViewModel : ViewModel() {
     }
 
     // 負的代表自己欠錢，正的代表別人欠錢
-    suspend fun calculateTotalDept(groupId: String): Double {
+    suspend fun calculateTotalDebt(groupId: String): Double {
         val userId = getCurrentUserID()
         var totalDebt = 0.0
 
         // 使用 withContext(Dispatchers.IO) 確保在協程內執行
         withContext(Dispatchers.IO) {
-            val groupIdDeptRelations = FirebaseRepository.getGroupDeptRelations(groupId)
+            val groupIdDebtRelations = FirebaseRepository.getGroupDebtRelations(groupId)
             // 展開所有的債務關係
-            val allDebtRelations = groupIdDeptRelations.values.flatten()
+            val allDebtRelations = groupIdDebtRelations.values.flatten()
 
             // 遍歷所有的債務關係並計算總金額
             allDebtRelations.forEach { debtRelation ->
@@ -341,9 +358,9 @@ class MainViewModel : ViewModel() {
         return totalDebt
     }
 
-    fun calculateTotalDeptForGroup(groupId: String) {
+    fun calculateTotalDebtForGroup(groupId: String) {
         viewModelScope.launch {
-            val totalDebt = calculateTotalDept(groupId)
+            val totalDebt = this@MainViewModel.calculateTotalDebt(groupId)
             _totalDebtMap.value = _totalDebtMap.value.toMutableMap().apply {
                 this[groupId] = totalDebt
             }
@@ -384,8 +401,8 @@ class MainViewModel : ViewModel() {
         return _user.value?.expense?.toFloat() ?: 0.0f
     }
 
-    // Dept Functions //
-    fun getDeptRelations(groupId: String): MutableStateFlow<List<DebtRelation>> {
+    // Debt Functions //
+    fun getDebtRelations(groupId: String): MutableStateFlow<List<DebtRelation>> {
         return _debtRelations
     }
 
@@ -765,7 +782,7 @@ class MainViewModel : ViewModel() {
                     updatedAt = Timestamp.now()
                 )
 
-                val deptRelations = when (_shareMethod.value) {
+                val debtRelations = when (_shareMethod.value) {
                     "均分" -> calculateEvenSplitRelations(transaction)
                     "比例" -> calculateProportionalRelations(transaction, _userPercentages.value)
                     "調整" -> calculateAdjustableRelations(transaction, _userAdjustments.value)
@@ -774,7 +791,7 @@ class MainViewModel : ViewModel() {
                     else -> emptyList() // Handle unexpected share method
                 }
 
-                FirebaseRepository.addGroupTransaction(groupId, transaction, deptRelations)
+                FirebaseRepository.addGroupTransaction(groupId, transaction, debtRelations)
 
                 // Reset fields
                 _amount.value = 0.0
@@ -944,30 +961,26 @@ class MainViewModel : ViewModel() {
     fun getGroupDebtRelations(groupId: String) {
         viewModelScope.launch {
             try {
-                val groupIdDeptRelations = FirebaseRepository.getGroupDeptRelations(groupId)
-                _groupIdDebtRelations.value = groupIdDeptRelations
-                _debtRelations.value = groupIdDeptRelations.values.flatten()
+                val groupIdDebtRelations = FirebaseRepository.getGroupDebtRelations(groupId)
+                _groupIdDebtRelations.value = groupIdDebtRelations
+                _debtRelations.value = groupIdDebtRelations.values.flatten()
             } catch (e: Exception) {
                 _error.value = e.message
             }
         }
     }
 
-    fun calculateTotalDebt(userId: String): Double {
-        return _debtRelations.value
-            .filter { it.from == userId }
-            .sumOf { it.amount }
-    }
 
-    fun getGroupIdDeptRelations(groupId: String): Map<String, List<DebtRelation>> {
+
+    fun getGroupIdDebtRelations(groupId: String): Map<String, List<DebtRelation>> {
         return _groupIdDebtRelations.value
     }
 
     fun loadGroupIdRelation(groupId: String){
         viewModelScope.launch {
             try {
-                val deptRelations = FirebaseRepository.getGroupDeptRelations(groupId)
-                _groupIdDebtRelations.value = deptRelations
+                val debtRelations = FirebaseRepository.getGroupDebtRelations(groupId)
+                _groupIdDebtRelations.value = debtRelations
             } catch (e: Exception) {
                 _error.value = e.message
             }
@@ -988,36 +1001,36 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun loadGroupDeptRelations(groupId: String) {
+    fun loadGroupDebtRelations(groupId: String) {
         viewModelScope.launch {
             try {
-                val deptRelationsMap = FirebaseRepository.getGroupDeptRelations(groupId)
-                _groupIdDebtRelations.value = deptRelationsMap
+                val debtRelationsMap = FirebaseRepository.getGroupDebtRelations(groupId)
+                _groupIdDebtRelations.value = debtRelationsMap
             } catch (e: Exception) {
-                Log.e("LoadGroupDeptRelations", "Error loading dept relations: ${e.message}", e)
+                Log.e("LoadGroupDebtRelations", "Error loading debt relations: ${e.message}", e)
             }
         }
     }
 
-    fun updateGroupDeptRelations(transactionId: String, newDebtRelations: List<DebtRelation>) {
+    fun updateGroupDebtRelations(transactionId: String, newDebtRelations: List<DebtRelation>) {
         viewModelScope.launch {
             try {
                 val currentRelations = _groupIdDebtRelations.value.toMutableMap()
 
-                // 更新指定的交易ID的 DeptRelations
+                // 更新指定的交易ID的 DebtRelations
                 currentRelations[transactionId] = newDebtRelations
 
                 // 更新 StateFlow 的值
                 _groupIdDebtRelations.value = currentRelations
             } catch (e: Exception) {
-                Log.e("UpdateGroupDeptRelations", "Error updating dept relations: ${e.message}", e)
+                Log.e("UpdateGroupDebtRelations", "Error updating debt relations: ${e.message}", e)
             }
         }
     }
 
-    fun deleteDeptRelation(groupId: String, deptRelationId: String) {
+    fun deleteDebtRelation(groupId: String, debtRelationId: String) {
         viewModelScope.launch {
-            FirebaseRepository.deleteDeptRelation(groupId, deptRelationId)
+            FirebaseRepository.deleteDebtRelation(groupId, debtRelationId)
         }
     }
 

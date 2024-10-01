@@ -18,7 +18,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import com.example.billapp.viewModel.AvatarViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,7 +33,7 @@ fun DebtRelationsScreen(
 
     // Load transactions and calculate dept relations when the screen is opened
     LaunchedEffect(groupId) {
-        viewModel.loadGroupDeptRelations(groupId)
+        viewModel.loadGroupDebtRelations(groupId)
     }
 
     Scaffold(

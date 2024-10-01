@@ -56,7 +56,7 @@ fun GroupSettingScreen(
 
     LaunchedEffect(groupId) {
         viewModel.getGroupDebtRelations(groupId)
-        viewModel.calculateTotalDeptForGroup(groupId)
+        viewModel.calculateTotalDebtForGroup(groupId)
     }
 
     val groupTotalDebt = totalDebt[groupId] ?: 0.0

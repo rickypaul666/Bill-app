@@ -30,7 +30,6 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 import com.google.firebase.messaging.RemoteMessage
-import org.json.JSONObject
 
 object FirebaseRepository {
 
@@ -266,35 +265,80 @@ object FirebaseRepository {
     }
 
     suspend fun getUserGroups(): List<Group> = withContext(Dispatchers.IO) {
-        val currentUser = getAuthInstance().currentUser ?: throw IllegalStateException("No user logged in")
-        val userId = currentUser.uid
+        try {
+            val currentUser = getAuthInstance().currentUser ?: throw IllegalStateException("No user logged in")
+            val userId = currentUser.uid
+            Log.d("FirebaseRepository", "開始獲取用戶群組，用戶ID: $userId")
 
-        // Query for groups where the user is in assignedTo
-        val assignedGroups = getFirestoreInstance()
-            .collection(Constants.GROUPS)
-            .whereArrayContains("assignedTo", userId)
-            .orderBy("createdTime", Query.Direction.DESCENDING)
-            .get()
-            .await()
-            .toObjects(Group::class.java)
+            // Query for groups where the user is in assignedTo
+            Log.d("FirebaseRepository", "查詢用戶被分配的群組")
+            val assignedGroupsSnapshot = getFirestoreInstance()
+                .collection(Constants.GROUPS)
+                .whereArrayContains("assignedTo", userId)
+                .orderBy("createdTime", Query.Direction.DESCENDING)
+                .get()
+                .await()
 
-        // Query for groups where the user is the creator
-        val createdGroups = getFirestoreInstance()
-            .collection(Constants.GROUPS)
-            .whereEqualTo("createdBy", userId)
-            .orderBy("createdTime", Query.Direction.DESCENDING)
-            .get()
-            .await()
-            .toObjects(Group::class.java)
+            Log.d("FirebaseRepository", "找到 ${assignedGroupsSnapshot.documents.size} 個被分配的群組")
+            val assignedGroups = assignedGroupsSnapshot.documents.mapNotNull { doc ->
+                try {
+                    val group = doc.toObject(Group::class.java)
+                    Log.d("FirebaseRepository", "群組 ${doc.id} 轉換結果: ${group != null}, 債務關係數量: ${group?.debtRelations?.size ?: 0}")
 
-        // Combine both lists, removing any duplicates if necessary, and sort by createdTime
-        val allGroups = (assignedGroups + createdGroups)
-            .distinctBy { it.id }
-            .sortedByDescending { it.createdTime }
+                    // 檢查原始數據
+                    val rawDebtRelations = doc.get("debtRelations")
+                    Log.d("FirebaseRepository", "群組 ${doc.id} 原始債務關係數據: $rawDebtRelations")
 
-        updateUserGroupsID(userId, allGroups.map { it.id })
+                    group
+                } catch (e: Exception) {
+                    Log.e("FirebaseRepository", "轉換群組 ${doc.id} 時出錯", e)
+                    null
+                }
+            }
 
-        return@withContext allGroups
+            // Query for groups where the user is the creator
+            Log.d("FirebaseRepository", "查詢用戶創建的群組")
+            val createdGroupsSnapshot = getFirestoreInstance()
+                .collection(Constants.GROUPS)
+                .whereEqualTo("createdBy", userId)
+                .orderBy("createdTime", Query.Direction.DESCENDING)
+                .get()
+                .await()
+
+            Log.d("FirebaseRepository", "找到 ${createdGroupsSnapshot.documents.size} 個創建的群組")
+            val createdGroups = createdGroupsSnapshot.documents.mapNotNull { doc ->
+                try {
+                    val group = doc.toObject(Group::class.java)
+                    Log.d("FirebaseRepository", "群組 ${doc.id} 轉換結果: ${group != null}, 債務關係數量: ${group?.debtRelations?.size ?: 0}")
+
+                    // 檢查原始數據
+                    val rawDebtRelations = doc.get("debtRelations")
+                    Log.d("FirebaseRepository", "群組 ${doc.id} 原始債務關係數據: $rawDebtRelations")
+
+                    group
+                } catch (e: Exception) {
+                    Log.e("FirebaseRepository", "轉換群組 ${doc.id} 時出錯", e)
+                    null
+                }
+            }
+
+            // Combine both lists
+            val allGroups = (assignedGroups + createdGroups)
+                .distinctBy { it.id }
+                .sortedByDescending { it.createdTime }
+
+            Log.d("FirebaseRepository", "最終獲取到 ${allGroups.size} 個群組")
+            allGroups.forEachIndexed { index, group ->
+                Log.d("FirebaseRepository", "群組 ${index + 1}: ${group.name}, 債務關係數量: ${group.debtRelations.size}")
+            }
+
+            updateUserGroupsID(userId, allGroups.map { it.id })
+
+            return@withContext allGroups
+        } catch (e: Exception) {
+            Log.e("FirebaseRepository", "獲取用戶群組時發生錯誤", e)
+            throw e
+        }
     }
 
     private fun updateUserGroupsID(userId: String, map: List<String>) {
@@ -438,21 +482,21 @@ object FirebaseRepository {
             .await()
 
         // 添加債務關係
-        for (deptRelation in debtRelations) {
-            deptRelation.groupTransactionId = transactionId
+        for (debtRelation in debtRelations) {
+            debtRelation.groupTransactionId = transactionId
             getFirestoreInstance().collection(Constants.GROUPS)
                 .document(groupId)
-                .collection("deptRelations")
-                .document(deptRelation.id)
-                .set(deptRelation)
+                .collection("debtRelations")
+                .document(debtRelation.id)
+                .set(debtRelation)
                 .await()
         }
     }
 
-    suspend fun getGroupDeptRelations(groupId: String): Map<String, List<DebtRelation>> = withContext(Dispatchers.IO) {
+    suspend fun getGroupDebtRelations(groupId: String): Map<String, List<DebtRelation>> = withContext(Dispatchers.IO) {
         val debtRelations = getFirestoreInstance().collection(Constants.GROUPS)
             .document(groupId)
-            .collection("deptRelations")
+            .collection("debtRelations")
             .get()
             .await()
             .toObjects(DebtRelation::class.java)
@@ -473,18 +517,18 @@ object FirebaseRepository {
         }
     }
 
-    suspend fun updateGroupDeptRelations(groupId: String, debtRelations: List<DebtRelation>) = withContext(Dispatchers.IO) {
+    suspend fun updateGroupDebtRelations(groupId: String, debtRelations: List<DebtRelation>) = withContext(Dispatchers.IO) {
         getFirestoreInstance().collection(Constants.GROUPS)
             .document(groupId)
-            .update("deptRelations", debtRelations)
+            .update("debtRelations", debtRelations)
             .await()
     }
 
-    suspend fun deleteDeptRelation(groupId: String, deptRelationId: String) = withContext(Dispatchers.IO) {
+    suspend fun deleteDebtRelation(groupId: String, debtRelationId: String) = withContext(Dispatchers.IO) {
         getFirestoreInstance().collection(Constants.GROUPS)
             .document(groupId)
-            .collection("deptRelations")
-            .document(deptRelationId)
+            .collection("debtRelations")
+            .document(debtRelationId)
             .delete()
     }
 
