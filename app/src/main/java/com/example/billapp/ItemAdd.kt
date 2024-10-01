@@ -299,7 +299,7 @@ fun ItemAdd(
                 .background(Color(0xFFD9C9BA))  // 背景顏色
                 .padding(innerPadding)
                 .padding(top = 23.dp, start = 16.dp, end = 16.dp, bottom = 7.dp)
-                .verticalScroll(rememberScrollState())
+//                .verticalScroll(rememberScrollState())
 //                .clickable {
 //                    if (isBottomSheetVisible) {
 //                        coroutineScope.launch {
@@ -492,39 +492,40 @@ fun ItemAdd(
 
             Spacer(modifier = Modifier.height(7.dp))
 
-
-            //類別
-            ExposedDropdownMenuBox(
-                expanded = expandedCategory,
-                onExpandedChange = { expandedCategory = !expandedCategory }
-            ) {
-                StylishTextField(
-                    value = selectedCategory,
-                    onValueChange = {},
-                    label = "選擇類別" ,
-                    readOnly = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
-                )
-                ExposedDropdownMenu(
-                    modifier = Modifier.exposedDropdownSize(matchTextFieldWidth = true),
+            if (personalOrGroup != "群組") {
+                //類別
+                ExposedDropdownMenuBox(
                     expanded = expandedCategory,
-                    onDismissRequest = { expandedCategory = false }
+                    onExpandedChange = { expandedCategory = !expandedCategory }
                 ) {
-                    categories.forEach { category ->
-                        DropdownMenuItem(
-                            text = { Text(category.name) },
-                            onClick = {
-                                viewModel.setCategory(category)
-                                expandedCategory = false
-                            }
-                        )
+                    StylishTextField(
+                        value = selectedCategory,
+                        onValueChange = {},
+                        label = "選擇類別",
+                        readOnly = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        modifier = Modifier.exposedDropdownSize(matchTextFieldWidth = true),
+                        expanded = expandedCategory,
+                        onDismissRequest = { expandedCategory = false }
+                    ) {
+                        categories.forEach { category ->
+                            DropdownMenuItem(
+                                text = { Text(category.name) },
+                                onClick = {
+                                    viewModel.setCategory(category)
+                                    expandedCategory = false
+                                }
+                            )
+                        }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(7.dp))
+                Spacer(modifier = Modifier.height(7.dp))
+            }
 
 
             if (personalOrGroup == "群組") {
@@ -646,17 +647,18 @@ fun ItemAdd(
             }
 
             Spacer(modifier = Modifier.height(5.dp))
+            if (personalOrGroup != "群組") {
+                //備註
+                StylishTextField(
+                    value = note,
+                    onValueChange = { viewModel.setNote(it) },
+                    label = "Note",
+                    readOnly = false,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            //備註
-            StylishTextField(
-                value = note,
-                onValueChange = { viewModel.setNote(it) },
-                label = "Note",
-                readOnly = false,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.weight(1f))
+            }
 
             // 完成按鈕
             if(personalOrGroup == "群組"){
