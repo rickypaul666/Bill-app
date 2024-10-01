@@ -143,17 +143,17 @@ object FirebaseRepository {
         if (debtRelation.lastRemindTimestamp == null || canSendReminder(currentDate, debtRelation.lastRemindTimestamp)) {
             // 發送推送通知
             sendPushNotification(
-                debtRelation.to,
+                debtRelation.from,
                 "債務提醒",
-                "您有一筆 ${debtRelation.amount} 元的債務需要償還給 ${debtRelation.name}"
+                "您有一筆 ${debtRelation.amount} 元的債務需要償還給 ${debtRelation.to}"
             )
 
             // 發送應用內通知
             sendInAppNotification(context, debtRelation)
 
             // 更新用戶經驗值和信任等級
-            updateUserExperience(debtRelation.from, 5)
-            updateUserTrustLevel(debtRelation.to, -1)
+            updateUserExperience(debtRelation.to, 5)
+            updateUserTrustLevel(debtRelation.from, -5)
 
             return@withContext true
         } else {
@@ -167,7 +167,6 @@ object FirebaseRepository {
     }
 
     private fun sendInAppNotification(context: Context, debtRelation: DebtRelation) {
-        val context: Context = context
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId = "debt_reminder_channel"
 

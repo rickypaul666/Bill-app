@@ -1,5 +1,6 @@
 package com.example.billapp.group
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -8,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
@@ -17,6 +19,11 @@ import androidx.navigation.compose.rememberNavController
 import com.example.billapp.QRCodeScannerScreen
 import com.example.billapp.R
 import com.example.billapp.models.User
+import com.example.billapp.ui.theme.Brown1
+import com.example.billapp.ui.theme.Brown2
+import com.example.billapp.ui.theme.Brown5
+import com.example.billapp.ui.theme.Brown6
+import com.example.billapp.ui.theme.Brown7
 import com.example.billapp.viewModel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,7 +57,8 @@ fun AddInvitationScreen(
                             contentDescription = "掃描 QR code"
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(Color(0xFF9B7160))
             )
         }
     ) { innerPadding ->
@@ -58,11 +66,19 @@ fun AddInvitationScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp),
+                .padding(16.dp)
+                .background(Color(0xFFFFFAF1)),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+
         ) {
             TextField(
+                colors = TextFieldDefaults.textFieldColors(
+                    containerColor = Color(0xFFCCBEA3), // 背景顏色
+                    focusedIndicatorColor = Brown6, // 焦點下的指示器顏色
+                    unfocusedIndicatorColor = Color(0xFFCCBEA3), // 未焦點下的指示器顏色
+                    errorIndicatorColor = MaterialTheme.colorScheme.error, // 錯誤狀態下的指示器顏色
+                ),
                 value = groupLink,
                 onValueChange = {
                     groupLink = it
@@ -94,6 +110,10 @@ fun AddInvitationScreen(
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Brown5,
+                    contentColor = Color.White // 根據需要調整文本顏色
+                ),
                 enabled = groupLink.isNotBlank()
             ) {
                 Text("完成")
