@@ -44,12 +44,14 @@ fun GroupTest(
         viewModel.getGroupMembers(groupId)
     }
 
+    val name by viewModel.name.collectAsState()
     val amount by viewModel.amount.collectAsState()
     val shareMethod by viewModel.shareMethod.collectAsState()
     val dividers by viewModel.dividers.collectAsState()
     val payers by viewModel.payers.collectAsState()
     val groupMembers by viewModel.groupMembers.collectAsState()
 
+    var nameInput by remember { mutableStateOf(name) }
     var amountInput by remember { mutableStateOf(amount.toString()) }
     var expandedShareMethod by remember { mutableStateOf(false) }
     var expandedDividers by remember { mutableStateOf(false) }
@@ -82,6 +84,20 @@ fun GroupTest(
                 .background(Color(0xFFD9C9BA))
                 .padding(innerPadding)
         ) {
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 新增的交易名稱輸入欄位
+            StylishTextField(
+                value = nameInput,
+                onValueChange = {
+                    nameInput = it
+                    viewModel.setName(it) // 更新ViewModel中的交易名稱
+                },
+                label = "交易名稱",
+                readOnly = false,
+                modifier = Modifier
+                    .fillMaxWidth()
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
             Box(

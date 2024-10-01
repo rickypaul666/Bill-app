@@ -45,8 +45,8 @@ fun DeptRelationList(
                     viewModel = viewModel,
                     fromName = fromName,
                     toName = toName,
-                    fromUrl = pair.first,
-                    toUrl = pair.second,
+                    fromUrl = fromUrl,
+                    toUrl = toUrl,
                     totalAmount = amount,
                     debtRelations = debtRelations.values.flatten().filter {
                         (it.from == pair.first && it.to == pair.second) ||

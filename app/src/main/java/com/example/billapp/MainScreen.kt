@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -51,7 +50,7 @@ import androidx.navigation.navArgument
 import coil.compose.AsyncImage
 import com.example.billapp.bonus.CurrencyConverterScreen
 import com.example.billapp.bonus.ExchangeRateTableScreen
-import com.example.billapp.dept_relation.DeptRelationsScreen
+import com.example.billapp.dept_relation.DebtRelationsScreen
 import com.example.billapp.group.AddInvitationScreen
 import com.example.billapp.group.CreateGroup
 import com.example.billapp.group.GroupInviteLinkScreen
@@ -298,7 +297,7 @@ fun MainScreen(
 
                 composable("deptRelationsScreen/{groupId}") { backStackEntry ->
                     val groupId = backStackEntry.arguments?.getString("groupId") ?: return@composable
-                    DeptRelationsScreen(
+                    DebtRelationsScreen(
                         avatarViewModel = avatarViewModel,
                         viewModel = viewModel,
                         groupId = groupId,

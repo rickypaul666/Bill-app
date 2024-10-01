@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -31,39 +32,44 @@ fun DeptRelationDetailItem(
     var toName by remember { mutableStateOf("") }
     val canRemind = lastRemindTime == null || (System.currentTimeMillis() - lastRemindTime!!.toDate().time) > 86400000 // 24 hours in ms
 
-
-    // Get user names in a coroutine
     LaunchedEffect(debtRelation.from, debtRelation.to) {
         fromName = viewModel.getUserName(debtRelation.from)
         toName = viewModel.getUserName(debtRelation.to)
     }
 
-    Row(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9))  // 浅绿色背景
     ) {
-        Column {
-            Text(text = "交易名稱: ${debtRelation.name}", style = MaterialTheme.typography.titleMedium)
-            Text(text = "from: $fromName -> to: $toName", style = MaterialTheme.typography.bodyMedium)
-            Text(text = "$${String.format("%.2f", debtRelation.amount)}", style = MaterialTheme.typography.bodyLarge)
-        }
-        Row {
-            IconButton(onClick = { showBottomSheet = true }) {
-                Icon(Icons.Default.Clear, contentDescription = "Clear Debt")
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(text = "交易名称: ${debtRelation.name}", style = MaterialTheme.typography.titleMedium)
+                Text(text = "from: $fromName -> to: $toName", style = MaterialTheme.typography.bodyMedium)
+                Text(text = "$${String.format("%.2f", debtRelation.amount)}", style = MaterialTheme.typography.bodyLarge)
             }
-            IconButton(onClick = {
-                if (canRemind) {
-                    viewModel.sendDebtReminder(context, debtRelation)  // Send notification via ViewModel
-                    lastRemindTime = Timestamp.now()  // 更新最後催債時間
-                    showRemindConfirmation = true
-                } else {
-                    // 提示用戶一天只能催一次
+            Row {
+                IconButton(onClick = { showBottomSheet = true }) {
+                    Icon(Icons.Default.Clear, contentDescription = "Clear Debt")
                 }
-            }) {
-                Icon(Icons.Default.Notifications, contentDescription = "催債")
+                IconButton(onClick = {
+                    if (canRemind) {
+                        viewModel.sendDebtReminder(context, debtRelation)
+                        lastRemindTime = Timestamp.now()
+                        showRemindConfirmation = true
+                    } else {
+                        // 提示用户一天只能催一次
+                    }
+                }) {
+                    Icon(Icons.Default.Notifications, contentDescription = "催债")
+                }
             }
         }
     }
