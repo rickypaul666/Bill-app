@@ -264,9 +264,47 @@ object FirebaseRepository {
         }
     }
 
+    suspend fun fetchGroupWithDebtRelations(groupId: String): Group? {
+        return withContext(Dispatchers.IO) {
+            try {
+                // 获取主要的 group 文档
+                val groupDoc = getFirestoreInstance()
+                    .collection(Constants.GROUPS)
+                    .document(groupId)
+                    .get()
+                    .await()
+
+                val group = groupDoc.toObject(Group::class.java) ?: return@withContext null
+
+                // 获取 debtRelations 子集合
+                val debtRelationsSnapshot = groupDoc.reference
+                    .collection("debtRelations")
+                    .get()
+                    .await()
+
+                // 将子集合数据转换为 DebtRelation 对象列表
+                val debtRelations = debtRelationsSnapshot.documents.mapNotNull { doc ->
+                    doc.toObject(DebtRelation::class.java)
+                }
+
+                // 更新 group 对象的 debtRelations
+                group.debtRelations.clear()
+                group.debtRelations.addAll(debtRelations)
+
+                Log.d("FirebaseRepository", "Group ${group.id} fetched with ${debtRelations.size} debt relations")
+
+                return@withContext group
+            } catch (e: Exception) {
+                Log.e("FirebaseRepository", "Error fetching group with debt relations", e)
+                return@withContext null
+            }
+        }
+    }
+
     suspend fun getUserGroups(): List<Group> = withContext(Dispatchers.IO) {
         try {
-            val currentUser = getAuthInstance().currentUser ?: throw IllegalStateException("No user logged in")
+            val currentUser =
+                getAuthInstance().currentUser ?: throw IllegalStateException("No user logged in")
             val userId = currentUser.uid
             Log.d("FirebaseRepository", "開始獲取用戶群組，用戶ID: $userId")
 
@@ -279,15 +317,31 @@ object FirebaseRepository {
                 .get()
                 .await()
 
-            Log.d("FirebaseRepository", "找到 ${assignedGroupsSnapshot.documents.size} 個被分配的群組")
+            Log.d(
+                "FirebaseRepository",
+                "找到 ${assignedGroupsSnapshot.documents.size} 個被分配的群組"
+            )
             val assignedGroups = assignedGroupsSnapshot.documents.mapNotNull { doc ->
                 try {
-                    val group = doc.toObject(Group::class.java)
-                    Log.d("FirebaseRepository", "群組 ${doc.id} 轉換結果: ${group != null}, 債務關係數量: ${group?.debtRelations?.size ?: 0}")
+                    // 首先輸出原始文檔數據
+                    Log.d("FirebaseRepository", "群組 ${doc.id} 原始數據: ${doc.data}")
 
-                    // 檢查原始數據
+                    // 特別檢查 debtRelations 字段
                     val rawDebtRelations = doc.get("debtRelations")
-                    Log.d("FirebaseRepository", "群組 ${doc.id} 原始債務關係數據: $rawDebtRelations")
+                    Log.d(
+                        "FirebaseRepository",
+                        "群組 ${doc.id} 原始債務關係數據類型: ${rawDebtRelations?.javaClass?.name}"
+                    )
+                    Log.d(
+                        "FirebaseRepository",
+                        "群組 ${doc.id} 原始債務關係數據內容: $rawDebtRelations"
+                    )
+
+                    val group = doc.toObject(Group::class.java)
+                    Log.d(
+                        "FirebaseRepository",
+                        "群組 ${doc.id} 轉換後的債務關係數量: ${group?.debtRelations?.size ?: 0}"
+                    )
 
                     group
                 } catch (e: Exception) {
@@ -309,11 +363,17 @@ object FirebaseRepository {
             val createdGroups = createdGroupsSnapshot.documents.mapNotNull { doc ->
                 try {
                     val group = doc.toObject(Group::class.java)
-                    Log.d("FirebaseRepository", "群組 ${doc.id} 轉換結果: ${group != null}, 債務關係數量: ${group?.debtRelations?.size ?: 0}")
+                    Log.d(
+                        "FirebaseRepository",
+                        "群組 ${doc.id} 轉換結果: ${group != null}, 債務關係數量: ${group?.debtRelations?.size ?: 0}"
+                    )
 
                     // 檢查原始數據
                     val rawDebtRelations = doc.get("debtRelations")
-                    Log.d("FirebaseRepository", "群組 ${doc.id} 原始債務關係數據: $rawDebtRelations")
+                    Log.d(
+                        "FirebaseRepository",
+                        "群組 ${doc.id} 原始債務關係數據: $rawDebtRelations"
+                    )
 
                     group
                 } catch (e: Exception) {
@@ -327,15 +387,23 @@ object FirebaseRepository {
                 .distinctBy { it.id }
                 .sortedByDescending { it.createdTime }
 
-            Log.d("FirebaseRepository", "最終獲取到 ${allGroups.size} 個群組")
-            allGroups.forEachIndexed { index, group ->
-                Log.d("FirebaseRepository", "群組 ${index + 1}: ${group.name}, 債務關係數量: ${group.debtRelations.size}")
+            // 为每个组获取完整的数据，包括 debtRelations
+            val completeGroups = allGroups.mapNotNull { group ->
+                fetchGroupWithDebtRelations(group.id)
             }
 
-            updateUserGroupsID(userId, allGroups.map { it.id })
+            Log.d("FirebaseRepository", "最終獲取到 ${completeGroups.size} 個完整的群组")
+            completeGroups.forEachIndexed { index, group ->
+                Log.d(
+                    "FirebaseRepository",
+                    "群组 ${index + 1}: ${group.name}, 債務關係數量: ${group.debtRelations.size}"
+                )
+            }
 
-            return@withContext allGroups
-        } catch (e: Exception) {
+            updateUserGroupsID(userId, completeGroups.map { it.id })
+
+            return@withContext completeGroups
+        }catch (e: Exception) {
             Log.e("FirebaseRepository", "獲取用戶群組時發生錯誤", e)
             throw e
         }
