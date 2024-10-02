@@ -38,7 +38,7 @@ import com.example.billapp.viewModel.MainViewModel
 import kotlinx.coroutines.launch
 
 val lightBrown = Color(0xFF6D4C41)
-//fwnt
+//fwnt1234
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingScreen(
