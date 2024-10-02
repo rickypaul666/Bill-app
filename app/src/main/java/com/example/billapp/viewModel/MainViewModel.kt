@@ -4,14 +4,10 @@ import AvatarRepository
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.billapp.firebase.FirebaseRepository
-import com.example.billapp.models.DeptRelation
+import com.example.billapp.models.DebtRelation
 import com.example.billapp.models.Group
 import com.example.billapp.models.GroupTransaction
 import com.example.billapp.models.PersonalTransaction
@@ -27,13 +23,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 class MainViewModel : ViewModel() {
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user.asStateFlow()
+
+    private val _totalDebtMap = MutableStateFlow<Map<String, Double>>(emptyMap())
+    val totalDebtMap: StateFlow<Map<String, Double>> = _totalDebtMap
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -55,13 +54,13 @@ class MainViewModel : ViewModel() {
     private val _groupTransactions = MutableStateFlow<List<GroupTransaction>>(emptyList())
     val groupTransactions: StateFlow<List<GroupTransaction>> = _groupTransactions.asStateFlow()
 
-    // Dept relations (List)
-    private val _deptRelations = MutableStateFlow<List<DeptRelation>>(emptyList())
-    val deptRelations: StateFlow<List<DeptRelation>> = _deptRelations.asStateFlow()
+    // Debt relations (List)
+    private val _debtRelations = MutableStateFlow<List<DebtRelation>>(emptyList())
+    val debtRelations: StateFlow<List<DebtRelation>> = _debtRelations.asStateFlow()
 
-    // Dept relations (Map) grouped by Transaction ID
-    private val _groupIdDeptRelations = MutableStateFlow<Map<String, List<DeptRelation>>>(emptyMap())
-    val groupIdDeptRelations: StateFlow<Map<String, List<DeptRelation>>> = _groupIdDeptRelations.asStateFlow()
+    // Debt relations (Map) grouped by Transaction ID
+    private val _groupIdDebtRelations = MutableStateFlow<Map<String, List<DebtRelation>>>(emptyMap())
+    val groupIdDebtRelations: StateFlow<Map<String, List<DebtRelation>>> = _groupIdDebtRelations.asStateFlow()
 
     // Transaction fields
     private val _transactionType = MutableStateFlow("支出")
@@ -82,7 +81,7 @@ class MainViewModel : ViewModel() {
     private val _name = MutableStateFlow("")
     val name: StateFlow<String> = _name.asStateFlow()
 
-    private val _shareMethod = MutableStateFlow("")
+    private val _shareMethod = MutableStateFlow("均分")
     val shareMethod: StateFlow<String> = _shareMethod
 
     private val _dividers = MutableStateFlow<List<String>>(emptyList())
@@ -97,34 +96,250 @@ class MainViewModel : ViewModel() {
     private val _transaction = MutableStateFlow<PersonalTransaction?>(null)
     val transaction: StateFlow<PersonalTransaction?> = _transaction
 
-    private var _updatetime =MutableStateFlow(Timestamp.now())
+    private var _updatetime = MutableStateFlow(Timestamp.now())
     val updatetime: StateFlow<Timestamp> = _updatetime.asStateFlow()
 
+    private var currentGroup = MutableStateFlow<Group?>(null)
+    val group: StateFlow<Group?> = currentGroup.asStateFlow()
 
-    // 不要在這邊宣告firebase
+    // 用於登入和註冊的狀態流
+    private val _authState = MutableStateFlow<AuthState>(AuthState.Initial)
+    val authState: StateFlow<AuthState> = _authState.asStateFlow()
+
+    private val _isUserLoggedIn = MutableStateFlow(false) // 初始值為 false
+    val isUserLoggedIn: StateFlow<Boolean> = _isUserLoggedIn
+
     init {
-        loadUserData()
-        loadUserGroups()
-        loadUserTransactions()
+        checkCurrentUser()
     }
 
-    private fun loadUserData() {
+    sealed class AuthState {
+        object Initial : AuthState()
+        object Loading : AuthState()
+        data class Authenticated(val user: User) : AuthState()
+        data class Error(val message: String) : AuthState()
+    }
+
+    // 將經驗值加上 amount
+    fun updateUserExperience(userId: String, amount: Int) {
         viewModelScope.launch {
-            FirebaseFirestore.getInstance().collection(Constants.USERS)
-                .document(getCurrentUserID())
-                .get()
-                .addOnSuccessListener { document ->
-                    val loggedInUser = document.toObject(User::class.java)
-                    _user.value = loggedInUser
-                }
-                .addOnFailureListener { e ->
-                    Log.e(
-                        "loadUserData",
-                        "Error while getting loggedIn user details",
-                        e
-                    )
-                }
+            FirebaseRepository.updateUserExperience(userId, amount)
+            reloadUserData()
         }
+    }
+
+    // 將信任度加上 amount
+    fun updateUserTrustLevel(userId: String, amount: Int) {
+        viewModelScope.launch {
+            FirebaseRepository.updateUserTrustLevel(userId, amount)
+            reloadUserData()
+        }
+    }
+
+    fun dailyExperienceIncrease(userId: String) {
+        updateUserExperience(userId, 10)
+    }
+
+    fun getUserLevel(): Int {
+        return user.value?.experience?.div(100) ?: 0
+    }
+
+    fun getUserTrustLevel(): Int {
+        return user.value?.trustLevel ?: 0
+    }
+
+    fun getUserBudget(): Int {
+        return user.value?.budget ?: 0
+    }
+
+    fun updateUserBudget(budget: Int) {
+        FirebaseRepository.updateUserBudget(budget)
+    }
+
+    private val _lastCheckTimestamp = MutableStateFlow(0L)
+    private val _debtCount = MutableStateFlow(0)
+    val debtCount: StateFlow<Int> = _debtCount
+    private val _totalTrustPenalty = MutableStateFlow(0)
+    val totalTrustPenalty: StateFlow<Int> = _totalTrustPenalty
+
+    fun checkUserDebtRelations(userId: String) {
+        viewModelScope.launch {
+            try {
+                val currentTime = System.currentTimeMillis()
+                val lastCheck = _lastCheckTimestamp.value
+
+                // 如果距離上次檢查不到24小時，則跳過
+                if (currentTime - lastCheck < TimeUnit.HOURS.toMillis(24)) {
+                    Log.d("MainViewModel", "距離上次檢查未滿24小時，跳過檢查")
+                    return@launch
+                }
+
+                Log.d("MainViewModel", "開始檢查用戶債務關係，用戶ID: $userId")
+                val groups = FirebaseRepository.getUserGroups()
+                Log.d("MainViewModel", "成功獲取用戶群組：${groups.size}")
+
+                val fiveDaysInMillis = TimeUnit.DAYS.toMillis(5)
+                var newUnpaidDebtCount = 0
+                var newTotalPenalty = 0
+
+
+                groups.forEachIndexed { index, group ->
+                    Log.d("MainViewModel", "檢查群組 ${index + 1}/${groups.size}: ${group.name}")
+                    Log.d("MainViewModel", "該群組的債務關係數量: ${group.debtRelations.size}")
+
+                    group.debtRelations.forEach { debtRelation ->
+                        Log.d("MainViewModel", "債務關係詳情：從 ${debtRelation.from} 到 ${debtRelation.to}，金額：${debtRelation.amount}")
+                        val lastPenaltyTime = debtRelation.lastPenaltyDate?.toDate()?.time
+
+                        if (debtRelation.from == userId) {
+                            Log.d("MainViewModel", "找到當前用戶的債務")
+                            debtRelation.lastRemindTimestamp?.let { lastRemindTime ->
+                                val timeDifference = currentTime - lastRemindTime.toDate().time
+                                val daysOverdue = TimeUnit.MILLISECONDS.toDays(timeDifference)
+                                Log.d("MainViewModel", "上次提醒時間：${lastRemindTime.toDate()}, 超過天數：$daysOverdue")
+
+                                if (timeDifference > fiveDaysInMillis && lastRemindTime.toDate().time > lastCheck && currentTime - lastPenaltyTime!! > TimeUnit.HOURS.toMillis(24)) {
+                                    newUnpaidDebtCount++
+                                    val daysForPenalty = daysOverdue - 5
+                                    val trustPenalty = daysForPenalty.toInt()
+                                    newTotalPenalty += trustPenalty
+                                    Log.d("MainViewModel", "新增未付債務，當前新增未付總數：$newUnpaidDebtCount，新增懲罰：$trustPenalty，新增總懲罰：$newTotalPenalty")
+
+                                    updateUserTrustLevel(userId, -trustPenalty)
+                                    updateDebtLastPenaltyDate(group.id, debtRelation.id, currentTime)
+                                } else {
+                                    Log.d("MainViewModel", "債務未超過5天或已在上次檢查中計算過，不計入懲罰")
+                                }
+                            } ?: Log.d("MainViewModel", "該債務關係沒有最後提醒時間")
+                        }
+                    }
+                }
+
+                // 更新State
+                _debtCount.value += newUnpaidDebtCount
+                _totalTrustPenalty.value += newTotalPenalty
+                _lastCheckTimestamp.value = currentTime
+
+                Log.d("MainViewModel", "完成檢查，最終結果：未付債務總數=${_debtCount.value}，總懲罰=${_totalTrustPenalty.value}")
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "檢查用戶債務關係時出錯", e)
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private suspend fun updateDebtLastPenaltyDate(groupId: String, debtId: String, timestamp: Long) {
+        try {
+            FirebaseRepository.updateDebtLastPenaltyDate(groupId, debtId, timestamp)
+            Log.d("MainViewModel", "成功更新債務最後懲罰日期。群組ID: $groupId, 債務ID: $debtId")
+        } catch (e: Exception) {
+            Log.e("MainViewModel", "更新債務最後懲罰日期時發生錯誤", e)
+            // 這裡您可以選擇重試、顯示錯誤消息給用戶，或者採取其他錯誤處理策略
+        }
+    }
+
+    private fun checkCurrentUser() {
+        viewModelScope.launch {
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            if (currentUser != null) {
+                loadUserData(currentUser.uid)
+                loadUserGroups()
+                loadUserTransactions()
+            }
+            _isUserLoggedIn.value = currentUser != null
+        }
+    }
+
+    fun loadUserData(userId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val userData = FirebaseRepository.getUserData(userId)
+                _user.value = userData
+                loadUserGroups()
+                loadUserTransactions()
+            } catch (e: Exception) {
+                _error.value = e.message
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun logOut(onComplete: () -> Unit) {
+        viewModelScope.launch {
+            clearData()
+            FirebaseRepository.signOut()
+            _authState.value = AuthState.Initial
+            _isUserLoggedIn.value = false
+            onComplete()
+        }
+    }
+
+    fun signIn(email: String, password: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _authState.value = AuthState.Loading
+            try {
+                val user = FirebaseRepository.signIn(email, password)
+                _user.value = user
+                _authState.value = AuthState.Authenticated(user)
+                loadUserData(user.id)
+            } catch (e: Exception) {
+                _error.value = e.message
+                _authState.value = AuthState.Error(e.message ?: "Unknown error occurred")
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun signUp(name: String, email: String, password: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _authState.value = AuthState.Loading
+            try {
+                val user = FirebaseRepository.signUp(name, email, password)
+                _user.value = user
+                _authState.value = AuthState.Authenticated(user)
+                loadUserData(user.id)
+            } catch (e: Exception) {
+                _error.value = e.message
+                _authState.value = AuthState.Error(e.message ?: "Unknown error occurred")
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+
+    fun clearData() {
+//        _groupCreationStatus.value = GroupCreationStatus.IDLE
+//        _groupIdDebtRelations.value = emptyMap()
+//        currentGroup.value = null
+//        _userTransactions.value = emptyList()
+//        _groupTransactions.value = emptyList()
+//        _debtRelations.value = emptyList()
+//        _isLoading.value = false
+//        _error.value = null
+//        _dividers.value = emptyList()
+//        _payers.value = emptyList()
+//        _transactionType.value = "支出"
+//        _amount.value = 0.0
+//        _note.value = ""
+//        _date.value = Timestamp.now()
+//        _category.value = ""
+//        _name.value = ""
+//        _shareMethod.value = "均分"
+//        _groupMembers.value = emptyList()
+//        _transaction.value = null
+//        _updatetime.value = Timestamp.now()
+//        _userGroups.value = emptyList()
+//        _userPercentages.value = emptyMap()
+//        _userAdjustments.value = emptyMap()
+//        _userExactAmounts.value = emptyMap()
+//        _userShares.value = emptyMap()
+//        _groupName.value = ""
     }
 
     fun reloadUserData() {
@@ -137,6 +352,44 @@ class MainViewModel : ViewModel() {
             }
         }
     }
+
+    // 負的代表自己欠錢，正的代表別人欠錢
+    suspend fun calculateTotalDebt(groupId: String): Double {
+        val userId = getCurrentUserID()
+        var totalDebt = 0.0
+
+        // 使用 withContext(Dispatchers.IO) 確保在協程內執行
+        withContext(Dispatchers.IO) {
+            val groupIdDebtRelations = FirebaseRepository.getGroupDebtRelations(groupId)
+            // 展開所有的債務關係
+            val allDebtRelations = groupIdDebtRelations.values.flatten()
+
+            // 遍歷所有的債務關係並計算總金額
+            allDebtRelations.forEach { debtRelation ->
+                // 如果是user欠別人的錢，將金額減去
+                if (debtRelation.from == userId) {
+                    totalDebt -= debtRelation.amount
+                }
+                // 如果是別人欠user的錢，將金額加上
+                if (debtRelation.to == userId) {
+                    totalDebt += debtRelation.amount
+                }
+            }
+        }
+
+        return totalDebt
+    }
+
+    fun calculateTotalDebtForGroup(groupId: String) {
+        viewModelScope.launch {
+            val totalDebt = this@MainViewModel.calculateTotalDebt(groupId)
+            _totalDebtMap.value = _totalDebtMap.value.toMutableMap().apply {
+                this[groupId] = totalDebt
+            }
+        }
+    }
+
+
 
     fun updateUserProfile(updatedUser: User) {
         viewModelScope.launch {
@@ -152,7 +405,7 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    private fun getCurrentUserID(): String {
+    fun getCurrentUserID(): String {
         val currentUser = FirebaseAuth.getInstance().currentUser
         return currentUser?.uid ?: ""
     }
@@ -170,9 +423,17 @@ class MainViewModel : ViewModel() {
         return _user.value?.expense?.toFloat() ?: 0.0f
     }
 
-    // Dept Functions //
-    fun getDeptRelations(groupId: String): MutableStateFlow<List<DeptRelation>> {
-        return _deptRelations
+    // Debt Functions //
+    fun getDebtRelations(groupId: String): MutableStateFlow<List<DebtRelation>> {
+        return _debtRelations
+    }
+
+    suspend fun getUserName(userId: String): String {
+        return FirebaseRepository.getUserName(userId)
+    }
+
+    fun getCurrentUserName(): String {
+        return user.value?.name ?: ""
     }
 
     // Groups Function //
@@ -222,6 +483,32 @@ class MainViewModel : ViewModel() {
             }
         }
     }
+
+    ///
+
+    private val _debtReminderStatus = MutableStateFlow<DebtReminderStatus>(DebtReminderStatus.IDLE)
+    val debtReminderStatus: StateFlow<DebtReminderStatus> = _debtReminderStatus.asStateFlow()
+
+    fun sendDebtReminder(context: Context,debtRelation: DebtRelation) {
+        viewModelScope.launch {
+            _debtReminderStatus.value = DebtReminderStatus.LOADING
+            try {
+                val reminderSent = FirebaseRepository.sendDebtReminder(context, debtRelation)
+                if (reminderSent) {
+                    _debtReminderStatus.value = DebtReminderStatus.SUCCESS
+                } else {
+                    _debtReminderStatus.value = DebtReminderStatus.ERROR("You can only send one reminder per day.")
+                }
+            } catch (e: Exception) {
+                _debtReminderStatus.value = DebtReminderStatus.ERROR(e.message ?: "Unknown error occurred")
+            }
+        }
+    }
+
+
+    ///
+
+
 
     fun deleteGroup(groupId: String) {
         viewModelScope.launch {
@@ -299,6 +586,23 @@ class MainViewModel : ViewModel() {
                         imageUrl?.let { avatarRepository.updateGroupImage(groupId, it) }
                     }
                 }
+
+                _groupCreationStatus.value = GroupCreationStatus.SUCCESS
+            } catch (e: Exception) {
+                _groupCreationStatus.value = GroupCreationStatus.ERROR
+            }
+        }
+    }
+
+    fun createGroupWithImageId(groupName: String, imageId: Int) {
+        viewModelScope.launch {
+            _groupCreationStatus.value = GroupCreationStatus.LOADING
+            try {
+                val group = Group(
+                    name = groupName,
+                    imageId = imageId
+                )
+                val groupId = FirebaseRepository.createGroup(group)
 
                 _groupCreationStatus.value = GroupCreationStatus.SUCCESS
             } catch (e: Exception) {
@@ -454,21 +758,9 @@ class MainViewModel : ViewModel() {
     fun setShareMethod(method: String) {
         _shareMethod.value = method
     }
-
-    fun toggleDivider(userId: String) {
-        _dividers.value = if (_dividers.value.contains(userId)) {
-            _dividers.value - userId
-        } else {
-            _dividers.value + userId
-        }
-    }
-
-    fun togglePayer(userId: String) {
-        _payers.value = if (_payers.value.contains(userId)) {
-            _payers.value - userId
-        } else {
-            _payers.value + userId
-        }
+    // 設定群組交易名稱
+    fun setGroupTransactionName(groupName: String){
+        _groupName.value = groupName
     }
 
     fun getGroupMembers(groupId: String) {
@@ -482,61 +774,235 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    // New state flows for different share methods
+    private val _userPercentages = MutableStateFlow<Map<String, Float>>(emptyMap())
+    private val _userAdjustments = MutableStateFlow<Map<String, Float>>(emptyMap())
+    private val _userExactAmounts = MutableStateFlow<Map<String, Float>>(emptyMap())
+    private val _userShares = MutableStateFlow<Map<String, Int>>(emptyMap())
+
+    val userPercentages: StateFlow<Map<String, Float>> = _userPercentages.asStateFlow()
+    val userAdjustments: StateFlow<Map<String, Float>> = _userAdjustments.asStateFlow()
+    val userExactAmounts: StateFlow<Map<String, Float>> = _userExactAmounts.asStateFlow()
+    val userShares: StateFlow<Map<String, Int>> = _userShares.asStateFlow()
+
+    private val _groupName = MutableStateFlow("")
+    val groupName: StateFlow<String> get() = _groupName
+
     fun addGroupTransaction(groupId: String) {
         viewModelScope.launch {
             try {
-                FirebaseRepository.addGroupTransaction(
-                    groupId,
-                    GroupTransaction(
-                        id = "",
-                        payer = _payers.value,
-                        divider = _dividers.value,
-                        shareMethod = _shareMethod.value,
-                        type = _transactionType.value,
-                        amount = _amount.value,
-                        date = Timestamp.now(),
-                        createdAt = Timestamp.now(),
-                        updatedAt = Timestamp.now()
-                    )
+                val transaction = GroupTransaction(
+                    id = "",
+                    name = _groupName.value,
+                    payer = _payers.value,
+                    divider = _dividers.value,
+                    shareMethod = _shareMethod.value,
+                    type = _transactionType.value,
+                    amount = _amount.value,
+                    date = Timestamp.now(),
+                    createdAt = Timestamp.now(),
+                    updatedAt = Timestamp.now()
                 )
+
+                val debtRelations = when (_shareMethod.value) {
+                    "均分" -> calculateEvenSplitRelations(transaction)
+                    "比例" -> calculateProportionalRelations(transaction, _userPercentages.value)
+                    "調整" -> calculateAdjustableRelations(transaction, _userAdjustments.value)
+                    "金額" -> calculateExactAmountRelations(transaction, _userExactAmounts.value)
+                    "份數" -> calculateSharesRelations(transaction, _userShares.value)
+                    else -> emptyList() // Handle unexpected share method
+                }
+
+                FirebaseRepository.addGroupTransaction(groupId, transaction, debtRelations)
+
                 // Reset fields
                 _amount.value = 0.0
                 _shareMethod.value = ""
                 _dividers.value = emptyList()
                 _payers.value = emptyList()
+                _userPercentages.value = emptyMap()
+                _userAdjustments.value = emptyMap()
+                _userExactAmounts.value = emptyMap()
+                _userShares.value = emptyMap()
             } catch (e: Exception) {
                 Log.e("GroupTransactionAdd", "Error adding group transaction: ${e.message}", e)
             }
         }
     }
 
-    fun getGroupDeptRelations(groupId: String) {
+    fun updateGroupName(newName: String) {
+        _groupName.value = newName
+    }
+
+    private fun calculateEvenSplitRelations(transaction: GroupTransaction): List<DebtRelation> {
+        val debtRelations = mutableListOf<DebtRelation>()
+        val amountPerDivider = transaction.amount / transaction.divider.size
+
+        transaction.divider.forEach { dividerId ->
+            transaction.payer.forEach { payerId ->
+                if (dividerId != payerId) {
+                    debtRelations.add(
+                        DebtRelation(
+                            id = UUID.randomUUID().toString(),
+                            name = transaction.name,
+                            groupTransactionId = transaction.id,
+                            from = dividerId,
+                            to = payerId,
+                            amount = amountPerDivider / transaction.payer.size,
+                            lastRemindTimestamp = Timestamp.now()
+                        )
+                    )
+                }
+            }
+        }
+        return debtRelations
+    }
+
+    private fun calculateProportionalRelations(transaction: GroupTransaction, userPercentages: Map<String, Float>): List<DebtRelation> {
+        val debtRelations = mutableListOf<DebtRelation>()
+        val totalPercentage = userPercentages.values.sum()
+
+        if (totalPercentage != 100f) return debtRelations // Ensure percentages sum to 100%
+
+        transaction.payer.forEach { payerId ->
+            userPercentages.forEach { (userId, percentage) ->
+                if (userId != payerId) {
+                    val amountOwed = transaction.amount * (percentage / 100) / transaction.payer.size
+                    debtRelations.add(
+                        DebtRelation(
+                            id = UUID.randomUUID().toString(),
+                            groupTransactionId = transaction.id,
+                            from = userId,
+                            to = payerId,
+                            amount = amountOwed,
+                            lastRemindTimestamp = Timestamp.now()
+                        )
+                    )
+                }
+            }
+        }
+        return debtRelations
+    }
+
+    private fun calculateAdjustableRelations(transaction: GroupTransaction, userAdjustments: Map<String, Float>): List<DebtRelation> {
+        val debtRelations = mutableListOf<DebtRelation>()
+        val totalAdjustment = userAdjustments.values.sum()
+        val remainingAmount = transaction.amount - totalAdjustment
+        val evenSplitAmount = remainingAmount / transaction.divider.size
+
+        transaction.payer.forEach { payerId ->
+            transaction.divider.forEach { dividerId ->
+                if (dividerId != payerId) {
+                    val adjustment = userAdjustments[dividerId] ?: 0f
+                    val amountOwed = (adjustment + evenSplitAmount) / transaction.payer.size
+                    debtRelations.add(
+                        DebtRelation(
+                            id = UUID.randomUUID().toString(),
+                            groupTransactionId = transaction.id,
+                            from = dividerId,
+                            to = payerId,
+                            amount = amountOwed,
+                            lastRemindTimestamp = Timestamp.now()
+                        )
+                    )
+                }
+            }
+        }
+        return debtRelations
+    }
+
+    private fun calculateExactAmountRelations(transaction: GroupTransaction, userAmounts: Map<String, Float>): List<DebtRelation> {
+        val debtRelations = mutableListOf<DebtRelation>()
+
+        transaction.payer.forEach { payerId ->
+            userAmounts.forEach { (userId, amount) ->
+                if (userId != payerId) {
+                    debtRelations.add(
+                        DebtRelation(
+                            id = UUID.randomUUID().toString(),
+                            groupTransactionId = transaction.id,
+                            from = userId,
+                            to = payerId,
+                            amount = amount.toDouble() / transaction.payer.size,
+                            lastRemindTimestamp = Timestamp.now()
+                        )
+                    )
+                }
+            }
+        }
+        return debtRelations
+    }
+
+    private fun calculateSharesRelations(transaction: GroupTransaction, userShares: Map<String, Int>): List<DebtRelation> {
+        val debtRelations = mutableListOf<DebtRelation>()
+        val totalShares = userShares.values.sum()
+
+        if (totalShares == 0) return debtRelations // Avoid division by zero
+
+        transaction.payer.forEach { payerId ->
+            userShares.forEach { (userId, shares) ->
+                if (userId != payerId) {
+                    val amountOwed = transaction.amount * (shares.toDouble() / totalShares) / transaction.payer.size
+                    debtRelations.add(
+                        DebtRelation(
+                            id = UUID.randomUUID().toString(),
+                            groupTransactionId = transaction.id,
+                            from = userId,
+                            to = payerId,
+                            amount = amountOwed,
+                            lastRemindTimestamp = Timestamp.now()
+                        )
+                    )
+                }
+            }
+        }
+        return debtRelations
+    }
+
+    // Functions to update state flows for different share methods
+    fun updateUserPercentages(percentages: Map<String, Float>) {
+        _userPercentages.value = percentages
+    }
+
+    fun updateUserAdjustments(adjustments: Map<String, Float>) {
+        _userAdjustments.value = adjustments
+    }
+
+    fun updateUserExactAmounts(amounts: Map<String, Float>) {
+        _userExactAmounts.value = amounts
+    }
+
+    fun updateUserShares(shares: Map<String, Int>) {
+        _userShares.value = shares
+    }
+
+    fun updateShareMethod(method: String) {
+        _shareMethod.value = method
+    }
+
+    fun getGroupDebtRelations(groupId: String) {
         viewModelScope.launch {
             try {
-                val groupIdDeptRelations = FirebaseRepository.getGroupDeptRelations(groupId)
-                _groupIdDeptRelations.value = groupIdDeptRelations
-                _deptRelations.value = groupIdDeptRelations.values.flatten()
+                val groupIdDebtRelations = FirebaseRepository.getGroupDebtRelations(groupId)
+                _groupIdDebtRelations.value = groupIdDebtRelations
+                _debtRelations.value = groupIdDebtRelations.values.flatten()
             } catch (e: Exception) {
                 _error.value = e.message
             }
         }
     }
 
-    fun calculateTotalDebt(userId: String): Double {
-        return _deptRelations.value
-            .filter { it.from == userId }
-            .sumOf { it.amount }
-    }
 
-    fun getGroupIdDeptRelations(groupId: String): Map<String, List<DeptRelation>> {
-        return _groupIdDeptRelations.value
+
+    fun getGroupIdDebtRelations(groupId: String): Map<String, List<DebtRelation>> {
+        return _groupIdDebtRelations.value
     }
 
     fun loadGroupIdRelation(groupId: String){
         viewModelScope.launch {
             try {
-                val deptRelations = FirebaseRepository.getGroupDeptRelations(groupId)
-                _groupIdDeptRelations.value = deptRelations
+                val debtRelations = FirebaseRepository.getGroupDebtRelations(groupId)
+                _groupIdDebtRelations.value = debtRelations
             } catch (e: Exception) {
                 _error.value = e.message
             }
@@ -556,8 +1022,70 @@ class MainViewModel : ViewModel() {
             }
         }
     }
+
+    fun loadGroupDebtRelations(groupId: String) {
+        viewModelScope.launch {
+            try {
+                val debtRelationsMap = FirebaseRepository.getGroupDebtRelations(groupId)
+                _groupIdDebtRelations.value = debtRelationsMap
+            } catch (e: Exception) {
+                Log.e("LoadGroupDebtRelations", "Error loading debt relations: ${e.message}", e)
+            }
+        }
+    }
+
+    fun updateGroupDebtRelations(transactionId: String, newDebtRelations: List<DebtRelation>) {
+        viewModelScope.launch {
+            try {
+                val currentRelations = _groupIdDebtRelations.value.toMutableMap()
+
+                // 更新指定的交易ID的 DebtRelations
+                currentRelations[transactionId] = newDebtRelations
+
+                // 更新 StateFlow 的值
+                _groupIdDebtRelations.value = currentRelations
+            } catch (e: Exception) {
+                Log.e("UpdateGroupDebtRelations", "Error updating debt relations: ${e.message}", e)
+            }
+        }
+    }
+
+    fun deleteDebtRelation(groupId: String, debtRelationId: String) {
+        viewModelScope.launch {
+            FirebaseRepository.deleteDebtRelation(groupId, debtRelationId)
+        }
+    }
+
+    fun toggleDivider(userId: String) {
+        val currentDividers = dividers.value.toMutableList()
+        if (currentDividers.contains(userId)) {
+            currentDividers.remove(userId)
+        } else {
+            currentDividers.add(userId)
+        }
+        _dividers.value = currentDividers
+    }
+
+    fun togglePayer(userId: String) {
+        val currentPayers = payers.value.toMutableList()
+        if (currentPayers.contains(userId)) {
+            currentPayers.remove(userId)
+        } else {
+            currentPayers.add(userId)
+        }
+        _payers.value = currentPayers
+    }
+
+
 }
 
 enum class GroupCreationStatus {
     IDLE, LOADING, SUCCESS, ERROR
+}
+
+sealed class DebtReminderStatus {
+    object IDLE : DebtReminderStatus()
+    object LOADING : DebtReminderStatus()
+    object SUCCESS : DebtReminderStatus()
+    data class ERROR(val message: String) : DebtReminderStatus()
 }

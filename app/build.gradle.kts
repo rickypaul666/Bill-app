@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
+    id("kotlin-parcelize")
 }
 
 android {
@@ -72,6 +73,9 @@ dependencies {
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("com.google.android.material:material:1.12.0")
     implementation(libs.volley)
+    implementation(libs.androidx.runtime.livedata)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.play.services.nearby)
 
     val compose_version = "1.5.1"
     implementation ("androidx.compose.material:material:$compose_version")
@@ -122,6 +126,10 @@ dependencies {
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2")
     implementation ("androidx.datastore:datastore-preferences:1.0.0")
 
+    //icon
+    implementation ("androidx.compose.material:material-icons-core:1.5.0")
+    implementation ("androidx.compose.material:material-icons-extended:1.5.0")
+    
     // image
     implementation("io.coil-kt:coil-compose:2.7.0")
     implementation("com.google.firebase:firebase-storage-ktx:21.0.0")
@@ -134,6 +142,17 @@ dependencies {
     implementation(libs.firebase.storage)
 
     implementation("androidx.compose.material:material:1.6.8")
+
+    implementation("androidx.core:core-splashscreen:1.0.0")
+
+    // Add the dependencies for the Firebase Cloud Messaging and Analytics libraries
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation("com.google.firebase:firebase-messaging")
+
+    implementation("androidx.compose.material:material-icons-extended:1.5.0")
+
+    implementation ("com.google.accompanist:accompanist-pager:0.28.0")
+    implementation ("com.google.accompanist:accompanist-pager-indicators:0.28.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

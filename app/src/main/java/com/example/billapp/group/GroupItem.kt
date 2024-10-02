@@ -3,12 +3,13 @@ package com.example.billapp.group
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -17,12 +18,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,56 +30,112 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.billapp.R
 import com.example.billapp.models.Group
+import com.example.billapp.ui.theme.Green
+import com.example.billapp.ui.theme.Orange4
+import com.example.billapp.ui.theme.Purple40
+import com.example.billapp.viewModel.MainViewModel
 
-// 顯示在 Group，會放在底下 GroupList 中
 @Composable
-fun GroupItem(groupName: String, createdBy: String, onClick: () -> Unit) {
+fun GroupItem(
+    viewModel: MainViewModel,
+    groupId: String,
+    groupName: String,
+    createdBy: String,
+    onClick: () -> Unit,
+    imageId: Int
+) {
+    val totalDebt by viewModel.totalDebtMap.collectAsState()
+
+    // LaunchedEffect 確保在組件啟動時執行計算
+    LaunchedEffect(groupId) {
+        viewModel.calculateTotalDebtForGroup(groupId)
+    }
+
+    // 獲取該群組的債務總額，如果尚未計算出來則顯示 0
+    val groupTotalDebt = totalDebt[groupId] ?: 0.0
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp) // External padding
+            .padding(horizontal = 16.dp, vertical = 6.dp)
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp), // Rounded corners
+        shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp), // Internal padding
+                .background(Color(0xFFBBB0A2))
+                .padding(top = 16.dp, start = 8.dp, end = 8.dp, bottom = 4.dp),
+
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Circular ImageView
+            Spacer(modifier = Modifier.width(16.dp))
             Image(
-                painter = painterResource(id = R.drawable.ic_board_place_holder),
+                painter = painterResource(id = getImageResourceById(imageId)),
                 contentDescription = stringResource(id = R.string.image_contentDescription),
                 modifier = Modifier
                     .size(60.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
+                    .background(color = Purple40),
                 contentScale = ContentScale.Crop
             )
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            // Group name and created by text
             Column {
                 BasicText(
                     text = groupName,
                     style = MaterialTheme.typography.titleLarge.copy(
-                        fontSize = MaterialTheme.typography.headlineSmall.fontSize // Larger font size
+                        fontSize = MaterialTheme.typography.headlineMedium.fontSize,
+                        fontWeight = FontWeight.Bold
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
+//                BasicText(
+//                    text = "created by : $createdBy",
+//                    style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
+//                    modifier = Modifier.fillMaxWidth()
+//                )
+            }
+        }
 
-                BasicText(
-                    text = "created by : $createdBy",
-                    style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray),
-                    modifier = Modifier.fillMaxWidth()
+        //Spacer(modifier = Modifier.height(0.dp)) // 縮短距離，根據需要調整此值
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth() // 填滿整個寬度
+                .background(Color(0xFFBBB0A2))
+                .padding(1.dp), // 外邊距
+            horizontalArrangement = Arrangement.End // 內容向右對齊
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(150.dp) // 固定寬度
+                    .padding(4.dp) // 調整內邊距
+                    .background(
+                        color = when {
+                            groupTotalDebt < 0 -> Color(0xF3FF8B8B) // 負數時為紅色
+                            groupTotalDebt > 0 -> Green // 正數時為綠色
+                            else -> Orange4 // 0 為淺黃色
+                        },
+                        shape = RoundedCornerShape(8.dp) // 圓角背景
+                    ),
+                contentAlignment = Alignment.BottomStart
+            ) {
+                Text(
+                    text = when {
+                        groupTotalDebt < 0.0 -> "應付 : ${-groupTotalDebt}" // 負數時為紅色
+                        groupTotalDebt > 0.0 -> "應收 : $groupTotalDebt" // 正數時為綠色
+                        else -> "帳務已結清" // 0 為淺黃色
+                    },
+                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
+                    modifier = Modifier.padding(8.dp) // 調整文字的內邊距
                 )
             }
         }
@@ -88,38 +144,27 @@ fun GroupItem(groupName: String, createdBy: String, onClick: () -> Unit) {
 
 @Composable
 fun GroupList(
+    viewModel: MainViewModel,
     groupItems: List<Group>,
     onGroupClick: (String) -> Unit,
     navController: NavController
 ) {
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(groupItems) { groupItem ->
-            GroupItem(
-                groupName = groupItem.name,
-                createdBy = groupItem.createdBy,
-                onClick = { onGroupClick(groupItem.id) }
-            )
-        }
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = {
-                    navController.navigate("CreateGroupScreen")
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp) // 設定按鈕高度
-                    .padding(vertical = 4.dp)
-            ) {
-                Text("新增群組")
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFE4DFCB)) // 設置整個頁面的背景顏色
+    ) {
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            items(groupItems) { groupItem ->
+                GroupItem(
+                    viewModel = viewModel,
+                    groupId = groupItem.id,
+                    groupName = groupItem.name,
+                    createdBy = groupItem.createdBy,
+                    onClick = { onGroupClick(groupItem.id) },
+                    imageId = groupItem.imageId
+                )
             }
         }
     }
-}
-
-@Preview
-@Composable
-fun GroupItemPreview()
-{
-    GroupItem("Travel","Jason",{})
 }

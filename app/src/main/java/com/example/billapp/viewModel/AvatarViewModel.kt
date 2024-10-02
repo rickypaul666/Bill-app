@@ -92,6 +92,19 @@ class AvatarViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    suspend fun loadAvatar(userId: String): String? {
+        _isLoading.value = true
+        return try {
+            repository.getUserAvatarUrl(userId)
+        } catch (e: Exception) {
+            // Handle error
+            null
+        } finally {
+            _isLoading.value = false
+        }
+    }
+
+
     fun loadGroupAvatar(groupId: String) {
         viewModelScope.launch {
             _isLoading.value = true

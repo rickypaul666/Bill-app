@@ -1,89 +1,54 @@
 package com.example.billapp.group
 
-import android.app.Application
-import android.net.Uri
-import androidx.activity.compose.ManagedActivityResultLauncher
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.rememberAsyncImagePainter
-import com.example.billapp.viewModel.MainViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.billapp.R
-import com.example.billapp.viewModel.AvatarViewModel
+import com.example.billapp.viewModel.MainViewModel
 import com.example.billapp.viewModel.GroupCreationStatus
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateGroup(
     viewModel: MainViewModel,
-    avatarViewModel: AvatarViewModel,
     navController: NavController
 ) {
     var groupName by remember { mutableStateOf("") }
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedImageId by remember { mutableStateOf(0) }
     var showBottomSheet by remember { mutableStateOf(false) }
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    val user by viewModel.user.collectAsState()
+    val userId by remember { mutableStateOf(user?.id ?: "") }
 
     val groupCreationStatus by viewModel.groupCreationStatus.collectAsState()
 
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        imageUri = uri
-    }
-
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )
-
-    Scaffold { contentPadding ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("創建群組", style = MaterialTheme.typography.headlineMedium) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        }
+    ) { contentPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -91,9 +56,6 @@ fun CreateGroup(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Create Group", style = MaterialTheme.typography.headlineMedium)
-            Spacer(modifier = Modifier.height(16.dp))
-
             Box(
                 modifier = Modifier
                     .size(120.dp)
@@ -102,11 +64,7 @@ fun CreateGroup(
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = if (imageUri != null) {
-                        rememberAsyncImagePainter(imageUri)
-                    } else {
-                        painterResource(id = R.drawable.ic_board_place_holder)
-                    },
+                    painter = painterResource(id = getImageResourceById(selectedImageId)),
                     contentDescription = "Group Image",
                     modifier = Modifier
                         .size(100.dp)
@@ -129,7 +87,8 @@ fun CreateGroup(
 
             Button(
                 onClick = {
-                    viewModel.createGroup(groupName, imageUri, context)
+                    viewModel.createGroupWithImageId(groupName, selectedImageId)
+                    viewModel.updateUserExperience(userId,10)
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -139,38 +98,21 @@ fun CreateGroup(
 
         if (showBottomSheet) {
             ModalBottomSheet(
-                onDismissRequest = {
-                    scope.launch { sheetState.hide() }.invokeOnCompletion {
-                        showBottomSheet = false
-                    }
-                },
-                sheetState = sheetState
+                onDismissRequest = { showBottomSheet = false }
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .fillMaxHeight(0.6f)
+                        .padding(16.dp)
                 ) {
-                    CreateGroupPresetAvatars(
-                        onImageSelected = { uri ->
-                            imageUri = uri
-                            showBottomSheet = false
-                        },
-                        launcher = launcher
-                    )
-
+                    Text("Select Group Image", style = MaterialTheme.typography.titleLarge)
                     Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(
-                        onClick = {
-                            scope.launch { sheetState.hide() }.invokeOnCompletion {
-                                showBottomSheet = false
-                            }
-                        },
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    ) {
-                        Text("Cancel")
-                    }
+                    CreateGroupPresetImages(
+                        onImageSelected = { id ->
+                            selectedImageId = id
+                            showBottomSheet = false
+                        }
+                    )
                 }
             }
         }
@@ -185,70 +127,37 @@ fun CreateGroup(
 }
 
 @Composable
-fun CreateGroupPresetAvatars(
-    onImageSelected: (Uri?) -> Unit,
-    launcher: ManagedActivityResultLauncher<String, Uri?>
+fun CreateGroupPresetImages(
+    onImageSelected: (Int) -> Unit
 ) {
-    val presets = listOf(
-        R.drawable.image_group_travel,
-        R.drawable.image_group_house,
-        R.drawable.image_group_dining,
-        R.drawable.image_group_shopping
-    )
-
-    val context = LocalContext.current
+    val presets = listOf(1, 2, 3, 4)
 
     LazyVerticalGrid(
-        columns = GridCells.Fixed(3),
+        columns = GridCells.Fixed(2),
         contentPadding = PaddingValues(8.dp)
     ) {
-        item {
-            Box(
-                modifier = Modifier
-                    .size(100.dp)
-                    .padding(8.dp)
-                    .clip(CircleShape)
-                    .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                    .background(MaterialTheme.colorScheme.surface)
-                    .clickable {
-                        launcher.launch("image/*")
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.add_photo),
-                    contentDescription = "Choose from gallery",
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(40.dp)
-                )
-            }
-        }
-        items(presets) { preset ->
+        items(presets) { imageId ->
             Image(
-                painter = painterResource(id = preset),
-                contentDescription = "Preset Group Avatar",
+                painter = painterResource(id = getImageResourceById(imageId)),
+                contentDescription = "Preset Group Image $imageId",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(100.dp)
+                    .size(120.dp)
                     .padding(8.dp)
                     .clip(CircleShape)
                     .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                    .clickable {
-                        val uri = Uri.parse("android.resource://${context.packageName}/$preset")
-                        onImageSelected(uri)
-                    }
+                    .clickable { onImageSelected(imageId) }
             )
         }
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun CreateGroupPreview() {
-    // Create a mock NavController
-    val navController = rememberNavController()
-    // Create a mock or default MainViewModel
-    val viewModel = MainViewModel() // You may need to provide required parameters or use a factory if necessary
-    val avatarViewModel = AvatarViewModel(LocalContext.current.applicationContext as Application)
-    CreateGroup(navController = navController, viewModel = viewModel, avatarViewModel = avatarViewModel)
+fun getImageResourceById(imageId: Int): Int {
+    return when (imageId) {
+        1 -> R.drawable.image_group_travel
+        2 -> R.drawable.image_group_house
+        3 -> R.drawable.image_group_dining
+        4 -> R.drawable.image_group_shopping
+        else -> R.drawable.ic_board_place_holder
+    }
 }

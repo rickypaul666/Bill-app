@@ -171,9 +171,12 @@ fun AvatarScreen(viewModel: AvatarViewModel) {
 fun PresetAvatars(viewModel: AvatarViewModel) {
     val presets = listOf(
         R.drawable.image1,
-        R.drawable.image2,
-        R.drawable.image3,
-        R.drawable.image4
+        R.drawable.image10,
+        R.drawable.image11,
+        R.drawable.image12,
+        R.drawable.image7,
+        R.drawable.image8,
+        R.drawable.image9
     )
 
     val launcher = rememberLauncherForActivityResult(
