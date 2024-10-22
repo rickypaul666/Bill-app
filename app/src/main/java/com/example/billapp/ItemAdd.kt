@@ -329,14 +329,14 @@ fun ItemAdd(
                 ) {
                     Text("個人",color = if (personalOrGroup == "個人") LightGray  else DarkGray, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
-                Button(
-                    onClick = { personalOrGroup = "群組" },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (personalOrGroup == "群組") Brown1 else ButtonGrayColor
-                    )
-                ) {
-                    Text("群組",color = if (personalOrGroup == "群組") LightGray  else DarkGray, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                }
+//                Button(
+//                    onClick = { personalOrGroup = "群組" },
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = if (personalOrGroup == "群組") Brown1 else ButtonGrayColor
+//                    )
+//                ) {
+//                    Text("群組",color = if (personalOrGroup == "群組") LightGray  else DarkGray, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+//                }
             }
 
             Spacer(modifier = Modifier.height(14.dp))
