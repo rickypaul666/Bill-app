@@ -3,7 +3,6 @@ package com.example.billapp
 import AvatarScreen
 import ExposedDropdown
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -38,7 +37,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -59,6 +57,7 @@ import com.example.billapp.group.CreateGroup
 import com.example.billapp.group.GroupInviteLinkScreen
 import com.example.billapp.group.GroupScreen
 import com.example.billapp.group.GroupSettingScreen
+import com.example.billapp.group.MemberListScreen
 import com.example.billapp.models.User
 import com.example.billapp.personal.EditTransactionDetailScreen
 import com.example.billapp.personal.PersonalUIScreen
@@ -303,7 +302,7 @@ fun MainScreen(
 
                 composable("memberListScreen/{groupId}") { backStackEntry ->
                     val groupId = backStackEntry.arguments?.getString("groupId") ?: return@composable
-                    MemberListScreen(navController, viewModel, groupId)
+                    MemberListScreen(navController, viewModel, avatarViewModel, groupId)
                 }
 
 
