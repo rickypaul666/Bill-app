@@ -2,6 +2,7 @@ package com.example.billapp.setting
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +36,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.billapp.viewModel.MainViewModel
+import com.example.billapp.ui.theme.MainBackgroundColor
+import com.example.billapp.ui.theme.Brown5
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,23 +55,28 @@ fun ContactUsScreen(
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Brown5
+                )
             )
         }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(16.dp)
+                .padding(0.dp)
                 .fillMaxWidth()
-                .fillMaxHeight(),
+                .fillMaxHeight()
+                .background(color = MainBackgroundColor),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
+                    .weight(1f)
+                    .background(color = MainBackgroundColor),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -106,6 +115,9 @@ fun ContactUsScreen(
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://forms.gle/tf5imsLTd5bfp3tp8"))
                             context.startActivity(intent)
                         },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Brown5
+                        ),
                         modifier = Modifier.fillMaxWidth(0.8f)
                     ) {
                         Text(text = "意見調查")
@@ -114,6 +126,9 @@ fun ContactUsScreen(
                         onClick = {
                             navController.navigate("currency")
                         },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Brown5
+                        ),
                         modifier = Modifier.fillMaxWidth(0.8f)
                     ) {
                         Text(text = "貨幣轉換器")
