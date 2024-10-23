@@ -1,8 +1,10 @@
 package com.example.billapp.setting
 
 import android.content.pm.PackageManager
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -13,6 +15,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -23,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.billapp.ui.theme.MainBackgroundColor
+import com.example.billapp.ui.theme.Brown5
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +49,8 @@ fun AboutScreen(navController: NavController) {
     val versionName = packageInfo?.versionName ?: "Unknown"
 
     Scaffold(
+        modifier = Modifier
+            .background(color = MainBackgroundColor),
         topBar = {
             TopAppBar(
                 title = { Text(text = "關於我們") },
@@ -51,16 +58,19 @@ fun AboutScreen(navController: NavController) {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Brown5
+                )
             )
         }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.Center
+                .fillMaxSize()
+                .background(color = MainBackgroundColor),
+            verticalArrangement = Arrangement.Top
         ) {
             Text(
                 text = "Ca Bill Ba Ra",
