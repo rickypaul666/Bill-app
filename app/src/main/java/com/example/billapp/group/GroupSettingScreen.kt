@@ -27,9 +27,9 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.billapp.CustomBottomSheet
 import com.example.billapp.R
-import com.example.billapp.models.Group
-import com.example.billapp.models.GroupTransaction
-import com.example.billapp.models.User
+import com.example.billapp.data.models.Group
+import com.example.billapp.data.models.GroupTransaction
+import com.example.billapp.data.models.User
 import com.example.billapp.ui.theme.*
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel

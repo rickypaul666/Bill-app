@@ -34,7 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.billapp.R
-import com.example.billapp.models.Group
+import com.example.billapp.data.models.Group
 import com.example.billapp.ui.theme.Green
 import com.example.billapp.ui.theme.Orange4
 import com.example.billapp.ui.theme.Purple40

@@ -18,7 +18,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.billapp.QRCodeScannerScreen
 import com.example.billapp.R
-import com.example.billapp.models.User
+import com.example.billapp.data.models.User
 import com.example.billapp.ui.theme.Brown1
 import com.example.billapp.ui.theme.Brown2
 import com.example.billapp.ui.theme.Brown5

@@ -66,9 +66,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.billapp.group.getImageResourceById
-import com.example.billapp.models.Group
-import com.example.billapp.models.PersonalTransaction
-import com.example.billapp.models.User
+import com.example.billapp.data.models.Group
+import com.example.billapp.data.models.PersonalTransaction
+import com.example.billapp.data.models.User
 import com.example.billapp.ui.theme.BoxBackgroundColor
 import com.example.billapp.ui.theme.Brown1
 import com.example.billapp.ui.theme.Brown2

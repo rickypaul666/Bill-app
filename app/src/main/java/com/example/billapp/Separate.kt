@@ -29,7 +29,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.billapp.models.User
+import com.example.billapp.data.models.User
 import com.example.billapp.viewModel.MainViewModel
 
 @Composable

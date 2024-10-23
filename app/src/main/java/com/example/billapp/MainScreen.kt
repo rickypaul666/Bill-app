@@ -58,7 +58,7 @@ import com.example.billapp.group.GroupInviteLinkScreen
 import com.example.billapp.group.GroupScreen
 import com.example.billapp.group.GroupSettingScreen
 import com.example.billapp.group.MemberListScreen
-import com.example.billapp.models.User
+import com.example.billapp.data.models.User
 import com.example.billapp.personal.EditTransactionDetailScreen
 import com.example.billapp.personal.PersonalUIScreen
 import com.example.billapp.setting.AboutScreen
@@ -72,6 +72,7 @@ import com.example.billapp.ui.theme.BlueGray
 import com.example.billapp.ui.theme.BottomBackgroundColor
 import com.example.billapp.ui.theme.DarkGray
 import com.example.billapp.ui.theme.White
+import com.example.billapp.viewModel.AchievementViewModel
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
 import kotlinx.coroutines.launch
@@ -81,6 +82,7 @@ import kotlinx.coroutines.launch
 fun MainScreen(
     viewModel: MainViewModel,
     avatarViewModel: AvatarViewModel,
+    achievementViewModel: AchievementViewModel,
     requestPermission: (String) -> Unit
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)

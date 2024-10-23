@@ -43,7 +43,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.navigation.NavController
-import com.example.billapp.models.TransactionCategory
+import com.example.billapp.data.models.TransactionCategory
 import com.example.billapp.viewModel.MainViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.animation.AnimatedVisibility

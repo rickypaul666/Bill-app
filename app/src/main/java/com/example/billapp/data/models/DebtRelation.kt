@@ -1,4 +1,4 @@
-package com.example.billapp.models
+package com.example.billapp.data.models
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize

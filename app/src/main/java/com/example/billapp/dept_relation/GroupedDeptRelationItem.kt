@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.billapp.R
-import com.example.billapp.models.DebtRelation
+import com.example.billapp.data.models.DebtRelation
 import com.example.billapp.ui.theme.Black
 import com.example.billapp.ui.theme.Brown5
 import com.example.billapp.viewModel.MainViewModel

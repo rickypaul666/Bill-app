@@ -10,11 +10,11 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.billapp.MainActivity
 import com.example.billapp.R
-import com.example.billapp.models.DebtRelation
-import com.example.billapp.models.Group
-import com.example.billapp.models.GroupTransaction
-import com.example.billapp.models.PersonalTransaction
-import com.example.billapp.models.User
+import com.example.billapp.data.models.DebtRelation
+import com.example.billapp.data.models.Group
+import com.example.billapp.data.models.GroupTransaction
+import com.example.billapp.data.models.PersonalTransaction
+import com.example.billapp.data.models.User
 import com.example.billapp.utils.Constants
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -273,7 +273,8 @@ object FirebaseRepository {
 
     suspend fun getCurrentUser(): User = withContext(Dispatchers.IO) {
         val currentUser = getAuthInstance().currentUser ?: throw IllegalStateException("No user logged in")
-        getFirestoreInstance().collection("users").document(currentUser.uid).get().await().toObject(User::class.java)
+        getFirestoreInstance().collection("users").document(currentUser.uid).get().await().toObject(
+            User::class.java)
             ?: throw IllegalStateException("User data not found")
     }
 

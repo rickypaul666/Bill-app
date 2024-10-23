@@ -1,6 +1,6 @@
 package com.example.billapp.firebase
 
-import com.example.billapp.models.User
+import com.example.billapp.data.models.User
 import com.example.billapp.utils.Constants
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore

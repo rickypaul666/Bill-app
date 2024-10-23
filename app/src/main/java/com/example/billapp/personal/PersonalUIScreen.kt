@@ -38,7 +38,7 @@ import com.example.billapp.PieChart
 import com.example.billapp.PieChartWithCategory
 import com.example.billapp.R
 import com.example.billapp.YearPickerDialog
-import com.example.billapp.models.TransactionCategory
+import com.example.billapp.data.models.TransactionCategory
 import com.example.billapp.ui.theme.ButtonRedColor
 import com.example.billapp.ui.theme.MainBackgroundColor
 import com.example.billapp.viewModel.MainViewModel

@@ -34,7 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.billapp.R
-import com.example.billapp.models.User
+import com.example.billapp.data.models.User
 import com.example.billapp.ui.theme.BillAppTheme
 import com.example.billapp.ui.theme.BoxBackgroundColor
 import com.example.billapp.ui.theme.Orange1

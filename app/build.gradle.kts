@@ -1,9 +1,14 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
     id("kotlin-parcelize")
+    kotlin("kapt")
+    id("org.jetbrains.kotlin.android")
+    id("com.google.devtools.ksp") version "1.9.20-1.0.14"
+
 }
+
+
 
 android {
     namespace = "com.example.billapp"
@@ -43,7 +48,7 @@ android {
         viewBinding = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.4"
     }
     packaging {
         resources {
@@ -122,8 +127,8 @@ dependencies {
     implementation ("androidx.compose.material3:material3:1.2.0-alpha02")
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0") // 更新為最新版本
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0") // 更新為最新版本
     implementation ("androidx.datastore:datastore-preferences:1.0.0")
 
     //icon
@@ -153,6 +158,11 @@ dependencies {
 
     implementation ("com.google.accompanist:accompanist-pager:0.28.0")
     implementation ("com.google.accompanist:accompanist-pager-indicators:0.28.0")
+
+    implementation("androidx.room:room-runtime:${rootProject.extra["room_version"]}")
+    ksp("androidx.room:room-compiler:${rootProject.extra["room_version"]}")
+    implementation("androidx.room:room-ktx:${rootProject.extra["room_version"]}")
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
