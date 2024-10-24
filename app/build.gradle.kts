@@ -81,6 +81,7 @@ dependencies {
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.play.services.nearby)
+    implementation(libs.androidx.ui.test.android)
 
     val compose_version = "1.5.1"
     implementation ("androidx.compose.material:material:$compose_version")

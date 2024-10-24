@@ -31,7 +31,6 @@ import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -65,10 +64,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.billapp.group.getImageResourceById
 import com.example.billapp.data.models.Group
 import com.example.billapp.data.models.PersonalTransaction
 import com.example.billapp.data.models.User
+import com.example.billapp.group.getImageResourceById
 import com.example.billapp.ui.theme.BoxBackgroundColor
 import com.example.billapp.ui.theme.Brown1
 import com.example.billapp.ui.theme.Brown2
@@ -78,7 +77,6 @@ import com.example.billapp.ui.theme.MainBackgroundColor
 import com.example.billapp.ui.theme.MainCardRedColor
 import com.example.billapp.ui.theme.PieGreenColor
 import com.example.billapp.ui.theme.PieRedColor
-import com.example.billapp.ui.theme.Purple40
 import com.example.billapp.ui.theme.Red
 import com.example.billapp.ui.theme.VeryDarkGray
 import com.example.billapp.viewModel.AvatarViewModel

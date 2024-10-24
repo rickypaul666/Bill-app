@@ -1,20 +1,23 @@
 package com.example.billapp
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.LinearProgressIndicator
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Egg
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.LocalDining
-import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -24,13 +27,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.billapp.data.models.Achievement
 import com.example.billapp.data.models.Badge
-
-//導入fillMaxWidth
-import androidx.compose.foundation.layout.fillMaxWidth
 
 @Composable
 fun AchievementsSection(
@@ -39,7 +38,7 @@ fun AchievementsSection(
 ) {
     Column(
         modifier = modifier
-            .fillMaxWidth() // 這裡正確使用fillMaxWidth
+            .fillMaxWidth()
             .padding(16.dp)
     ) {
         Row(
@@ -48,7 +47,7 @@ fun AchievementsSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "目前排名：Top 40%",
+                text = "我的成就",
                 style = MaterialTheme.typography.titleMedium
             )
             TextButton(onClick = { /* 查看成就 */ }) {
@@ -56,12 +55,12 @@ fun AchievementsSection(
             }
         }
 
-        Text(
-            text = "本賽季日期：2024/09/01-2024/10/31",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(vertical = 8.dp)
-        )
+//        Text(
+//            text = "本賽季日期：2024/09/01-2024/10/31",
+//            style = MaterialTheme.typography.bodySmall,
+//            color = MaterialTheme.colorScheme.onSurfaceVariant,
+//            modifier = Modifier.padding(vertical = 8.dp)
+//        )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -82,21 +81,22 @@ fun AchievementCircle(achievement: Achievement) {
             .size(80.dp)
             .padding(4.dp)
     ) {
+        val progress = achievement.currentCount.toFloat() / achievement.maxCount.toFloat()
         CircularProgressIndicator(
-            progress = achievement.progress,
+            progress = progress,
             modifier = Modifier.fillMaxSize(),
-            color = Color(0xFF4CAF50),
+            color = if (progress >= 1f) Color(0xFF4CAF50) else Color.Gray,
             strokeWidth = 4.dp
         )
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Top",
+                text = "進度",
                 style = MaterialTheme.typography.bodySmall
             )
             Text(
-                text = "${(achievement.progress * 100).toInt()}%",
+                text = "${(progress * 100).toInt()}%",
                 style = MaterialTheme.typography.titleMedium
             )
         }
@@ -110,7 +110,7 @@ fun BadgesSection(
 ) {
     Column(
         modifier = modifier
-            .fillMaxWidth() // 正確使用fillMaxWidth
+            .fillMaxWidth()
             .padding(16.dp)
     ) {
         Row(
@@ -119,7 +119,7 @@ fun BadgesSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "我的微章",
+                text = "我的徽章",
                 style = MaterialTheme.typography.titleMedium
             )
             TextButton(onClick = { /* 查看全部 */ }) {
@@ -165,7 +165,7 @@ fun BadgeItem(badge: Badge) {
                 tint = if (badge.isUnlocked)
                     MaterialTheme.colorScheme.primary
                 else
-                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) // 灰色圖標
             )
         }
 
@@ -183,31 +183,5 @@ fun BadgeItem(badge: Badge) {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-    }
-}
-
-// Example usage
-@Preview
-@Composable
-fun AchievementScreenPreview() {
-    val achievements = listOf(
-        Achievement("登入&發票", 0.4f),
-        Achievement("任務參與", 1f),
-        Achievement("活躍指數", 1f)
-    )
-
-    val badges = listOf(
-        Badge("noodle", "初次見麵", Icons.Outlined.Restaurant, true, 0.3f),
-        Badge("vegetables", "乾巴巴菜蟲", Icons.Outlined.Info, false, 0f),
-        Badge("egg", "散蛋", Icons.Outlined.Egg, true, 0.7f),
-        Badge("meat", "肉食主義者", Icons.Outlined.LocalDining, true, 1f)
-    )
-
-    MaterialTheme {
-        Column {
-            AchievementsSection(achievements)
-            Divider()
-            BadgesSection(badges)
-        }
     }
 }

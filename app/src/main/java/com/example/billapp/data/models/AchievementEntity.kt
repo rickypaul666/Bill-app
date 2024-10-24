@@ -8,8 +8,8 @@ data class AchievementEntity(
     @PrimaryKey val id: String,
     val title: String,
     val description: String,
-    val currentProgress: Float,
-    val maxProgress: Float,
+    val currentCount: Int,  // 用於紀錄已完成的次數
+    val targetCount: Int,   // 目標次數
     val color: Int,
     val lastUpdated: Long = System.currentTimeMillis()
 )

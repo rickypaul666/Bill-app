@@ -40,7 +40,9 @@ class AchievementViewModel(application: Application) : AndroidViewModel(applicat
                 entities.map { entity ->
                     Achievement(
                         title = entity.title,
-                        progress = entity.currentProgress / entity.maxProgress,
+                        currentCount = entity.currentCount,
+                        maxCount = entity.targetCount,
+                        color = Color(entity.color),
                     )
                 }
             }
@@ -69,9 +71,9 @@ class AchievementViewModel(application: Application) : AndroidViewModel(applicat
             )
     }
 
-    fun updateAchievementProgress(id: String, progress: Float) {
+    fun updateAchievementCount(id: String, count: Int) {
         viewModelScope.launch {
-            repository.updateAchievementProgress(id, progress)
+            repository.updateAchievementProgress(id, count)
         }
     }
 

@@ -38,7 +38,6 @@ import com.example.billapp.viewModel.MainViewModel
 import kotlinx.coroutines.launch
 
 val lightBrown = Color(0xFF6D4C41)
-//fwnt12345
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingScreen(
@@ -88,6 +87,17 @@ fun SettingScreen(
             NotificationSwitch()
             SettingsList(navController,context)
             Spacer(modifier = Modifier.weight(1f))
+
+            Button(
+                onClick = { navController.navigate("achievements") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text("成就", color = MaterialTheme.colorScheme.onError)
+            }
+
             LogoutButton(viewModel, navController, onCloseDrawer)
         }
     }

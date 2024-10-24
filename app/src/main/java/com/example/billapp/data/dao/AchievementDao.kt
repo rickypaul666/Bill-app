@@ -22,6 +22,6 @@ interface AchievementDao {
     @Update
     suspend fun updateAchievement(achievement: AchievementEntity)
 
-    @Query("UPDATE achievements SET currentProgress = :progress, lastUpdated = :timestamp WHERE id = :achievementId")
-    suspend fun updateProgress(achievementId: String, progress: Float, timestamp: Long = System.currentTimeMillis())
+    @Query("UPDATE achievements SET currentCount = :count, lastUpdated = :timestamp WHERE id = :achievementId")
+    suspend fun updateProgress(achievementId: String, count: Int, timestamp: Long = System.currentTimeMillis())
 }

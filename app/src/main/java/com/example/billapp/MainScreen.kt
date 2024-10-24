@@ -325,6 +325,13 @@ fun MainScreen(
                     )
                 }
 
+                composable("achievements") {
+                    AchievementsScreen(
+                        achievementViewModel = achievementViewModel,
+                        onNavigateBack = { navController.navigateUp() }
+                    )
+                }
+
 
             }
         }
