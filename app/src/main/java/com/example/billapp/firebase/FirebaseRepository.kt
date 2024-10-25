@@ -7,17 +7,23 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.core.app.NotificationCompat
 import com.example.billapp.MainActivity
 import com.example.billapp.R
+import com.example.billapp.data.models.Achievement
+import com.example.billapp.data.models.Badge
 import com.example.billapp.data.models.DebtRelation
 import com.example.billapp.data.models.Group
 import com.example.billapp.data.models.GroupTransaction
 import com.example.billapp.data.models.PersonalTransaction
 import com.example.billapp.data.models.User
 import com.example.billapp.utils.Constants
+import com.google.android.gms.nearby.connection.AuthenticationException
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -30,6 +36,10 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 import com.google.firebase.messaging.RemoteMessage
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.map
 
 object FirebaseRepository {
 
@@ -91,6 +101,240 @@ object FirebaseRepository {
                 .update("budget", budget)
         }
     }
+
+    // achievement //
+
+    // Achievement functions
+    fun getAllAchievements(): Flow<List<Achievement>> = callbackFlow {
+        val userId = getAuthInstance().currentUser?.uid ?: return@callbackFlow
+        val subscription = getFirestoreInstance().collection("users")
+            .document(userId)
+            .collection("achievements")
+            .addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                return@addSnapshotListener
+            }
+            val achievements = snapshot?.documents?.mapNotNull { doc ->
+                doc.toObject(Achievement::class.java)?.let {
+                    Achievement(
+                        title = it.title,
+                        currentCount = it.currentCount,
+                        targetCount = it.targetCount,
+                        color = Color(it.color).toArgb()
+                    )
+                }
+            } ?: emptyList()
+            trySend(achievements)
+        }
+        awaitClose { subscription.remove() }
+    }
+
+    suspend fun updateAchievementProgress(id: String, count: Int,userId: String) {
+        getFirestoreInstance().collection("users")
+            .document(userId)
+            .collection("achievements")
+            .document(id)
+            .update(
+                mapOf(
+                    "currentCount" to count,
+                    "lastUpdated" to Timestamp.now()
+                )
+            ).await()
+    }
+
+    // Badge functions
+    fun getAllBadges(userId: String): Flow<List<Badge>> = callbackFlow {
+
+        val subscription = getFirestoreInstance().collection("users")
+            .document(userId)
+            .collection("badges")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    return@addSnapshotListener
+                }
+                val badges = snapshot?.documents?.mapNotNull { doc ->
+                    doc.toObject(Badge::class.java)?.let {
+                        Badge(
+                            id = it.id,
+                            name = it.name,
+                            iconName = it.iconName,
+                            isUnlocked = it.isUnlocked,
+                            currentProgress = it.currentProgress,
+                            maxProgress = it.maxProgress
+                        )
+                    }
+                } ?: emptyList()
+                trySend(badges)
+            }
+            awaitClose { subscription.remove() }
+    }
+
+    fun getUnlockedBadges(userId: String): Flow<List<Badge>> = getAllBadges(userId).map { badges ->
+        badges.filter { it.isUnlocked }
+    }
+
+    suspend fun updateBadgeProgress(id: String, progress: Float,userId: String) {
+        val badge = getFirestoreInstance().collection("users")
+            .document(userId)
+            .collection("badges")
+            .document(id)
+            .get()
+            .await()
+            .toObject(Badge::class.java)
+        if (badge != null) {
+            val isNewlyUnlocked = !badge.isUnlocked && progress >= badge.maxProgress
+            val updates = mutableMapOf<String, Any>(
+                "currentProgress" to progress,
+                "lastUpdated" to Timestamp.now()
+            )
+            if (isNewlyUnlocked) {
+                updates["isUnlocked"] = true
+                updates["unlockedDate"] = Timestamp.now()
+            }
+            getFirestoreInstance().collection("users")
+                .document(userId)
+                .collection("badges")
+                .document(id).update(updates).await()
+        }
+    }
+
+    // Initial data setup
+    suspend fun initializeAchievementsIfEmpty(userId: String) {
+        val snapshot = getFirestoreInstance().collection("users")
+            .document(userId)
+            .collection("achievements")
+            .limit(1)
+            .get()
+            .await()
+        if (snapshot.isEmpty) {
+            val defaultAchievements = listOf(
+                Achievement(id = "record_master", title = "記帳達人", description = "累積記帳 100 次", currentCount = 0, targetCount = 100, color = Color.Blue.toArgb()),
+                Achievement(id = "debt_master", title = "分帳達人", description = "累積完成 50 次分帳", currentCount = 0, targetCount = 50, color = Color.Green.toArgb()),
+                Achievement(id = "trust_streak", title = "誠信保持者", description = "保持信任度 100% 超過 30 天", currentCount = 0, targetCount = 30, color = Color.Yellow.toArgb())
+            )
+            defaultAchievements.forEach { achievement ->
+                getFirestoreInstance().collection("users")
+                    .document(userId)
+                    .collection("achievements")
+                    .document(achievement.id).set(achievement).await()
+            }
+        }
+    }
+
+    suspend fun initializeBadgesIfEmpty(userId: String) {
+        val snapshot = getFirestoreInstance().collection("users")
+            .document(userId)
+            .collection("badges")
+            .limit(1).get().await()
+        if (snapshot.isEmpty) {
+            val defaultBadges = getDefaultBadges()
+            defaultBadges.forEach { badge ->
+                getFirestoreInstance().collection("users")
+                    .document(userId)
+                    .collection("badges")
+                    .document(badge.id).set(badge).await()
+            }
+        }
+    }
+
+    private fun getDefaultBadges(): List<Badge> = listOf(
+        Badge(
+            id = "first_split_badge",
+            name = "初次分帳",
+            description = "首次與好友完成分帳",
+            iconName = "handshake_icon",
+            currentProgress = 0f,
+            maxProgress = 1f
+        ),
+        Badge(
+            id = "savings_badge",
+            name = "節儉大師",
+            description = "連續 30 天支出少於 1000 元",
+            iconName = "piggy_bank_icon",
+            currentProgress = 0f,
+            maxProgress = 30f
+        ),
+        Badge(
+            id = "social_star_badge",
+            name = "社交新星",
+            description = "達到社交等級 3",
+            iconName = "star_icon",
+            currentProgress = 0f,
+            maxProgress = 3f
+        ),
+        Badge(
+            id = "trust_shield_badge",
+            name = "信用超人",
+            description = "信任度保持 100% 超過 15 天",
+            iconName = "shield_icon",
+            currentProgress = 0f,
+            maxProgress = 15f
+        ),
+        Badge(
+            id = "debt_hero_badge",
+            name = "還款俠客",
+            description = "快速還清超過 10 筆債務",
+            iconName = "sword_icon",
+            currentProgress = 0f,
+            maxProgress = 10f
+        ),
+        Badge(
+            id = "accounting_badge",
+            name = "記帳達人",
+            description = "累積記帳 100 次",
+            iconName = "accounting_icon",
+            currentProgress = 0f,
+            maxProgress = 100f,
+            isUnlocked = false
+        ),
+        Badge(
+            id = "trust_master_badge",
+            name = "人見人愛",
+            description = "信任度保持 100% 超過一個月",
+            iconName = "trust_icon",
+            currentProgress = 0f,
+            maxProgress = 30f,
+            isUnlocked = false
+        ),
+        Badge(
+            id = "quick_debt_clear_badge",
+            name = "快速清帳",
+            description = "欠款後一天內還款三次",
+            iconName = "quick_clear_icon",
+            currentProgress = 0f,
+            maxProgress = 3f,
+            isUnlocked = false
+        ),
+        Badge(
+            id = "social_master_badge",
+            name = "社交高手",
+            description = "創建 5 個群組並在每個群組完成一筆分帳交易",
+            iconName = "social_master_icon",
+            currentProgress = 0f,
+            maxProgress = 5f,
+            isUnlocked = false
+        ),
+        Badge(
+            id = "savings_master_badge",
+            name = "省錢達人",
+            description = "連續記錄 30 天支出並保持結餘為正",
+            iconName = "saving_icon",
+            currentProgress = 0f,
+            maxProgress = 30f,
+            isUnlocked = false
+        ),
+        Badge(
+            id = "accounting_streak_badge",
+            name = "全勤記帳王",
+            description = "連續記帳 7 天",
+            iconName = "streak_icon",
+            currentProgress = 0f,
+            maxProgress = 7f,
+            isUnlocked = false
+        )
+    )
+
+    ////
 
     private const val GROUPS_COLLECTION = "groups"
     private const val DEBT_RELATIONS_COLLECTION = "debtRelations"

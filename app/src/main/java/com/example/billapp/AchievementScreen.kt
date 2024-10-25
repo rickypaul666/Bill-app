@@ -20,16 +20,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
-import com.example.billapp.viewModel.AchievementViewModel
 import androidx.compose.ui.Modifier
+import com.example.billapp.viewModel.MainViewModel
 
 @Composable
 fun AchievementsScreen(
-    achievementViewModel: AchievementViewModel,
+    viewModel: MainViewModel,
     onNavigateBack: () -> Unit
 ) {
-    val achievements by achievementViewModel.achievements.collectAsState()
-    val badges by achievementViewModel.badges.collectAsState()
+    val achievements by viewModel.achievements.collectAsState()
+    val badges by viewModel.badges.collectAsState()
 
     Column(
         modifier = Modifier

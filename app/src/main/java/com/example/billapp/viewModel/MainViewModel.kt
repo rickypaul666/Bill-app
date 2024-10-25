@@ -4,8 +4,15 @@ import AvatarRepository
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Restaurant
+import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.outlined.ThumbUp
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.billapp.data.models.Achievement
+import com.example.billapp.data.models.Badge
 import com.example.billapp.firebase.FirebaseRepository
 import com.example.billapp.data.models.DebtRelation
 import com.example.billapp.data.models.Group
@@ -20,8 +27,10 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
@@ -109,8 +118,40 @@ class MainViewModel : ViewModel() {
     private val _isUserLoggedIn = MutableStateFlow(false) // 初始值為 false
     val isUserLoggedIn: StateFlow<Boolean> = _isUserLoggedIn
 
+    private val _achievements = MutableStateFlow<List<Achievement>>(emptyList())
+    val achievements: StateFlow<List<Achievement>> = _achievements.asStateFlow()
+
+    private val _badges = MutableStateFlow<List<Badge>>(emptyList())
+    val badges: StateFlow<List<Badge>> = _badges.asStateFlow()
+
     init {
         checkCurrentUser()
+    }
+
+    private fun checkCurrentUser() {
+        viewModelScope.launch {
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            if (currentUser != null) {
+                loadUserData(currentUser.uid)
+                loadUserGroups()
+                loadUserTransactions()
+                FirebaseRepository.initializeAchievementsIfEmpty(currentUser.uid)
+                FirebaseRepository.initializeBadgesIfEmpty(currentUser.uid)
+            }
+            _isUserLoggedIn.value = currentUser != null
+        }
+    }
+
+    fun updateAchievementCount(id: String, count: Int, userId: String) {
+        viewModelScope.launch {
+            FirebaseRepository.updateAchievementProgress(id, count, userId)
+        }
+    }
+
+    fun updateBadgeProgress(id: String, progress: Float,userId: String) {
+        viewModelScope.launch {
+            FirebaseRepository.updateBadgeProgress(id, progress,userId)
+        }
     }
 
     sealed class AuthState {
@@ -238,17 +279,7 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    private fun checkCurrentUser() {
-        viewModelScope.launch {
-            val currentUser = FirebaseAuth.getInstance().currentUser
-            if (currentUser != null) {
-                loadUserData(currentUser.uid)
-                loadUserGroups()
-                loadUserTransactions()
-            }
-            _isUserLoggedIn.value = currentUser != null
-        }
-    }
+
 
     fun loadUserData(userId: String) {
         viewModelScope.launch {

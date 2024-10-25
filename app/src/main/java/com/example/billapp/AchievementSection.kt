@@ -18,6 +18,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.LinearProgressIndicator
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Handshake
+import androidx.compose.material.icons.filled.Savings
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -25,6 +30,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -81,7 +89,7 @@ fun AchievementCircle(achievement: Achievement) {
             .size(80.dp)
             .padding(4.dp)
     ) {
-        val progress = achievement.currentCount.toFloat() / achievement.maxCount.toFloat()
+        val progress = achievement.currentCount.toFloat() / achievement.targetCount.toFloat()
         CircularProgressIndicator(
             progress = progress,
             modifier = Modifier.fillMaxSize(),
@@ -160,7 +168,7 @@ fun BadgeItem(badge: Badge) {
                 )
         ) {
             Icon(
-                imageVector = badge.icon,
+                painter = getIconForName(badge.iconName),
                 contentDescription = badge.name,
                 tint = if (badge.isUnlocked)
                     MaterialTheme.colorScheme.primary
@@ -170,7 +178,7 @@ fun BadgeItem(badge: Badge) {
         }
 
         LinearProgressIndicator(
-            progress = badge.progress,
+            progress = badge.currentProgress / badge.maxProgress,
             modifier = Modifier
                 .width(50.dp)
                 .padding(vertical = 4.dp)
@@ -184,4 +192,26 @@ fun BadgeItem(badge: Badge) {
             overflow = TextOverflow.Ellipsis
         )
     }
+
 }
+
+@Composable
+fun getIconForName(name: String): Painter {
+    return when (name) {
+        "handshake_icon" -> painterResource(id = R.drawable.handshake_icon)
+        "piggy_bank_icon" -> painterResource(id = R.drawable.piggy_bank_icon)
+        "star_icon" -> painterResource(id = R.drawable.star_icon)
+        "shield_icon" -> painterResource(id = R.drawable.shield_icon)
+        "sword_icon" -> painterResource(id = R.drawable.sword_icon)
+        "accounting_icon" -> painterResource(id = R.drawable.accounting_icon)
+        "trust_icon" -> painterResource(id = R.drawable.trust_icon)
+        "quick_clear_icon" -> painterResource(id = R.drawable.quick_clear_icon)
+        "social_master_icon" -> painterResource(id = R.drawable.social_master_icon)
+        "saving_icon" -> painterResource(id = R.drawable.saving_icon)
+        "streak_icon" -> painterResource(id = R.drawable.streak_icon)
+        else -> painterResource(id= R.drawable.ic_board_place_holder)
+    }
+}
+
+
+

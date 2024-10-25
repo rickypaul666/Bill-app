@@ -72,7 +72,6 @@ import com.example.billapp.ui.theme.BlueGray
 import com.example.billapp.ui.theme.BottomBackgroundColor
 import com.example.billapp.ui.theme.DarkGray
 import com.example.billapp.ui.theme.White
-import com.example.billapp.viewModel.AchievementViewModel
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
 import kotlinx.coroutines.launch
@@ -82,7 +81,6 @@ import kotlinx.coroutines.launch
 fun MainScreen(
     viewModel: MainViewModel,
     avatarViewModel: AvatarViewModel,
-    achievementViewModel: AchievementViewModel,
     requestPermission: (String) -> Unit
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -327,7 +325,7 @@ fun MainScreen(
 
                 composable("achievements") {
                     AchievementsScreen(
-                        achievementViewModel = achievementViewModel,
+                        viewModel = viewModel,
                         onNavigateBack = { navController.navigateUp() }
                     )
                 }

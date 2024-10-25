@@ -15,18 +15,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.work.*
-import com.example.billapp.data.models.AchievementDatabase
+import com.example.billapp.ui.theme.*
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
-import com.example.billapp.ui.theme.*
-import com.example.billapp.viewModel.AchievementViewModel
-import java.util.concurrent.TimeUnit
 import com.google.firebase.Firebase
 import com.google.firebase.messaging.messaging
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 private const val TAG = "MainActivity"
 
@@ -34,13 +30,6 @@ class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
     private val avatarViewModel: AvatarViewModel by viewModels()
 
-    private val achievementViewModel: AchievementViewModel by viewModels {
-        object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return AchievementViewModel(application) as T
-            }
-        }
-    }
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
@@ -53,8 +42,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        val database = AchievementDatabase.getDatabase(applicationContext)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Log.d(TAG, "正在請求通知權限")
@@ -94,10 +81,6 @@ class MainActivity : ComponentActivity() {
                 val scope = rememberCoroutineScope()
                 val isUserLoggedIn by viewModel.isUserLoggedIn.collectAsState()
 
-                // 收集成就和徽章數據
-                val achievements by achievementViewModel.achievements.collectAsState()
-                val badges by achievementViewModel.badges.collectAsState()
-
                 LaunchedEffect(isUserLoggedIn) {
                     if (viewModel.isUserLoggedIn.value) {
                         Log.d(TAG, "用戶已登入，檢查債務關係")
@@ -105,9 +88,6 @@ class MainActivity : ComponentActivity() {
                             viewModel.loadUserData(viewModel.getCurrentUserID())
                             viewModel.checkUserDebtRelations(viewModel.getCurrentUserID())
                             setupDailyExperienceWork()
-
-                            // 初始化成就系統的默認數據
-                            // achievementViewModel.initializeDefaultAchievements()
                         }
                     } else {
                         Log.d(TAG, "用戶未登入")
@@ -117,7 +97,6 @@ class MainActivity : ComponentActivity() {
                 MainScreen(
                     viewModel = viewModel,
                     avatarViewModel = avatarViewModel,
-                    achievementViewModel = achievementViewModel,
                     requestPermission = { permission ->
                         requestPermissionLauncher.launch(permission)
                     }
