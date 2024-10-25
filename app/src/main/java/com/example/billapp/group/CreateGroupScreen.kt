@@ -53,7 +53,7 @@ fun CreateGroup(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Brown5 // 設定背景顏色為 Brown5
+                    containerColor = Brown5
                 )
             )
         }
@@ -101,7 +101,7 @@ fun CreateGroup(
                     viewModel.updateUserExperience(userId,10)
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Brown5  // Use containerColor instead of backgroundColor
+                    containerColor = Brown5
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {

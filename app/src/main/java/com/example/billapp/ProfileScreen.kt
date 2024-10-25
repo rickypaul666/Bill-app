@@ -18,8 +18,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.billapp.ui.theme.BoxBackgroundColor
+import com.example.billapp.ui.theme.Brown1
+import com.example.billapp.ui.theme.ButtonGrayColor
+import com.example.billapp.ui.theme.ButtonGreenColor
+import com.example.billapp.ui.theme.ButtonRedColor
+import com.example.billapp.ui.theme.MainBackgroundColor
+import com.example.billapp.ui.theme.Orange1
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
+import androidx.compose.ui.graphics.graphicsLayer
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,7 +58,7 @@ fun ProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("My Profile") },
+                title = { Text("我的個人檔案") },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
@@ -62,13 +71,16 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.background)
+                .background(color = MainBackgroundColor)
         ) {
             Card(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = BoxBackgroundColor
+                        )
             ) {
                 Column(
                     modifier = Modifier
@@ -88,30 +100,37 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    OutlinedTextField(
+                    StylishTextField(
                         value = name,
                         onValueChange = { name = it },
-                        label = { Text("Name") },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = isEditing
+                        label = "Name",
+                        readOnly = !isEditing,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .graphicsLayer(alpha = if (isEditing) 1f else 0.5f)
+
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
+                    StylishTextField(
                         value = email,
                         onValueChange = { email = it },
-                        label = { Text("Email") },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = false
+                        label = "Email",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .graphicsLayer(alpha = if (isEditing) 1f else 0.5f),
+                        readOnly = !isEditing,
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
                     // Add the budget input field
-                    OutlinedTextField(
+                    StylishTextField(
                         value = budget,
                         onValueChange = { budget = it },
-                        label = { Text("Budget") },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = isEditing,
+                        label = "Budget",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .graphicsLayer(alpha = if (isEditing) 1f else 0.5f),
+                        readOnly = !isEditing,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number) // Ensure numeric input
                     )
 
@@ -135,7 +154,10 @@ fun ProfileScreen(
                             }
                             isEditing = !isEditing
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isEditing) ButtonRedColor else ButtonGreenColor
+                                )
                     ) {
                         Text(if (isEditing) "Update" else "Edit")
                     }
