@@ -43,7 +43,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.navigation.NavController
-import com.example.billapp.models.TransactionCategory
+import com.example.billapp.data.models.TransactionCategory
 import com.example.billapp.viewModel.MainViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.animation.AnimatedVisibility
@@ -330,14 +330,14 @@ fun ItemAdd(
                 ) {
                     Text("個人",color = if (personalOrGroup == "個人") LightGray  else DarkGray, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
-                Button(
-                    onClick = { personalOrGroup = "群組" },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (personalOrGroup == "群組") Brown1 else ButtonGrayColor
-                    )
-                ) {
-                    Text("群組",color = if (personalOrGroup == "群組") LightGray  else DarkGray, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                }
+//                Button(
+//                    onClick = { personalOrGroup = "群組" },
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = if (personalOrGroup == "群組") Brown1 else ButtonGrayColor
+//                    )
+//                ) {
+//                    Text("群組",color = if (personalOrGroup == "群組") LightGray  else DarkGray, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+//                }
             }
 
             Spacer(modifier = Modifier.height(14.dp))

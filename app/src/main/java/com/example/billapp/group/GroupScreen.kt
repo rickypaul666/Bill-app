@@ -56,7 +56,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.billapp.viewModel.MainViewModel
 import com.example.billapp.R
-import com.example.billapp.models.Group
+import com.example.billapp.data.models.Group
 import com.example.billapp.ui.theme.ButtonRedColor
 import com.example.billapp.ui.theme.Gray
 

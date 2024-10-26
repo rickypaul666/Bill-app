@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.billapp.models.DebtRelation
+import com.example.billapp.data.models.DebtRelation
 import com.example.billapp.viewModel.MainViewModel
 import com.google.firebase.Timestamp
 

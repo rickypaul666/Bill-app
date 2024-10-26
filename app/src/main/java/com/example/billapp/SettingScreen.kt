@@ -32,13 +32,12 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
-import com.example.billapp.models.User
+import com.example.billapp.data.models.User
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
 import kotlinx.coroutines.launch
 
 val lightBrown = Color(0xFF6D4C41)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingScreen(
@@ -88,6 +87,17 @@ fun SettingScreen(
             NotificationSwitch()
             SettingsList(navController,context)
             Spacer(modifier = Modifier.weight(1f))
+
+            Button(
+                onClick = { navController.navigate("achievements") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text("成就", color = MaterialTheme.colorScheme.onError)
+            }
+
             LogoutButton(viewModel, navController, onCloseDrawer)
         }
     }

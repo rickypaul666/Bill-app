@@ -63,8 +63,8 @@ import com.example.billapp.CustomKeyboard
 import com.example.billapp.R
 import com.example.billapp.StylishTextField
 import com.example.billapp.evaluateExpression
-import com.example.billapp.models.PersonalTransaction
-import com.example.billapp.models.TransactionCategory
+import com.example.billapp.data.models.PersonalTransaction
+import com.example.billapp.data.models.TransactionCategory
 import com.example.billapp.ui.theme.Black
 import com.example.billapp.ui.theme.Brown1
 import com.example.billapp.ui.theme.Brown3

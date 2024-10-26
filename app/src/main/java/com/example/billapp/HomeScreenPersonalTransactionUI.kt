@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.runtime.*
 import androidx.navigation.NavController
-import com.example.billapp.models.PersonalTransaction
+import com.example.billapp.data.models.PersonalTransaction
 import com.example.billapp.viewModel.MainViewModel
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*

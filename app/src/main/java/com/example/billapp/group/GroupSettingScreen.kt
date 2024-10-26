@@ -27,9 +27,9 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.billapp.CustomBottomSheet
 import com.example.billapp.R
-import com.example.billapp.models.Group
-import com.example.billapp.models.GroupTransaction
-import com.example.billapp.models.User
+import com.example.billapp.data.models.Group
+import com.example.billapp.data.models.GroupTransaction
+import com.example.billapp.data.models.User
 import com.example.billapp.ui.theme.*
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
@@ -37,6 +37,8 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -388,8 +390,9 @@ fun RecentTransactionsSection(
                     Text("新增交易", style = MaterialTheme.typography.bodyMedium, color = Color.White)
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            Spacer(modifier = Modifier.height(16.dp))
+
+            // Reduced spacing here
+            Spacer(modifier = Modifier.height(8.dp))
 
             if (transactions.isNotEmpty()) {
                 HorizontalPager(
@@ -400,11 +403,12 @@ fun RecentTransactionsSection(
                     TransactionItem(transactions[page], viewModel)
                 }
 
+                // Reduced padding here
                 HorizontalPagerIndicator(
                     pagerState = pagerState,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(16.dp),
+                        .padding(8.dp),  // Changed from 16.dp to 8.dp
                 )
             } else {
                 Text(
@@ -436,28 +440,39 @@ fun TransactionItem(transaction: GroupTransaction, viewModel: MainViewModel) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = transaction.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "付款人: $payerName",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "日期: ${transaction.date?.toDate()?.toString() ?: "N/A"}",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
+                style = MaterialTheme.typography.titleLarge,  // 改大標題大小
+                fontWeight = FontWeight.Bold  // 加粗標題
             )
             Spacer(modifier = Modifier.height(8.dp))
+
+            // 付款人和日期放在同一行
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "¥${transaction.amount}",
+                    text = "付款人: $payerName",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
+
+                // 格式化日期顯示
+                Text(
+                    text = transaction.date?.toDate()?.let {
+                        SimpleDateFormat("yyyy/MM/dd", Locale.getDefault()).format(it)
+                    } ?: "N/A",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "$${transaction.amount}",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )

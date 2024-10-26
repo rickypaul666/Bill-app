@@ -37,7 +37,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.billapp.models.TransactionCategory
+import com.example.billapp.data.models.TransactionCategory
 import com.example.billapp.viewModel.MainViewModel
 import kotlinx.coroutines.launch
 

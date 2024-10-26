@@ -1,9 +1,12 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
     id("kotlin-parcelize")
+    kotlin("kapt")
+    id("org.jetbrains.kotlin.android")
 }
+
+
 
 android {
     namespace = "com.example.billapp"
@@ -43,7 +46,7 @@ android {
         viewBinding = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.4"
     }
     packaging {
         resources {
@@ -76,6 +79,7 @@ dependencies {
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.play.services.nearby)
+    implementation(libs.androidx.ui.test.android)
 
     val compose_version = "1.5.1"
     implementation ("androidx.compose.material:material:$compose_version")
@@ -122,8 +126,8 @@ dependencies {
     implementation ("androidx.compose.material3:material3:1.2.0-alpha02")
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0") // 更新為最新版本
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0") // 更新為最新版本
     implementation ("androidx.datastore:datastore-preferences:1.0.0")
 
     //icon

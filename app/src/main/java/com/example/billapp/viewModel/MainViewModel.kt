@@ -4,15 +4,22 @@ import AvatarRepository
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Restaurant
+import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.outlined.ThumbUp
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.billapp.data.models.Achievement
+import com.example.billapp.data.models.Badge
 import com.example.billapp.firebase.FirebaseRepository
-import com.example.billapp.models.DebtRelation
-import com.example.billapp.models.Group
-import com.example.billapp.models.GroupTransaction
-import com.example.billapp.models.PersonalTransaction
-import com.example.billapp.models.TransactionCategory
-import com.example.billapp.models.User
+import com.example.billapp.data.models.DebtRelation
+import com.example.billapp.data.models.Group
+import com.example.billapp.data.models.GroupTransaction
+import com.example.billapp.data.models.PersonalTransaction
+import com.example.billapp.data.models.TransactionCategory
+import com.example.billapp.data.models.User
 import com.example.billapp.utils.Constants
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -20,8 +27,11 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
@@ -109,8 +119,93 @@ class MainViewModel : ViewModel() {
     private val _isUserLoggedIn = MutableStateFlow(false) // 初始值為 false
     val isUserLoggedIn: StateFlow<Boolean> = _isUserLoggedIn
 
+    private val _achievements = MutableStateFlow<List<Achievement>>(emptyList())
+    val achievements: StateFlow<List<Achievement>> = _achievements.asStateFlow()
+
+    private val _badges = MutableStateFlow<List<Badge>>(emptyList())
+    val badges: StateFlow<List<Badge>> = _badges.asStateFlow()
+
     init {
         checkCurrentUser()
+    }
+
+    private fun checkCurrentUser() {
+        viewModelScope.launch {
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            if (currentUser != null) {
+                loadUserData(currentUser.uid)
+                loadUserGroups()
+                loadUserTransactions()
+                initializeDefaultAchievements(currentUser.uid)
+            }
+            _isUserLoggedIn.value = currentUser != null
+        }
+    }
+
+    fun updateAchievementCount(id: String, count: Int, userId: String) {
+        viewModelScope.launch {
+            FirebaseRepository.updateAchievementProgress(id, count, userId)
+        }
+    }
+
+    fun updateBadgeProgress(id: String, progress: Float,userId: String) {
+        viewModelScope.launch {
+            FirebaseRepository.updateBadgeProgress(id, progress,userId)
+        }
+    }
+
+    fun initializeDefaultAchievements(userId: String) {
+        viewModelScope.launch {
+            try {
+                // 初始化成就和徽章
+                FirebaseRepository.initializeAchievementsIfEmpty(userId)
+                FirebaseRepository.initializeBadgesIfEmpty(userId)
+
+                // 收集成就數據流
+                launch {
+                    FirebaseRepository.getAllAchievements()
+                        .catch { e ->
+                            // 處理錯誤，例如更新錯誤狀態
+                            Log.e("MainViewModel", "Error collecting achievements", e)
+                        }
+                        .collect { achievementsList ->
+                            _achievements.value = achievementsList
+                        }
+                }
+
+                // 收集徽章數據流
+                launch {
+                    FirebaseRepository.getAllBadges(userId)
+                        .catch { e ->
+                            // 處理錯誤
+                            Log.e("MainViewModel", "Error collecting badges", e)
+                        }
+                        .collect { badgesList ->
+                            _badges.value = badgesList
+                        }
+                }
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "Error initializing achievements/badges", e)
+            }
+        }
+    }
+
+    fun getAchievements(userId: String) {
+        viewModelScope.launch {
+            // 收集成就數據流
+            FirebaseRepository.getAllAchievements()
+                .collect { achievementsList ->
+                    _achievements.value = achievementsList
+                    Log.d("Achievements", "Achievements count: ${achievementsList.size}")
+                }
+
+            // 收集徽章數據流
+            FirebaseRepository.getAllBadges(userId)
+                .collect { badgesList ->
+                    _badges.value = badgesList
+                    Log.d("Badges", "Badges count: ${badgesList.size}")
+                }
+        }
     }
 
     sealed class AuthState {
@@ -238,17 +333,7 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    private fun checkCurrentUser() {
-        viewModelScope.launch {
-            val currentUser = FirebaseAuth.getInstance().currentUser
-            if (currentUser != null) {
-                loadUserData(currentUser.uid)
-                loadUserGroups()
-                loadUserTransactions()
-            }
-            _isUserLoggedIn.value = currentUser != null
-        }
-    }
+
 
     fun loadUserData(userId: String) {
         viewModelScope.launch {

@@ -16,13 +16,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.work.*
+import com.example.billapp.ui.theme.*
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
-import com.example.billapp.ui.theme.*
-import java.util.concurrent.TimeUnit
 import com.google.firebase.Firebase
 import com.google.firebase.messaging.messaging
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 private const val TAG = "MainActivity"
 
@@ -88,6 +88,7 @@ class MainActivity : ComponentActivity() {
                             viewModel.loadUserData(viewModel.getCurrentUserID())
                             viewModel.checkUserDebtRelations(viewModel.getCurrentUserID())
                             setupDailyExperienceWork()
+                            viewModel.initializeDefaultAchievements(viewModel.getCurrentUserID())
                         }
                     } else {
                         Log.d(TAG, "用戶未登入")

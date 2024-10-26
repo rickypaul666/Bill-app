@@ -31,7 +31,6 @@ import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -65,10 +64,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.billapp.data.models.Group
+import com.example.billapp.data.models.PersonalTransaction
+import com.example.billapp.data.models.User
 import com.example.billapp.group.getImageResourceById
-import com.example.billapp.models.Group
-import com.example.billapp.models.PersonalTransaction
-import com.example.billapp.models.User
 import com.example.billapp.ui.theme.BoxBackgroundColor
 import com.example.billapp.ui.theme.Brown1
 import com.example.billapp.ui.theme.Brown2
@@ -78,7 +77,6 @@ import com.example.billapp.ui.theme.MainBackgroundColor
 import com.example.billapp.ui.theme.MainCardRedColor
 import com.example.billapp.ui.theme.PieGreenColor
 import com.example.billapp.ui.theme.PieRedColor
-import com.example.billapp.ui.theme.Purple40
 import com.example.billapp.ui.theme.Red
 import com.example.billapp.ui.theme.VeryDarkGray
 import com.example.billapp.viewModel.AvatarViewModel
@@ -98,6 +96,9 @@ fun HomeScreen(
 ) {
     val user = viewModel.user.collectAsState().value
     val userName = viewModel.getCurrentUserName()
+
+    val achievements by viewModel.achievements.collectAsState()
+    val badges by viewModel.badges.collectAsState()
 
     val userImage = avatarViewModel.avatarUrl.collectAsState().value
 
@@ -190,6 +191,7 @@ fun HomeScreen(
         user?.let {
             viewModel.loadUserTransactions()
             filterRecords()
+            viewModel.getAchievements(user.id)
         }
     }
     LaunchedEffect(transactions) {
@@ -354,7 +356,7 @@ fun HomeScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Card(
             modifier = Modifier
@@ -398,6 +400,19 @@ fun HomeScreen(
                 }
             }
         }
+        Spacer(modifier = Modifier.height(16.dp))
+        AchievementsSection(
+            achievements = achievements,
+            onViewAllClick = { navController.navigate(DETAILED_ACHIEVEMENTS_ROUTE) }
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 徽章區塊
+        BadgesSection(
+            badges = badges,
+            onViewAllClick = { navController.navigate(DETAILED_BADGES_ROUTE) }
+        )
+
     }
 }
 
