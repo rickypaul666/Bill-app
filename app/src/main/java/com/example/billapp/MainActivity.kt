@@ -88,6 +88,7 @@ class MainActivity : ComponentActivity() {
                             viewModel.loadUserData(viewModel.getCurrentUserID())
                             viewModel.checkUserDebtRelations(viewModel.getCurrentUserID())
                             setupDailyExperienceWork()
+                            viewModel.initializeDefaultAchievements(viewModel.getCurrentUserID())
                         }
                     } else {
                         Log.d(TAG, "用戶未登入")

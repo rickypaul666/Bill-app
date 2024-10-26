@@ -4,8 +4,6 @@ plugins {
     id("kotlin-parcelize")
     kotlin("kapt")
     id("org.jetbrains.kotlin.android")
-    id("com.google.devtools.ksp") version "1.9.20-1.0.14"
-
 }
 
 
@@ -159,11 +157,6 @@ dependencies {
 
     implementation ("com.google.accompanist:accompanist-pager:0.28.0")
     implementation ("com.google.accompanist:accompanist-pager-indicators:0.28.0")
-
-    implementation("androidx.room:room-runtime:${rootProject.extra["room_version"]}")
-    ksp("androidx.room:room-compiler:${rootProject.extra["room_version"]}")
-    implementation("androidx.room:room-ktx:${rootProject.extra["room_version"]}")
-
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

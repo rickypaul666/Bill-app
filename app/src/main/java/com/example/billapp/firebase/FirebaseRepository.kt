@@ -158,7 +158,7 @@ object FirebaseRepository {
                             id = it.id,
                             name = it.name,
                             iconName = it.iconName,
-                            isUnlocked = it.isUnlocked,
+                            unlocked = it.unlocked,
                             currentProgress = it.currentProgress,
                             maxProgress = it.maxProgress
                         )
@@ -170,7 +170,7 @@ object FirebaseRepository {
     }
 
     fun getUnlockedBadges(userId: String): Flow<List<Badge>> = getAllBadges(userId).map { badges ->
-        badges.filter { it.isUnlocked }
+        badges.filter { it.unlocked }
     }
 
     suspend fun updateBadgeProgress(id: String, progress: Float,userId: String) {
@@ -182,13 +182,13 @@ object FirebaseRepository {
             .await()
             .toObject(Badge::class.java)
         if (badge != null) {
-            val isNewlyUnlocked = !badge.isUnlocked && progress >= badge.maxProgress
+            val isNewlyUnlocked = !badge.unlocked && progress >= badge.maxProgress
             val updates = mutableMapOf<String, Any>(
                 "currentProgress" to progress,
                 "lastUpdated" to Timestamp.now()
             )
             if (isNewlyUnlocked) {
-                updates["isUnlocked"] = true
+                updates["unlocked"] = true
                 updates["unlockedDate"] = Timestamp.now()
             }
             getFirestoreInstance().collection("users")
@@ -285,7 +285,7 @@ object FirebaseRepository {
             iconName = "accounting_icon",
             currentProgress = 0f,
             maxProgress = 100f,
-            isUnlocked = false
+            unlocked = false
         ),
         Badge(
             id = "trust_master_badge",
@@ -294,7 +294,7 @@ object FirebaseRepository {
             iconName = "trust_icon",
             currentProgress = 0f,
             maxProgress = 30f,
-            isUnlocked = false
+            unlocked = false
         ),
         Badge(
             id = "quick_debt_clear_badge",
@@ -303,7 +303,7 @@ object FirebaseRepository {
             iconName = "quick_clear_icon",
             currentProgress = 0f,
             maxProgress = 3f,
-            isUnlocked = false
+            unlocked = false
         ),
         Badge(
             id = "social_master_badge",
@@ -312,7 +312,7 @@ object FirebaseRepository {
             iconName = "social_master_icon",
             currentProgress = 0f,
             maxProgress = 5f,
-            isUnlocked = false
+            unlocked = false
         ),
         Badge(
             id = "savings_master_badge",
@@ -321,7 +321,7 @@ object FirebaseRepository {
             iconName = "saving_icon",
             currentProgress = 0f,
             maxProgress = 30f,
-            isUnlocked = false
+            unlocked = false
         ),
         Badge(
             id = "accounting_streak_badge",
@@ -330,7 +330,7 @@ object FirebaseRepository {
             iconName = "streak_icon",
             currentProgress = 0f,
             maxProgress = 7f,
-            isUnlocked = false
+            unlocked = false
         )
     )
 

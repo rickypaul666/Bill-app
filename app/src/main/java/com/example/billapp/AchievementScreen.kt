@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -19,13 +18,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.billapp.viewModel.MainViewModel
 
 @Composable
 fun AchievementsScreen(
     viewModel: MainViewModel,
+    navController: NavController,
     onNavigateBack: () -> Unit
 ) {
     val achievements by viewModel.achievements.collectAsState()
@@ -52,11 +53,19 @@ fun AchievementsScreen(
         }
 
         // 成就區塊
-        AchievementsSection(achievements = achievements)
+        AchievementsSection(
+            achievements = achievements,
+            onViewAllClick = { navController.navigate(DETAILED_ACHIEVEMENTS_ROUTE) }
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // 徽章區塊
-        BadgesSection(badges = badges)
+        BadgesSection(
+            badges = badges,
+            onViewAllClick = { navController.navigate(DETAILED_BADGES_ROUTE) }
+        )
+
     }
 }
+

@@ -76,6 +76,9 @@ import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
 import kotlinx.coroutines.launch
 
+const val DETAILED_ACHIEVEMENTS_ROUTE = "detailed_achievements"
+const val DETAILED_BADGES_ROUTE = "detailed_badges"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
@@ -326,6 +329,19 @@ fun MainScreen(
                 composable("achievements") {
                     AchievementsScreen(
                         viewModel = viewModel,
+                        navController = navController,
+                        onNavigateBack = { navController.navigateUp() }
+                    )
+                }
+                composable(DETAILED_ACHIEVEMENTS_ROUTE) {
+                    DetailedAchievementsScreen(
+                        achievements = viewModel.achievements.collectAsState().value,
+                        onNavigateBack = { navController.navigateUp() }
+                    )
+                }
+                composable(DETAILED_BADGES_ROUTE) {
+                    DetailedBadgesScreen(
+                        badges = viewModel.badges.collectAsState().value,
                         onNavigateBack = { navController.navigateUp() }
                     )
                 }

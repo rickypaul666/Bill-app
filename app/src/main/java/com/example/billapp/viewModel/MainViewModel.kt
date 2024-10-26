@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -135,8 +136,7 @@ class MainViewModel : ViewModel() {
                 loadUserData(currentUser.uid)
                 loadUserGroups()
                 loadUserTransactions()
-                FirebaseRepository.initializeAchievementsIfEmpty(currentUser.uid)
-                FirebaseRepository.initializeBadgesIfEmpty(currentUser.uid)
+                initializeDefaultAchievements(currentUser.uid)
             }
             _isUserLoggedIn.value = currentUser != null
         }
@@ -151,6 +151,60 @@ class MainViewModel : ViewModel() {
     fun updateBadgeProgress(id: String, progress: Float,userId: String) {
         viewModelScope.launch {
             FirebaseRepository.updateBadgeProgress(id, progress,userId)
+        }
+    }
+
+    fun initializeDefaultAchievements(userId: String) {
+        viewModelScope.launch {
+            try {
+                // 初始化成就和徽章
+                FirebaseRepository.initializeAchievementsIfEmpty(userId)
+                FirebaseRepository.initializeBadgesIfEmpty(userId)
+
+                // 收集成就數據流
+                launch {
+                    FirebaseRepository.getAllAchievements()
+                        .catch { e ->
+                            // 處理錯誤，例如更新錯誤狀態
+                            Log.e("MainViewModel", "Error collecting achievements", e)
+                        }
+                        .collect { achievementsList ->
+                            _achievements.value = achievementsList
+                        }
+                }
+
+                // 收集徽章數據流
+                launch {
+                    FirebaseRepository.getAllBadges(userId)
+                        .catch { e ->
+                            // 處理錯誤
+                            Log.e("MainViewModel", "Error collecting badges", e)
+                        }
+                        .collect { badgesList ->
+                            _badges.value = badgesList
+                        }
+                }
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "Error initializing achievements/badges", e)
+            }
+        }
+    }
+
+    fun getAchievements(userId: String) {
+        viewModelScope.launch {
+            // 收集成就數據流
+            FirebaseRepository.getAllAchievements()
+                .collect { achievementsList ->
+                    _achievements.value = achievementsList
+                    Log.d("Achievements", "Achievements count: ${achievementsList.size}")
+                }
+
+            // 收集徽章數據流
+            FirebaseRepository.getAllBadges(userId)
+                .collect { badgesList ->
+                    _badges.value = badgesList
+                    Log.d("Badges", "Badges count: ${badgesList.size}")
+                }
         }
     }
 

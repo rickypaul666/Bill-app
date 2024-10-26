@@ -12,7 +12,7 @@ data class Badge(
     val iconName: String = "",
     val currentProgress: Float = 0f,
     val maxProgress: Float = 1f,
-    val isUnlocked: Boolean = false,
+    val unlocked: Boolean = false,
     val unlockedDate: Timestamp? = null,
     val lastUpdated: Timestamp = Timestamp.now()
 ): Parcelable

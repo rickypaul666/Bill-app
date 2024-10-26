@@ -97,6 +97,9 @@ fun HomeScreen(
     val user = viewModel.user.collectAsState().value
     val userName = viewModel.getCurrentUserName()
 
+    val achievements by viewModel.achievements.collectAsState()
+    val badges by viewModel.badges.collectAsState()
+
     val userImage = avatarViewModel.avatarUrl.collectAsState().value
 
 
@@ -188,6 +191,7 @@ fun HomeScreen(
         user?.let {
             viewModel.loadUserTransactions()
             filterRecords()
+            viewModel.getAchievements(user.id)
         }
     }
     LaunchedEffect(transactions) {
@@ -352,7 +356,7 @@ fun HomeScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Card(
             modifier = Modifier
@@ -396,6 +400,19 @@ fun HomeScreen(
                 }
             }
         }
+        Spacer(modifier = Modifier.height(16.dp))
+        AchievementsSection(
+            achievements = achievements,
+            onViewAllClick = { navController.navigate(DETAILED_ACHIEVEMENTS_ROUTE) }
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 徽章區塊
+        BadgesSection(
+            badges = badges,
+            onViewAllClick = { navController.navigate(DETAILED_BADGES_ROUTE) }
+        )
+
     }
 }
 
