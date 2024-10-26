@@ -84,7 +84,8 @@ fun StylishTextField(
     onValueChange: (String) -> Unit,
     label: String,
     readOnly: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
     val capybaraBrown = colorResource(id = R.color.colorAccent)
 
@@ -109,7 +110,7 @@ fun StylishTextField(
             unfocusedIndicatorColor = Color.Transparent
         ),
         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
-
+//        keyboardOptions = keyboardOptions
     )
 }
 
