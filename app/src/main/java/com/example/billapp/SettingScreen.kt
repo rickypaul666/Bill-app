@@ -88,16 +88,6 @@ fun SettingScreen(
             SettingsList(navController,context)
             Spacer(modifier = Modifier.weight(1f))
 
-            Button(
-                onClick = { navController.navigate("achievements") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-            ) {
-                Text("成就", color = MaterialTheme.colorScheme.onError)
-            }
-
             LogoutButton(viewModel, navController, onCloseDrawer)
         }
     }
