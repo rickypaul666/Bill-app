@@ -42,7 +42,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -91,12 +93,19 @@ fun MainScreen(
 
     var selectedItem by remember { mutableStateOf(0) }
     val items = listOf("首頁", "個人", "新增", "群組", "設定")
-    val icons = listOf(
-        R.drawable.baseline_home_24,
-        R.drawable.baseline_person_24,
-        R.drawable.baseline_add_24,
-        R.drawable.baseline_groups_24,
-        R.drawable.baseline_settings_24
+    val selectedIcons = listOf(
+        R.drawable.capybara_icon_spaces,
+        R.drawable.capybara_icon_spaces,
+        R.drawable.capybara_icon_spaces,
+        R.drawable.capybara_icon_spaces,
+        R.drawable.capybara_icon_spaces
+    )
+    val unselectedIcons = listOf(
+        R.drawable.home_icon_spaces,
+        R.drawable.person_icon_spaces,
+        R.drawable.add_icon_spaces,
+        R.drawable.group_icon_spaces,
+        R.drawable.setting_icon_spaces
     )
 
     ModalNavigationDrawer(
@@ -115,17 +124,34 @@ fun MainScreen(
             bottomBar = {
                 if (currentRoute != "intro" && currentRoute != "signin" && currentRoute != "signup" && currentRoute != "splash") { // 確認當前路由不是 IntroScreen
                     NavigationBar(
-                        containerColor = BottomBackgroundColor
+                        containerColor = BottomBackgroundColor,
+                        modifier = Modifier.height(80.dp)
                     ) {
                         items.forEachIndexed { index, item ->
                             NavigationBarItem(
                                 icon = {
+                                    // 檢查當前選中的索引是否與當前項目匹配
+                                    val iconResId = if (selectedItem == index ) {
+                                        // 使用選中的圖標
+                                        selectedIcons[index]
+                                    } else {
+                                        unselectedIcons[index]
+                                    }
                                     Icon(
-                                        painter = painterResource(id = icons[index]),
-                                        contentDescription = item
+                                        painter = painterResource(id = iconResId),
+                                        contentDescription = item,
+                                        tint = Color.Unspecified,
+                                        modifier = Modifier
+                                            .size(48.dp)
+                                            .padding(2.dp)
                                     )
                                 },
-                                label = { Text(item) },
+                                label = {
+                                    Text(
+                                        text = item,
+                                        fontSize = 12.sp,  // 設定適當的文字大小
+                                        fontWeight = FontWeight.Medium  // 設定字體粗細
+                                    ) },
                                 selected = selectedItem == index,
                                 onClick = {
                                     selectedItem = index
@@ -137,8 +163,10 @@ fun MainScreen(
                                         4 -> navController.navigate("settings")
                                     }
                                 },
+                                modifier = Modifier,
+
                                 colors = NavigationBarItemColors(
-                                    selectedIndicatorColor = BlueGray,
+                                    selectedIndicatorColor = Color.Transparent,
                                     selectedIconColor = Black,
                                     selectedTextColor = Black,
                                     unselectedIconColor = White,
