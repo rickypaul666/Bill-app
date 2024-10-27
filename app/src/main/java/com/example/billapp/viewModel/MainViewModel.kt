@@ -763,6 +763,21 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    fun addPersonalTransaction(transaction: PersonalTransaction) {
+        viewModelScope.launch {
+            try {
+                FirebaseRepository.addPersonalTransaction(transaction)
+                // Reset fields after successful addition
+                _amount.value = 0.0
+                _category.value = TransactionCategory.FOOD.name
+                _name.value = ""
+                _note.value = ""
+            } catch (e: Exception) {
+                Log.e("TransactionAdd", "Error adding personal transaction: ${e.message}", e)
+            }
+        }
+    }
+
     // Setters for fields
     fun setTransactionType(type: String) {
         _transactionType.value = type
@@ -922,6 +937,7 @@ class MainViewModel : ViewModel() {
     private fun calculateEvenSplitRelations(transaction: GroupTransaction): List<DebtRelation> {
         val debtRelations = mutableListOf<DebtRelation>()
         val amountPerDivider = transaction.amount / transaction.divider.size
+        val currentUserId = getCurrentUserID()
 
         transaction.divider.forEach { dividerId ->
             transaction.payer.forEach { payerId ->
@@ -937,6 +953,19 @@ class MainViewModel : ViewModel() {
                             lastRemindTimestamp = Timestamp.now()
                         )
                     )
+                } else if(payerId == currentUserId) {
+                    addPersonalTransaction(
+                        PersonalTransaction(
+                            userId = currentUserId,
+                            type = "支出",
+                            amount = amountPerDivider,
+                            category = TransactionCategory.OTHER,
+                            name = "群組支出:" + transaction.name,
+                            date = Timestamp.now(),
+                            createdAt = Timestamp.now(),
+                            updatedAt = Timestamp.now()
+                        )
+                    )
                 }
             }
         }
@@ -946,6 +975,7 @@ class MainViewModel : ViewModel() {
     private fun calculateProportionalRelations(transaction: GroupTransaction, userPercentages: Map<String, Float>): List<DebtRelation> {
         val debtRelations = mutableListOf<DebtRelation>()
         val totalPercentage = userPercentages.values.sum()
+        val currentUserId = getCurrentUserID()
 
         if (totalPercentage != 100f) return debtRelations // Ensure percentages sum to 100%
 
@@ -963,6 +993,19 @@ class MainViewModel : ViewModel() {
                             lastRemindTimestamp = Timestamp.now()
                         )
                     )
+                } else if(payerId == currentUserId) {
+                    addPersonalTransaction(
+                        PersonalTransaction(
+                            userId = currentUserId,
+                            type = "支出",
+                            amount = transaction.amount * (percentage / 100),
+                            category = TransactionCategory.OTHER,
+                            name = "群組支出:" + transaction.name,
+                            date = Timestamp.now(),
+                            createdAt = Timestamp.now(),
+                            updatedAt = Timestamp.now()
+                        )
+                    )
                 }
             }
         }
@@ -974,6 +1017,7 @@ class MainViewModel : ViewModel() {
         val totalAdjustment = userAdjustments.values.sum()
         val remainingAmount = transaction.amount - totalAdjustment
         val evenSplitAmount = remainingAmount / transaction.divider.size
+        val currentUserId = getCurrentUserID()
 
         transaction.payer.forEach { payerId ->
             transaction.divider.forEach { dividerId ->
@@ -990,6 +1034,21 @@ class MainViewModel : ViewModel() {
                             lastRemindTimestamp = Timestamp.now()
                         )
                     )
+                } else if(payerId == currentUserId) {
+                    val adjustment = userAdjustments[dividerId] ?: 0f
+                    val amountOwed = (adjustment + evenSplitAmount)
+                    addPersonalTransaction(
+                        PersonalTransaction(
+                            userId = currentUserId,
+                            type = "支出",
+                            amount = amountOwed,
+                            category = TransactionCategory.OTHER,
+                            name = "群組支出:" + transaction.name,
+                            date = Timestamp.now(),
+                            createdAt = Timestamp.now(),
+                            updatedAt = Timestamp.now()
+                        )
+                    )
                 }
             }
         }
@@ -998,6 +1057,7 @@ class MainViewModel : ViewModel() {
 
     private fun calculateExactAmountRelations(transaction: GroupTransaction, userAmounts: Map<String, Float>): List<DebtRelation> {
         val debtRelations = mutableListOf<DebtRelation>()
+        val currentUserId = getCurrentUserID()
 
         transaction.payer.forEach { payerId ->
             userAmounts.forEach { (userId, amount) ->
@@ -1012,6 +1072,19 @@ class MainViewModel : ViewModel() {
                             lastRemindTimestamp = Timestamp.now()
                         )
                     )
+                } else if(payerId == currentUserId) {
+                    addPersonalTransaction(
+                        PersonalTransaction(
+                            userId = currentUserId,
+                            type = "支出",
+                            amount = amount.toDouble(),
+                            category = TransactionCategory.OTHER,
+                            name = "群組支出:" + transaction.name,
+                            date = Timestamp.now(),
+                            createdAt = Timestamp.now(),
+                            updatedAt = Timestamp.now()
+                        )
+                    )
                 }
             }
         }
@@ -1021,6 +1094,7 @@ class MainViewModel : ViewModel() {
     private fun calculateSharesRelations(transaction: GroupTransaction, userShares: Map<String, Int>): List<DebtRelation> {
         val debtRelations = mutableListOf<DebtRelation>()
         val totalShares = userShares.values.sum()
+        val currentUserId = getCurrentUserID()
 
         if (totalShares == 0) return debtRelations // Avoid division by zero
 
@@ -1036,6 +1110,19 @@ class MainViewModel : ViewModel() {
                             to = payerId,
                             amount = amountOwed,
                             lastRemindTimestamp = Timestamp.now()
+                        )
+                    )
+                } else if(payerId == currentUserId) {
+                    addPersonalTransaction(
+                        PersonalTransaction(
+                            userId = currentUserId,
+                            type = "支出",
+                            amount = transaction.amount * (shares.toDouble() / totalShares),
+                            category = TransactionCategory.OTHER,
+                            name = "群組支出:" + transaction.name,
+                            date = Timestamp.now(),
+                            createdAt = Timestamp.now(),
+                            updatedAt = Timestamp.now()
                         )
                     )
                 }
