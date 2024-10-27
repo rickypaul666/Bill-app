@@ -61,6 +61,8 @@ fun GroupedDeptRelationItem(
 ) {
     var expanded by remember { mutableStateOf(false) }
     var showClearAllConfirmation by remember { mutableStateOf(false) }
+    var showBottomSheet by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Card(
         modifier = Modifier
@@ -158,7 +160,9 @@ fun GroupedDeptRelationItem(
                         color = Black
                     )
                     TextButton(
-                        onClick = { showClearAllConfirmation = true },
+                        onClick = {
+                            showBottomSheet = true
+                        },
                         modifier = Modifier.padding(top = 4.dp),
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = Brown5
@@ -173,7 +177,7 @@ fun GroupedDeptRelationItem(
 
         if (expanded) {
             debtRelations.forEach { relation ->
-                DeptRelationDetailItem(
+                DebtRelationDetailItem(
                     viewModel = viewModel,
                     debtRelation = relation,
                     groupId = groupId,
@@ -181,24 +185,46 @@ fun GroupedDeptRelationItem(
             }
         }
     }
+
+    if (showBottomSheet) {
+        PaymentBottomSheet(
+            onDismiss = { showBottomSheet = false },
+            onConfirm = {
+                showClearAllConfirmation = true
+            },
+            context = context
+        )
+    }
+
     if (showClearAllConfirmation) {
         AlertDialog(
             onDismissRequest = { showClearAllConfirmation = false },
             title = { Text("確認一次結清") },
             text = { Text("您確定要一次結清所有債務嗎？總金額: $${String.format("%.2f", totalAmount)}") },
             confirmButton = {
-                Button(onClick = {
-                    debtRelations.forEach { relation ->
-                        viewModel.deleteDebtRelation(groupId, relation.id)
-                    }
-                    viewModel.loadGroupDebtRelations(groupId)
-                    showClearAllConfirmation = false
-                }) {
+                Button(
+                    onClick = {
+                        debtRelations.forEach { relation ->
+                            viewModel.deleteDebtRelation(groupId, relation.id)
+                        }
+                        viewModel.loadGroupDebtRelations(groupId)
+                        showClearAllConfirmation = false
+                        showBottomSheet = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF93F37C)
+                    )
+                ) {
                     Text("確認")
                 }
             },
             dismissButton = {
-                Button(onClick = { showClearAllConfirmation = false }) {
+                Button(
+                    onClick = { showClearAllConfirmation = false },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFF415C)
+                    )
+                ) {
                     Text("取消")
                 }
             }
