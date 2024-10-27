@@ -25,7 +25,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.billapp.CustomBottomSheet
 import com.example.billapp.R
 import com.example.billapp.data.models.Group
 import com.example.billapp.data.models.GroupTransaction
@@ -133,12 +132,6 @@ fun UserInfoSection(user: User?, userImage: String?, groupTotalDebt: Double, onV
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
-//                    Spacer(modifier = Modifier.height(4.dp))
-//                    Text(
-//                        text = "在這個群組",
-//                        style = MaterialTheme.typography.bodyMedium,
-//                        color = Color.Gray
-//                    )
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -369,6 +362,7 @@ fun RecentTransactionsSection(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = BoxBackgroundColor)
     ) {
+        Spacer(modifier = Modifier.width(4.dp))
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),

@@ -1,4 +1,4 @@
-package com.example.billapp
+package com.example.billapp.group
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
@@ -53,6 +53,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.billapp.CustomKeyboard
+import com.example.billapp.R
+import com.example.billapp.SeparateBottomSheetContent
+import com.example.billapp.StylishTextField
+import com.example.billapp.evaluateExpression
 import com.example.billapp.viewModel.MainViewModel
 import kotlinx.coroutines.launch
 
@@ -319,8 +324,9 @@ fun GroupTest(
                     // Trigger viewModel action to complete the transaction
                     viewModel.addGroupTransaction(groupId)
                     viewModel.loadGroupTransactions(groupId)
-                    viewModel.loadGroupDebtRelations(groupId)
                     viewModel.updateUserExperience(userId,5)
+                    viewModel.getGroupDebtRelations(groupId)
+                    viewModel.calculateTotalDebtForGroup(groupId)
                     navController.popBackStack()
                 },
                 colors = ButtonDefaults.buttonColors(

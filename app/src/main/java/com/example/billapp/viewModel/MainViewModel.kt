@@ -878,7 +878,7 @@ class MainViewModel : ViewModel() {
             try {
                 val transaction = GroupTransaction(
                     id = "",
-                    name = _groupName.value,
+                    name = _name.value,
                     payer = _payers.value,
                     divider = _dividers.value,
                     shareMethod = _shareMethod.value,
@@ -1081,17 +1081,6 @@ class MainViewModel : ViewModel() {
 
     fun getGroupIdDebtRelations(groupId: String): Map<String, List<DebtRelation>> {
         return _groupIdDebtRelations.value
-    }
-
-    fun loadGroupIdRelation(groupId: String){
-        viewModelScope.launch {
-            try {
-                val debtRelations = FirebaseRepository.getGroupDebtRelations(groupId)
-                _groupIdDebtRelations.value = debtRelations
-            } catch (e: Exception) {
-                _error.value = e.message
-            }
-        }
     }
 
     fun loadGroupTransactions(groupId: String) {

@@ -21,6 +21,7 @@ fun DeptRelationList(
     val optimizedDeptRelations = remember(debtRelations) {
         optimizeDebtRelations(debtRelations.values.flatten())
     }
+    val user by viewModel.user.collectAsState()
 
     LazyColumn(
         modifier = modifier
@@ -28,32 +29,35 @@ fun DeptRelationList(
             .padding(horizontal = 16.dp)
     ) {
         optimizedDeptRelations.forEach { (pair, amount) ->
-            item {
-                var fromName by remember { mutableStateOf("") }
-                var toName by remember { mutableStateOf("") }
-                var fromUrl by remember { mutableStateOf("") }
-                var toUrl by remember { mutableStateOf("") }
+            // 只有當使用者是債務關係中的其中一方時才顯示
+            if (user!!.id == pair.first || user!!.id == pair.second) {
+                item {
+                    var fromName by remember { mutableStateOf("") }
+                    var toName by remember { mutableStateOf("") }
+                    var fromUrl by remember { mutableStateOf("") }
+                    var toUrl by remember { mutableStateOf("") }
 
-                LaunchedEffect(pair.first, pair.second) {
-                    fromName = viewModel.getUserName(pair.first)
-                    toName = viewModel.getUserName(pair.second)
-                    fromUrl = avatarViewModel.loadAvatar(pair.first).toString()
-                    toUrl = avatarViewModel.loadAvatar(pair.second).toString()
+                    LaunchedEffect(pair.first, pair.second) {
+                        fromName = viewModel.getUserName(pair.first)
+                        toName = viewModel.getUserName(pair.second)
+                        fromUrl = avatarViewModel.loadAvatar(pair.first).toString()
+                        toUrl = avatarViewModel.loadAvatar(pair.second).toString()
+                    }
+
+                    GroupedDeptRelationItem(
+                        viewModel = viewModel,
+                        fromName = fromName,
+                        toName = toName,
+                        fromUrl = fromUrl,
+                        toUrl = toUrl,
+                        totalAmount = amount,
+                        debtRelations = debtRelations.values.flatten().filter {
+                            (it.from == pair.first && it.to == pair.second) ||
+                                    (it.from == pair.second && it.to == pair.first)
+                        },
+                        groupId = groupId
+                    )
                 }
-
-                GroupedDeptRelationItem(
-                    viewModel = viewModel,
-                    fromName = fromName,
-                    toName = toName,
-                    fromUrl = fromUrl,
-                    toUrl = toUrl,
-                    totalAmount = amount,
-                    debtRelations = debtRelations.values.flatten().filter {
-                        (it.from == pair.first && it.to == pair.second) ||
-                                (it.from == pair.second && it.to == pair.first)
-                    },
-                    groupId = groupId
-                )
             }
         }
     }
