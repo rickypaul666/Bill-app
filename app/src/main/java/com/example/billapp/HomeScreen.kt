@@ -391,7 +391,7 @@ fun HomeScreen(
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(groups.take(5).size) { index ->  // 使用 size 獲取前 4 個群組的數量
+                    items(groups.take(5).size) { index ->  // 使用 size 獲取前 5 個群組的數量
                         val group = groups[index]  // 根據索引獲取群組
                         GroupItem(group = group, onItemClick = {
                             navController.navigate("groupDetail/${group.id}")
