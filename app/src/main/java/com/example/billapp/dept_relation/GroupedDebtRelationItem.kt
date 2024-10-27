@@ -207,7 +207,8 @@ fun GroupedDeptRelationItem(
                         debtRelations.forEach { relation ->
                             viewModel.deleteDebtRelation(groupId, relation.id)
                         }
-                        viewModel.loadGroupDebtRelations(groupId)
+                        viewModel.getGroupDebtRelations(groupId)
+                        viewModel.calculateTotalDebtForGroup(groupId)
                         showClearAllConfirmation = false
                         showBottomSheet = false
                     },

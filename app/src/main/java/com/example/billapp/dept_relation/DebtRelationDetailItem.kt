@@ -191,7 +191,8 @@ fun DebtRelationDetailItem(
                     groupId = groupId,
                     debtRelationId = debtRelation.id
                 )
-                viewModel.loadGroupDebtRelations(groupId)
+                viewModel.getGroupDebtRelations(groupId)
+                viewModel.calculateTotalDebtForGroup(groupId)
                 viewModel.updateUserExperience(userId, 5)
                 showBottomSheet = false
             },

@@ -33,7 +33,8 @@ fun DebtRelationsScreen(
 
     // Load transactions and calculate dept relations when the screen is opened
     LaunchedEffect(groupId) {
-        viewModel.loadGroupDebtRelations(groupId)
+        viewModel.getGroupDebtRelations(groupId)
+        viewModel.calculateTotalDebtForGroup(groupId)
     }
 
     Scaffold(
