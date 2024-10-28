@@ -26,6 +26,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -125,6 +127,9 @@ class MainViewModel : ViewModel() {
     private val _badges = MutableStateFlow<List<Badge>>(emptyList())
     val badges: StateFlow<List<Badge>> = _badges.asStateFlow()
 
+    private val _isDataLoaded = MutableStateFlow(false)
+    val isDataLoaded: StateFlow<Boolean> = _isDataLoaded
+
     init {
         checkCurrentUser()
     }
@@ -137,6 +142,7 @@ class MainViewModel : ViewModel() {
                 loadUserGroups()
                 loadUserTransactions()
                 initializeDefaultAchievements(currentUser.uid)
+
             }
             _isUserLoggedIn.value = currentUser != null
         }
@@ -341,8 +347,6 @@ class MainViewModel : ViewModel() {
             try {
                 val userData = FirebaseRepository.getUserData(userId)
                 _user.value = userData
-                loadUserGroups()
-                loadUserTransactions()
             } catch (e: Exception) {
                 _error.value = e.message
             } finally {
@@ -350,6 +354,38 @@ class MainViewModel : ViewModel() {
             }
         }
     }
+
+    fun loadInitialData(userId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _isDataLoaded.value = false
+            try {
+                // 使用 coroutines 並行加載所有數據
+                coroutineScope {
+                    val userDataDeferred = async { FirebaseRepository.getUserData(userId) }
+                    val groupsDeferred = async { FirebaseRepository.getUserGroups() }
+                    val transactionsDeferred = async { FirebaseRepository.getUserTransactions(userId) }
+
+                    // 等待所有數據加載完成
+                    val userData = userDataDeferred.await()
+                    val groups = groupsDeferred.await()
+                    val transactions = transactionsDeferred.await()
+
+                    // 更新所有狀態
+                    _user.value = userData
+                    _userGroups.value = groups
+                    _userTransactions.value = transactions
+                    _isDataLoaded.value = true
+                }
+            } catch (e: Exception) {
+                _error.value = e.message
+                _isDataLoaded.value = false
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
 
     fun logOut(onComplete: () -> Unit) {
         viewModelScope.launch {
@@ -369,7 +405,8 @@ class MainViewModel : ViewModel() {
                 val user = FirebaseRepository.signIn(email, password)
                 _user.value = user
                 _authState.value = AuthState.Authenticated(user)
-                loadUserData(user.id)
+                _isUserLoggedIn.value = true
+                initializeDefaultAchievements(user.id)
             } catch (e: Exception) {
                 _error.value = e.message
                 _authState.value = AuthState.Error(e.message ?: "Unknown error occurred")
@@ -387,7 +424,6 @@ class MainViewModel : ViewModel() {
                 val user = FirebaseRepository.signUp(name, email, password)
                 _user.value = user
                 _authState.value = AuthState.Authenticated(user)
-                loadUserData(user.id)
             } catch (e: Exception) {
                 _error.value = e.message
                 _authState.value = AuthState.Error(e.message ?: "Unknown error occurred")

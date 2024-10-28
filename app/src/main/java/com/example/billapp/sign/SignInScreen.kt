@@ -60,6 +60,24 @@ fun SignInScreen(
     val authState by viewModel.authState.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
+    val isDataLoaded by viewModel.isDataLoaded.collectAsState()  // 新增狀態
+
+    LaunchedEffect(authState) {
+        if (authState is MainViewModel.AuthState.Authenticated) {
+            val user = (authState as MainViewModel.AuthState.Authenticated).user
+            // 在導航之前先加載所有必要數據
+            viewModel.loadInitialData(user.id)
+        }
+    }
+
+    // 監聽數據加載完成狀態
+    LaunchedEffect(isDataLoaded) {
+        if (isDataLoaded) {
+            navController.navigate("home") {
+                popUpTo("signIn") { inclusive = true }
+            }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -163,7 +181,7 @@ fun SignInScreen(
                 }
                 is MainViewModel.AuthState.Authenticated -> {
                     LaunchedEffect(authState) {
-                        navController.navigate("main") {
+                        navController.navigate("splash") {
                             popUpTo("signIn") { inclusive = true }
                         }
                     }

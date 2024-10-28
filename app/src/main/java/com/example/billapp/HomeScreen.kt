@@ -95,7 +95,6 @@ fun HomeScreen(
     avatarViewModel: AvatarViewModel
 ) {
     val user = viewModel.user.collectAsState().value
-    val userName = viewModel.getCurrentUserName()
 
     val achievements by viewModel.achievements.collectAsState()
     val badges by viewModel.badges.collectAsState()
@@ -104,7 +103,7 @@ fun HomeScreen(
 
 
     val groups by viewModel.userGroups.collectAsState()
-    // 获取最近两笔交易记录
+
     val transactions by viewModel.userTransactions.collectAsState()
     var filteredRecords by remember { mutableStateOf(transactions) }
 
@@ -129,13 +128,8 @@ fun HomeScreen(
 
     }
 
-    LaunchedEffect(user) {
-        user?.let {
-            viewModel.loadUserTransactions()
-            filtered()
-        }
-    }
-    LaunchedEffect(transactions) {
+
+    LaunchedEffect(user,transactions) {
         filtered()
     }
 
