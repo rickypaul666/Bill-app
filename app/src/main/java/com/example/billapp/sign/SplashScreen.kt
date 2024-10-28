@@ -34,6 +34,8 @@ fun SplashScreen(
     LaunchedEffect(isUserLoggedIn, user) {
         if (isUserLoggedIn && user != null) {
             viewModel.loadUserData(user!!.id) // Start loading immediately
+            viewModel.loadUserTransactions()
+            viewModel.loadUserGroups()
         }
     }
 
