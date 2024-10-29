@@ -1,5 +1,6 @@
 package com.example.billapp.group
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -185,13 +186,16 @@ fun DebtInfoCard(groupTotalDebt: Double, onViewDebtRelations: () -> Unit) {
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun DebtAmountBox(amount: Double) {
-    val (backgroundColor, textColor) = when {
+    var (backgroundColor, textColor) = when {
         amount < 0 -> Color(0xFFFFA8A8) to Color.Red
         amount > 0 -> Color(0xFFC6FFD5) to Color(0xFF228B22)
         else -> Color(0xFFFFEEBB) to Orange4
     }
+    backgroundColor = BoxBackgroundColor
+
 
     Box(
         modifier = Modifier
@@ -451,7 +455,7 @@ fun TransactionItem(transaction: GroupTransaction, viewModel: MainViewModel) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "¥${String.format("%.0f", transaction.amount)}",
+                    text = "${String.format("%.0f", transaction.amount)}",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
