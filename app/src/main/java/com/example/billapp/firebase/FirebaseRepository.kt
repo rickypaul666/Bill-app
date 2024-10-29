@@ -40,6 +40,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.map
+import java.util.UUID
 
 object FirebaseRepository {
 
@@ -50,19 +51,40 @@ object FirebaseRepository {
         getAuthInstance().signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    getFirestoreInstance().collection(Constants.USERS)
-                        .document(getAuthInstance().currentUser!!.uid)
-                        .get()
-                        .addOnSuccessListener { document ->
-                            val user = document.toObject(User::class.java)!!
-                            continuation.resume(user)
+                    val userId = getAuthInstance().currentUser!!.uid
+                    // 先更新 FCM Token
+                    FirebaseMessaging.getInstance().token
+                        .addOnCompleteListener { tokenTask ->
+                            if (tokenTask.isSuccessful) {
+                                val token = tokenTask.result
+                                // 更新 user document 中的 FCM token
+                                getFirestoreInstance().collection(Constants.USERS)
+                                    .document(userId)
+                                    .update("fcmToken", token)
+                                    .addOnSuccessListener {
+                                        // Token 更新成功後獲取用戶資料
+                                        getFirestoreInstance().collection(Constants.USERS)
+                                            .document(userId)
+                                            .get()
+                                            .addOnSuccessListener { document ->
+                                                val user = document.toObject(User::class.java)!!
+                                                continuation.resume(user)
+                                            }
+                                            .addOnFailureListener { e ->
+                                                continuation.resumeWithException(e)
+                                            }
+                                    }
+                                    .addOnFailureListener { e ->
+                                        continuation.resumeWithException(e)
+                                    }
+                            } else {
+                                continuation.resumeWithException(tokenTask.exception
+                                    ?: Exception("Failed to get FCM token"))
+                            }
                         }
-                        .addOnFailureListener { e ->
-                            continuation.resumeWithException(e)
-                        }
-                    updateUserFCMToken(getAuthInstance().currentUser!!.uid)
                 } else {
-                    continuation.resumeWithException(task.exception ?: Exception("Sign in failed"))
+                    continuation.resumeWithException(task.exception
+                        ?: Exception("Sign in failed"))
                 }
             }
     }
@@ -382,61 +404,59 @@ object FirebaseRepository {
     //////
 
     suspend fun sendDebtReminder(context: Context, debtRelation: DebtRelation) = withContext(Dispatchers.IO) {
-        val currentDate = Timestamp.now()
+        try {
+            val currentDate = Timestamp.now()
 
-        if (debtRelation.lastRemindTimestamp == null || canSendReminder(currentDate, debtRelation.lastRemindTimestamp)) {
-            // 發送推送通知
-            sendPushNotification(
-                debtRelation.from,
-                "債務提醒",
-                "您有一筆 ${debtRelation.amount} 元的債務需要償還給 ${debtRelation.to}"
-            )
+            if (debtRelation.lastRemindTimestamp == null || canSendReminder(currentDate, debtRelation.lastRemindTimestamp)) {
+                // 檢查接收者的 FCM token 是否存在
+                val receiverToken = getUserFCMToken(debtRelation.from)
+                if (receiverToken.isNullOrEmpty()) {
+                    throw Exception("Receiver's FCM token not found")
+                }
 
-            // 發送應用內通知
-            sendInAppNotification(context, debtRelation)
+                // 建立 FCM 訊息
+                val message = RemoteMessage.Builder(receiverToken)
+                    .setMessageId(UUID.randomUUID().toString())
+                    .setData(mapOf(
+                        "title" to "債務提醒",
+                        "message" to "您有一筆 ${debtRelation.amount} 元的債務需要償還給 ${debtRelation.to}",
+                        "userId" to debtRelation.from,
+                        "timestamp" to currentDate.seconds.toString()
+                    ))
+                    .build()
 
-            // 更新用戶經驗值和信任等級
-            updateUserExperience(debtRelation.to, 5)
-            updateUserTrustLevel(debtRelation.from, -5)
+                try {
+                    // 發送推送通知
+                    FirebaseMessaging.getInstance().send(message)
 
-            return@withContext true
-        } else {
-            return@withContext false
+                    // 更新最後提醒時間
+                    getFirestoreInstance()
+                        .collection("debtRelations")
+                        .document(debtRelation.id)
+                        .update("lastRemindTimestamp", currentDate)
+                        .await()
+
+                    // 更新用戶經驗值和信任等級
+                    updateUserExperience(debtRelation.to, 5)
+                    updateUserTrustLevel(debtRelation.from, -5)
+
+                    return@withContext true
+                } catch (e: Exception) {
+                    Log.e("FCM", "Error sending message", e)
+                    throw Exception("Failed to send notification: ${e.message}")
+                }
+            } else {
+                return@withContext false
+            }
+        } catch (e: Exception) {
+            Log.e("FCM", "Error in sendDebtReminder", e)
+            throw e
         }
     }
 
     private fun canSendReminder(currentDate: Timestamp, lastReminderDate: Timestamp): Boolean {
         val oneDayInMillis = 24 * 60 * 60 * 1000
         return currentDate.toDate().time - lastReminderDate.toDate().time >= oneDayInMillis
-    }
-
-    private fun sendInAppNotification(context: Context, debtRelation: DebtRelation) {
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channelId = "debt_reminder_channel"
-
-        // 創建通知通道
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId, "債務提醒", NotificationManager.IMPORTANCE_DEFAULT)
-            notificationManager.createNotificationChannel(channel)
-        }
-
-        // 創建意圖以響應通知點擊
-        val intent = Intent(context, MainActivity::class.java)  // 替換為你的活動
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-
-        // 創建通知
-        val notification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(R.drawable.ic_notification)  // 替換為你的圖標
-            .setContentTitle("債務提醒")
-            .setContentText("您有一筆 ${debtRelation.amount} 元的債務需要償還給 ${debtRelation.name}")
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-            .build()
-
-        // 發送通知
-        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
     }
 
     private suspend fun sendPushNotification(userId: String, title: String, message: String) {
@@ -471,8 +491,17 @@ object FirebaseRepository {
 
     private suspend fun getUserFCMToken(userId: String): String? {
         return try {
-            val user = getFirestoreInstance().collection("users").document(userId).get().await()
-            user.getString("fcmToken")
+            val userDoc = getFirestoreInstance()
+                .collection("users")
+                .document(userId)
+                .get()
+                .await()
+
+            userDoc.getString("fcmToken")?.also { token ->
+                if (token.isEmpty()) {
+                    Log.w("FCM", "Empty FCM token for user: $userId")
+                }
+            }
         } catch (e: Exception) {
             Log.e("FCM", "Error getting user FCM token", e)
             null
