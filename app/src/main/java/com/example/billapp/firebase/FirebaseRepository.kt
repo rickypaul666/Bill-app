@@ -433,10 +433,12 @@ object FirebaseRepository {
                 .collection("users")
                 .document(userId)
                 .collection("reminders")
-                .whereEqualTo("isRead", false)
+                .whereEqualTo("read", false)
                 .get()
                 .await()
                 .toObjects(DebtReminder::class.java)
+
+            Log.d(TAG, "檢查提醒，找到 ${unreadReminders.size} 條未讀提醒")
 
             if (unreadReminders.isEmpty()) {
                 return ReminderSummary(0, 0.0, emptyList())
@@ -464,7 +466,8 @@ object FirebaseRepository {
                 .collection("reminders")
                 .document(reminder.id)
 
-            batch.update(reminderRef, "isRead", true)
+            batch.update(reminderRef, "read", true)
+            Log.d(TAG, "Updating reminder: ${reminder.id} to read = true")
         }
 
         try {
@@ -488,9 +491,11 @@ object FirebaseRepository {
                     .await()
 
                 val creditorName = creditorDoc.getString("name") ?: "未知用戶"
+                val reminderId = UUID.randomUUID().toString()
 
                 // 建立提醒資訊
                 val reminder = DebtReminder(
+                    id = reminderId,
                     debtRelationId = debtRelation.id,
                     amount = debtRelation.amount,
                     creditorId = debtRelation.to,
@@ -498,12 +503,13 @@ object FirebaseRepository {
                     createdAt = currentDate
                 )
 
-                // 儲存提醒到債務人的提醒集合中
-                getFirestoreInstance()
+                // 儲存提醒到債務人的提醒集合中，並獲取自動生成的 ID
+                val reminderRef = getFirestoreInstance()
                     .collection("users")
                     .document(debtRelation.from)
                     .collection("reminders")
-                    .add(reminder)
+                    .document(reminder.id)
+                    .set(reminder)
                     .await()
 
                 // 更新債務關係的最後提醒時間
@@ -526,6 +532,7 @@ object FirebaseRepository {
             throw e
         }
     }
+
 
 //    suspend fun sendDebtReminder(context: Context, debtRelation: DebtRelation) = withContext(Dispatchers.IO) {
 //        try {

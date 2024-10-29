@@ -10,11 +10,18 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -26,6 +33,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.work.Constraints
@@ -74,7 +84,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             var isDialogVisible by remember { mutableStateOf(true) }
-            var reminderSummary by remember { mutableStateOf<ReminderSummary?>(null) }
+            var isDialogVisible2 by remember { mutableStateOf(true) }
+            val reminderSummary by viewModel.reminderSummary.collectAsState()
 
             MaterialTheme(typography = custom_jf_Typography) {
                 val scope = rememberCoroutineScope()
@@ -95,7 +106,7 @@ class MainActivity : ComponentActivity() {
                                 viewModel.initializeDefaultAchievements(userId)
 
                                 // 檢查提醒
-                                reminderSummary = viewModel.checkReminders(userId)
+                                viewModel.checkReminders(userId)
                             } catch (e: Exception) {
                                 Log.e(TAG, "用戶數據初始化失敗", e)
                             }
@@ -115,17 +126,21 @@ class MainActivity : ComponentActivity() {
                 )
 
                 // 顯示用戶提醒對話框
-                reminderSummary?.let { summary ->
-                    if (summary.totalAmount > 0 && isDialogVisible) {
+                reminderSummary.let { summary ->
+                    if (summary.totalAmount > 0 && isDialogVisible2) {
+                        Log.d(TAG, "有債務提醒 : ${summary.totalAmount}")
                         DebtReminderDialog(
                             reminderSummary = summary,
                             onDismiss = {
-                                isDialogVisible = false
+                                isDialogVisible2 = false
                                 scope.launch {
                                     viewModel.markRemindersAsRead(summary.reminders)
                                 }
                             }
                         )
+                    }else
+                    {
+                        Log.d(TAG, "沒有債務提醒")
                     }
                 }
 
@@ -221,43 +236,101 @@ fun DebtReminderDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier.border(
+            width = 1.dp,
+            color = Color(0xFFFF5244),
+            shape = RoundedCornerShape(16.dp)
+        ),
         title = {
             Text(
-                text = "債務提醒",
-                color = PrimaryFontColor
+                text = "債務提醒!!!",
+                color = PrimaryFontColor,
+                fontWeight = FontWeight.Bold
             )
         },
         text = {
-            Column {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                // 摘要資訊區塊
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    color = Color(0xFFF5F5F5),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp)
+                    ) {
+                        Text(
+                            text = "您目前有 ${reminderSummary.count} 筆未償還債務",
+                            color = PrimaryFontColor,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Text(
+                            text = "總金額：${reminderSummary.totalAmount} 元",
+                            color = Color(0xFFD32F2F),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                // 詳細清單標題
                 Text(
-                    text = "您目前有 ${reminderSummary.count} 筆未償還債務",
+                    text = "詳細清單",
                     color = PrimaryFontColor,
+                    fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-                Text(
-                    text = "總金額：${reminderSummary.totalAmount} 元",
-                    color = PrimaryFontColor
-                )
-                // 顯示詳細的債務列表
+
+                // 債務詳細列表
                 reminderSummary.reminders.forEach { reminder ->
-                    Text(
-                        text = "・欠款 ${reminder.amount} 元給 ${reminder.creditorName}",
-                        color = PrimaryFontColor,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "・${reminder.creditorName}",
+                            color = PrimaryFontColor,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "${reminder.amount} 元",
+                            color = Color(0xFFD32F2F),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
         },
         confirmButton = {
-            TextButton(
+            Button(
                 onClick = onDismiss,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = ButtonRedColor
-                )
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFD32F2F)
+                ),
+                modifier = Modifier.padding(horizontal = 8.dp)
             ) {
-                Text("確認")
+                Text(
+                    "確認",
+                    color = Color.White
+                )
             }
         },
-        containerColor = MainBackgroundColor
+        containerColor = MainBackgroundColor,
+        shape = RoundedCornerShape(16.dp)
     )
+}
+
+@Preview
+@Composable
+fun DebtReminderDialogPreview() {
+    val remainderSummary = ReminderSummary(1, 100.0, emptyList())
+    DebtReminderDialog(remainderSummary) {
+    }
 }
