@@ -131,12 +131,6 @@ fun UserInfoSection(user: User?, userImage: String?, groupTotalDebt: Double, onV
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
-//                    Spacer(modifier = Modifier.height(4.dp))
-//                    Text(
-//                        text = "在這個群組",
-//                        style = MaterialTheme.typography.bodyMedium,
-//                        color = Color.Gray
-//                    )
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -217,7 +211,7 @@ fun DebtAmountBox(amount: Double) {
         )
         Text(
             text = when {
-                amount != 0.0 -> "NT$ ${kotlin.math.abs(amount)}"
+                amount != 0.0 -> "NT$ ${String.format("%.0f", kotlin.math.abs(amount))}"
                 else -> "NT$ 0"
             },
             style = MaterialTheme.typography.headlineMedium,
@@ -457,7 +451,7 @@ fun TransactionItem(transaction: GroupTransaction, viewModel: MainViewModel) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "¥${transaction.amount}",
+                    text = "¥${String.format("%.0f", transaction.amount)}",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )

@@ -1,5 +1,6 @@
 package com.example.billapp
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -88,6 +89,7 @@ fun PieChart(income: Float, expense: Float, balance: Float, total: Float, modifi
     }
 }
 
+@SuppressLint("DefaultLocale")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PieChartWithCategory(income: Float, expense: Float, balance: Float, total: Float, selectedCategory: String, categoryValues: List<Float>){
@@ -107,7 +109,7 @@ fun PieChartWithCategory(income: Float, expense: Float, balance: Float, total: F
                     .height(200.dp)
             ) {
                 Text(
-                    text = "收入: $income",
+                    text = "收入: ${String.format("%.0f", income)}",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
@@ -115,7 +117,7 @@ fun PieChartWithCategory(income: Float, expense: Float, balance: Float, total: F
                         .padding(top = 16.dp, end = 16.dp)
                 )
                 Text(
-                    text = "支出: $expense",
+                    text = "支出: ${String.format("%.0f", expense)}",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
@@ -153,7 +155,7 @@ fun PieChartWithCategory(income: Float, expense: Float, balance: Float, total: F
                     }
                 }
                 Text(
-                    text = "結餘: $balance",
+                    text = "結餘: ${String.format("%.0f", balance)}",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.align(Alignment.Center)

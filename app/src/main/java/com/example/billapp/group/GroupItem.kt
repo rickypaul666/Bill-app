@@ -1,5 +1,6 @@
 package com.example.billapp.group
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,6 +41,7 @@ import com.example.billapp.ui.theme.Orange4
 import com.example.billapp.ui.theme.Purple40
 import com.example.billapp.viewModel.MainViewModel
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun GroupItem(
     viewModel: MainViewModel,
@@ -130,8 +132,8 @@ fun GroupItem(
             ) {
                 Text(
                     text = when {
-                        groupTotalDebt < 0.0 -> "應付 : ${-groupTotalDebt}" // 負數時為紅色
-                        groupTotalDebt > 0.0 -> "應收 : $groupTotalDebt" // 正數時為綠色
+                        groupTotalDebt < 0.0 -> "應付 : ${String.format("%.0f", -groupTotalDebt)}" // 負數時為紅色
+                        groupTotalDebt > 0.0 -> "應收 : ${String.format("%.0f", groupTotalDebt)}" // 正數時為綠色
                         else -> "帳務已結清" // 0 為淺黃色
                     },
                     style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),

@@ -1,5 +1,6 @@
 package com.example.billapp
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -578,7 +579,7 @@ fun FinancialInfoBox(label: String, value: Float, color: Color, modifier: Modifi
         )
         Spacer(modifier = Modifier.height(5.dp))
         Text(
-            text = "%.2f".format(value),
+            text = "%.0f".format(value),
             color = Color.White,
             fontWeight = FontWeight.Bold,
             fontSize = 16.sp
@@ -607,6 +608,7 @@ fun HomeScreenPersonalTransactionList(
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun TransactionItem(
     transaction: PersonalTransaction,
@@ -645,7 +647,7 @@ fun TransactionItem(
                 )
             }
             Text(
-                text = "${if (transaction.type == "收入") "+" else "-"}${transaction.amount}",
+                text = "${if (transaction.type == "收入") "+" else "-"}${String.format("%.0f", transaction.amount)}",
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,  // 增加字體大小
                 color = if (transaction.type == "收入") Color(0xFF228B22) else Red  // 使用較深的綠色
