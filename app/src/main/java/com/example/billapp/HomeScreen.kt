@@ -130,6 +130,7 @@ fun HomeScreen(
 
 
     LaunchedEffect(user,transactions) {
+        viewModel.loadUserData(user?.id ?: "")
         filtered()
     }
 

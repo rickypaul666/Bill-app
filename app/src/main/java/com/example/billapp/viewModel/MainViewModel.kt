@@ -11,10 +11,12 @@ import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.billapp.ReminderSummary
 import com.example.billapp.data.models.Achievement
 import com.example.billapp.data.models.Badge
 import com.example.billapp.firebase.FirebaseRepository
 import com.example.billapp.data.models.DebtRelation
+import com.example.billapp.data.models.DebtReminder
 import com.example.billapp.data.models.Group
 import com.example.billapp.data.models.GroupTransaction
 import com.example.billapp.data.models.PersonalTransaction
@@ -623,6 +625,25 @@ class MainViewModel : ViewModel() {
             } catch (e: Exception) {
                 _debtReminderStatus.value = DebtReminderStatus.ERROR(e.message ?: "Unknown error occurred")
             }
+        }
+    }
+
+    fun markRemindersAsRead(reminders: List<DebtReminder>) {
+        viewModelScope.launch {
+            try {
+                FirebaseRepository.markRemindersAsRead(getCurrentUserID(), reminders)
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "標記提醒為已讀失敗", e)
+            }
+        }
+    }
+
+    suspend fun checkReminders(userId: String): ReminderSummary {
+        return try {
+            FirebaseRepository.checkReminders(userId)
+        } catch (e: Exception) {
+            Log.e("MainViewModel", "檢查提醒失敗", e)
+            ReminderSummary(0, 0.0, emptyList())
         }
     }
 
