@@ -136,7 +136,7 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    //Group
+    //Group_invitation
     fun checkGroupExists(groupLink: String, callback: (Boolean) -> Unit) {
         // 在這裡實現檢查群組是否存在的邏輯
         // 假設我們使用 Firebase Firestore
