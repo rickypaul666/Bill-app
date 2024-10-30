@@ -23,8 +23,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.billapp.R
-import com.example.billapp.ui.theme.Brown2
-import com.example.billapp.ui.theme.Brown3
+import com.example.billapp.ui.theme.theme.Brown2
+import com.example.billapp.ui.theme.theme.Brown3
 import com.example.billapp.viewModel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

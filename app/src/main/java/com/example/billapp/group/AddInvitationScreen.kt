@@ -16,14 +16,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.billapp.QRCodeScannerScreen
 import com.example.billapp.R
-import com.example.billapp.data.models.User
-import com.example.billapp.ui.theme.Brown1
-import com.example.billapp.ui.theme.Brown2
-import com.example.billapp.ui.theme.Brown5
-import com.example.billapp.ui.theme.Brown6
-import com.example.billapp.ui.theme.Brown7
+import com.example.billapp.ui.theme.theme.Brown6
+import com.example.billapp.ui.theme.theme.ButtonRedColor
+import com.example.billapp.ui.theme.theme.ItemAddMainColor
+import com.example.billapp.ui.theme.theme.MainBackgroundColor
+import com.example.billapp.ui.theme.theme.MainCardRedColor
+import com.example.billapp.ui.theme.theme.PrimaryFontColor
 import com.example.billapp.viewModel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,18 +33,26 @@ fun AddInvitationScreen(
 ) {
     var groupLink by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
+    var dialogMessage by remember { mutableStateOf("") }
     val currentUser = viewModel.user.collectAsState().value
 
     val userId by remember { mutableStateOf(currentUser?.id ?: "") }
 
+    // Handle QR code scan result
+    val qrCodeResult = navController.currentBackStackEntry?.savedStateHandle?.get<String>("qrCodeResult")
+    qrCodeResult?.let {
+        groupLink = it
+        navController.currentBackStackEntry?.savedStateHandle?.remove<String>("qrCodeResult")
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("加入群組") },
+                title = { Text("加入群組", color = PrimaryFontColor) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },
                 actions = {
@@ -54,71 +61,104 @@ fun AddInvitationScreen(
                     }) {
                         Icon(
                             painter = painterResource(id = R.drawable.baseline_qr_code_scanner_24),
-                            contentDescription = "掃描 QR code"
+                            contentDescription = "掃描 QR code",
+                            tint = PrimaryFontColor
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(Color(0xFF9B7160))
+                colors = TopAppBarDefaults.topAppBarColors(MainCardRedColor)
             )
         }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MainBackgroundColor)
                 .padding(innerPadding)
                 .padding(16.dp)
-                .background(Color(0xFFFFFAF1)),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-
         ) {
-            TextField(
-                colors = TextFieldDefaults.textFieldColors(
-                    containerColor = Color(0xFFCCBEA3), // 背景顏色
-                    focusedIndicatorColor = Brown6, // 焦點下的指示器顏色
-                    unfocusedIndicatorColor = Color(0xFFCCBEA3), // 未焦點下的指示器顏色
-                    errorIndicatorColor = MaterialTheme.colorScheme.error, // 錯誤狀態下的指示器顏色
-                ),
-                value = groupLink,
-                onValueChange = {
-                    groupLink = it
-                    isError = groupLink.isBlank()
-                },
-                label = { Text("群組連結") },
-                modifier = Modifier.fillMaxWidth(),
-                isError = isError,
-                singleLine = true,
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done)
-            )
-            if (isError) {
-                Text(
-                    text = "群組連結不能為空",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = {
-                    if (groupLink.isNotBlank()) {
-                        // 根據 grouplink(groupid) 將當前的User新增到該群組的 assignedTo
-                        viewModel.assignUserToGroup(groupLink, currentUser?.id ?: "")
-                        viewModel.updateUserExperience(userId,10)
-                        navController.popBackStack()
-                    } else {
-                        isError = true
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Brown5,
-                    contentColor = Color.White // 根據需要調整文本顏色
-                ),
-                enabled = groupLink.isNotBlank()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MainBackgroundColor),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text("完成")
+                TextField(
+                    colors = TextFieldDefaults.textFieldColors(
+                        containerColor = MainBackgroundColor, // 背景顏色
+                        focusedIndicatorColor = Brown6, // 焦點下的指示器顏色
+                        unfocusedIndicatorColor = ItemAddMainColor, // 未焦點下的指示器顏色
+                        errorIndicatorColor = MaterialTheme.colorScheme.error, // 錯誤狀態下的指示器顏色
+                    ),
+                    value = groupLink,
+                    onValueChange = {
+                        groupLink = it
+                        isError = groupLink.isBlank()
+                    },
+                    label = { Text("群組連結", color = PrimaryFontColor) },
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = isError,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done)
+                )
+                if (isError) {
+                    Text(
+                        text = "群組連結不能為空",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = {
+                        if (groupLink.isNotBlank()) {
+                            viewModel.checkGroupExists(groupLink) { groupExists ->
+                                if (groupExists) {
+                                    viewModel.checkUserInGroup(groupLink, userId) { userInGroup ->
+                                        if (userInGroup) {
+                                            dialogMessage = "您已加入該群組"
+                                        } else {
+                                            viewModel.assignUserToGroup(groupLink, userId)
+                                            viewModel.updateUserExperience(userId, 10)
+                                            dialogMessage = "成功加入群組"
+                                        }
+                                        showDialog = true
+                                    }
+                                } else {
+                                    dialogMessage = "查無此ID"
+                                    showDialog = true
+                                }
+                            }
+                        } else {
+                            isError = true
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ButtonRedColor,
+                        contentColor = Color.White // 根據需要調整文本顏色
+                    ),
+                    enabled = groupLink.isNotBlank()
+                ) {
+                    Text("完成")
+                }
             }
         }
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            confirmButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("確定", color = PrimaryFontColor)
+                }
+            },
+            title = { Text("提示", color = PrimaryFontColor) },
+            text = { Text(dialogMessage, color = PrimaryFontColor) },
+            containerColor = MainBackgroundColor
+        )
     }
 }
 

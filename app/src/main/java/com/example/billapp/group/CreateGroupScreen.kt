@@ -16,7 +16,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -24,8 +23,8 @@ import androidx.navigation.NavController
 import com.example.billapp.R
 import com.example.billapp.viewModel.MainViewModel
 import com.example.billapp.viewModel.GroupCreationStatus
-import com.example.billapp.ui.theme.MainBackgroundColor
-import com.example.billapp.ui.theme.Brown5
+import com.example.billapp.ui.theme.theme.MainBackgroundColor
+import com.example.billapp.ui.theme.theme.Brown5
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

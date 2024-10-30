@@ -44,10 +44,11 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.billapp.data.models.DebtReminder
-import com.example.billapp.ui.theme.ButtonRedColor
-import com.example.billapp.ui.theme.MainBackgroundColor
-import com.example.billapp.ui.theme.PrimaryFontColor
-import com.example.billapp.ui.theme.custom_jf_Typography
+import com.example.billapp.home.MainScreen
+import com.example.billapp.ui.theme.theme.ButtonRedColor
+import com.example.billapp.ui.theme.theme.MainBackgroundColor
+import com.example.billapp.ui.theme.theme.PrimaryFontColor
+import com.example.billapp.ui.theme.theme.custom_jf_Typography
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
 import kotlinx.coroutines.launch

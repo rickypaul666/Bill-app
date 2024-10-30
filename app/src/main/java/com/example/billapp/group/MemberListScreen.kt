@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -29,15 +28,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.billapp.R
 import com.example.billapp.data.models.User
-import com.example.billapp.ui.theme.BillAppTheme
-import com.example.billapp.ui.theme.BoxBackgroundColor
-import com.example.billapp.ui.theme.Orange1
+import com.example.billapp.ui.theme.theme.BoxBackgroundColor
+import com.example.billapp.ui.theme.theme.Orange1
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
 

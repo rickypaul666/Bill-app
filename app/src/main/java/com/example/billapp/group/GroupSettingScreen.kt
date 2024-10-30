@@ -1,5 +1,6 @@
 package com.example.billapp.group
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -9,8 +10,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,7 +33,10 @@ import com.example.billapp.R
 import com.example.billapp.data.models.Group
 import com.example.billapp.data.models.GroupTransaction
 import com.example.billapp.data.models.User
-import com.example.billapp.ui.theme.*
+import com.example.billapp.ui.theme.theme.BoxBackgroundColor
+import com.example.billapp.ui.theme.theme.MainBackgroundColor
+import com.example.billapp.ui.theme.theme.Orange1
+import com.example.billapp.ui.theme.theme.Orange4
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -98,7 +105,7 @@ fun GroupSettingScreen(
         }
     }
 
-    ManagementBottomSheet(
+    ManagementDialog(
         isVisible = isBottomSheetVisible.value,
         onDismiss = { isBottomSheetVisible.value = false },
         groupId = groupId,
@@ -186,13 +193,16 @@ fun DebtInfoCard(groupTotalDebt: Double, onViewDebtRelations: () -> Unit) {
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun DebtAmountBox(amount: Double) {
-    val (backgroundColor, textColor) = when {
+    var (backgroundColor, textColor) = when {
         amount < 0 -> Color(0xFFFFA8A8) to Color.Red
         amount > 0 -> Color(0xFFC6FFD5) to Color(0xFF228B22)
         else -> Color(0xFFFFEEBB) to Orange4
     }
+    backgroundColor = BoxBackgroundColor
+
 
     Box(
         modifier = Modifier
@@ -212,7 +222,7 @@ fun DebtAmountBox(amount: Double) {
         )
         Text(
             text = when {
-                amount != 0.0 -> "NT$ ${kotlin.math.abs(amount)}"
+                amount != 0.0 -> "NT$ ${String.format("%.0f", kotlin.math.abs(amount))}"
                 else -> "NT$ 0"
             },
             style = MaterialTheme.typography.headlineMedium,
@@ -466,7 +476,7 @@ fun TransactionItem(transaction: GroupTransaction, viewModel: MainViewModel) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "$${transaction.amount}",
+                    text = "${String.format("%.0f", transaction.amount)}",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -481,47 +491,90 @@ fun TransactionItem(transaction: GroupTransaction, viewModel: MainViewModel) {
 }
 
 @Composable
-fun ManagementBottomSheet(
+fun ManagementDialog(
     isVisible: Boolean,
     onDismiss: () -> Unit,
     groupId: String,
     viewModel: MainViewModel,
     navController: NavController
 ) {
-    CustomBottomSheet(isVisible = isVisible, onDismiss = onDismiss) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .background(Color.White, RoundedCornerShape(16.dp))
-                .border(BorderStroke(1.dp, Color.LightGray), RoundedCornerShape(16.dp))
-        ) {
-            Text(
-                "群組管理",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(16.dp)
-            )
-            Divider()
-            BottomSheetButton(
-                text = "成員",
-                icon = Icons.Default.Add,
-                onClick = { navController.navigate("memberListScreen/$groupId") }
-            )
-            BottomSheetButton(
-                text = "群組邀請連結",
-                icon = Icons.Default.Add,
-                onClick = { navController.navigate("Group_Invite/$groupId") }
-            )
-            Divider()
-            BottomSheetButton(
-                text = "刪除群組",
-                icon = Icons.Default.Add,
-                onClick = {
-                    viewModel.deleteGroup(groupId)
-                    navController.navigateUp()
+    if (isVisible) {
+        // 用於控制是否顯示刪除確認對話框
+        var showDeleteConfirmationDialog by remember { mutableStateOf(false) }
+
+        AlertDialog(
+            containerColor = Color(0xFF8EB7D2),
+            onDismissRequest = onDismiss,
+            title = {
+                Text(
+                    "群組管理",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    BottomSheetButton(
+                        text = "成員",
+                        icon = Icons.Default.Person,
+                        onClick = { navController.navigate("memberListScreen/$groupId") }
+                    )
+                    BottomSheetButton(
+                        text = "群組邀請連結",
+                        icon = Icons.Default.Link,
+                        onClick = { navController.navigate("Group_Invite/$groupId") }
+                    )
+                    BottomSheetButton(
+                        text = "刪除群組",
+                        icon = Icons.Default.Delete,
+                        onClick = {
+                            showDeleteConfirmationDialog = true
+                        },
+                        color = Color.Red
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = onDismiss) {
+                    Text("關閉", color = Color.White)
+                }
+            }
+        )
+
+        // 刪除確認對話框
+        if (showDeleteConfirmationDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteConfirmationDialog = false },
+                title = {
+                    Text("確認刪除", fontWeight = FontWeight.Bold)
                 },
-                color = Color.Red
+                text = {
+                    Text("您確定要刪除群組嗎？此操作無法撤銷。")
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.deleteGroup(groupId)
+                            showDeleteConfirmationDialog = false
+                            onDismiss()  // 關閉主要對話框
+                            navController.navigateUp()
+                        }
+                    ) {
+                        Text("刪除", color = Color.Red)
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showDeleteConfirmationDialog = false }
+                    ) {
+                        Text("取消")
+                    }
+                }
             )
         }
     }
@@ -532,11 +585,16 @@ fun BottomSheetButton(
     text: String,
     icon: ImageVector,
     onClick: () -> Unit,
-    color: Color = Color.Black
+    color: Color = Color.Black,
+    elevation: ButtonElevation? = null
 ) {
     TextButton(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth()
+        shape = RoundedCornerShape(50),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .background(Color.White, shape = RoundedCornerShape(50))
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

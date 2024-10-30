@@ -15,28 +15,20 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -47,36 +39,27 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.billapp.CustomKeyboard
+import com.example.billapp.home.CustomKeyboard
 import com.example.billapp.R
-import com.example.billapp.StylishTextField
-import com.example.billapp.evaluateExpression
+import com.example.billapp.home.StylishTextField
+import com.example.billapp.home.evaluateExpression
 import com.example.billapp.data.models.PersonalTransaction
 import com.example.billapp.data.models.TransactionCategory
-import com.example.billapp.ui.theme.Black
-import com.example.billapp.ui.theme.Brown1
-import com.example.billapp.ui.theme.Brown3
-import com.example.billapp.ui.theme.Brown7
-import com.example.billapp.ui.theme.ButtonGrayColor
-import com.example.billapp.ui.theme.ButtonGreenColor
-import com.example.billapp.ui.theme.DarkGray
-import com.example.billapp.ui.theme.DarkerGray
-import com.example.billapp.ui.theme.MainBackgroundColor
-import com.example.billapp.ui.theme.Orange1
-import com.example.billapp.ui.theme.PrimaryFontColor
-import com.example.billapp.ui.theme.VeryDarkGray
+import com.example.billapp.ui.theme.theme.Brown7
+import com.example.billapp.ui.theme.theme.ButtonGrayColor
+import com.example.billapp.ui.theme.theme.ButtonGreenColor
+import com.example.billapp.ui.theme.theme.DarkGray
+import com.example.billapp.ui.theme.theme.MainBackgroundColor
+import com.example.billapp.ui.theme.theme.Orange1
+import com.example.billapp.ui.theme.theme.VeryDarkGray
 import com.example.billapp.viewModel.MainViewModel
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
@@ -422,35 +405,6 @@ fun EditTransactionDetailScreen(
                 }
             }
         )
-    }
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DatePickerModal(
-    onDateSelected: (Long?) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val datePickerState = rememberDatePickerState()
-
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = {
-                onDateSelected(datePickerState.selectedDateMillis)
-                onDismiss()
-            }) {
-                Text("OK")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    ) {
-        DatePicker(state = datePickerState)
     }
 }
 

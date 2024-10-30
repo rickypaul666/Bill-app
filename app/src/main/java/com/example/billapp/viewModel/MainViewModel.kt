@@ -240,6 +240,34 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    //Group_invitation
+    fun checkGroupExists(groupLink: String, callback: (Boolean) -> Unit) {
+        // 在這裡實現檢查群組是否存在的邏輯
+        // 假設我們使用 Firebase Firestore
+        val db = FirebaseFirestore.getInstance()
+        db.collection("groups").document(groupLink).get()
+            .addOnSuccessListener { document ->
+                callback(document.exists())
+            }
+            .addOnFailureListener {
+                callback(false)
+            }
+    }
+
+    fun checkUserInGroup(groupLink: String, userId: String, callback: (Boolean) -> Unit) {
+        // 在這裡實現檢查使用者是否已加入群組的邏輯
+        // 假設我們使用 Firebase Firestore
+        val db = FirebaseFirestore.getInstance()
+        db.collection("groups").document(groupLink).collection("members").document(userId).get()
+            .addOnSuccessListener { document ->
+                callback(document.exists())
+            }
+            .addOnFailureListener {
+                callback(false)
+            }
+    }
+
+
     fun dailyExperienceIncrease(userId: String) {
         updateUserExperience(userId, 10)
     }
