@@ -97,7 +97,7 @@ fun GroupInviteLinkScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
-                painter = painterResource(id = R.drawable.group),
+                painter = painterResource(id = R.drawable.capybara_take_invitation),
                 contentDescription = "Group Image",
                 modifier = Modifier
                     .fillMaxWidth()
