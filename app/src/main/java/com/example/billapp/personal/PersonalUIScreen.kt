@@ -393,7 +393,7 @@ fun PersonalUIScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .wrapContentHeight()
+                    .height(300.dp)
                     .align(Alignment.CenterHorizontally)
             ) {
                 // PieChart
