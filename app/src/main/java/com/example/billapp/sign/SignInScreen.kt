@@ -33,13 +33,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.billapp.R
 import com.example.billapp.ui.theme.theme.Brown2
@@ -79,7 +82,7 @@ fun SignInScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(id = R.drawable.signinbackground),
+            painter = painterResource(id = R.drawable.ic_background),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.FillBounds
@@ -169,6 +172,10 @@ fun SignInScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(48.dp))
+
+
+
             when (authState) {
                 is MainViewModel.AuthState.Loading -> {
                     CircularProgressIndicator(
@@ -200,4 +207,11 @@ fun SignInScreen(
 
 private fun validateForm(email: String, password: String): Boolean {
     return email.isNotBlank() && password.isNotBlank()
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SignInScreenPreview() {
+    val viewModel: MainViewModel = viewModel()
+    SignInScreen(viewModel = viewModel, navController = NavController(LocalContext.current))
 }

@@ -315,15 +315,8 @@ fun SettingsList(navController: NavController, context: Context) {
             context.startActivity(intent)
         },
         SettingsItem("關於", R.drawable.baseline_speaker_notes_24) { navController.navigate("about") },
-        SettingsItem("Line pay", R.drawable.baseline_wallet_24){
-            val linePayUri = Uri.parse("linepay://")
-            val linePayIntent = Intent(Intent.ACTION_VIEW, linePayUri)
-            try {
-                context.startActivity(linePayIntent)
-            } catch (e: ActivityNotFoundException) {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://pay.line.me/portal/tw/main"))
-                context.startActivity(intent)
-            }
+        SettingsItem("Line Token 更新", R.drawable.baseline_wallet_24) {
+            navController.navigate("line_token_update")
         }
     )
 
@@ -449,3 +442,116 @@ data class SettingsItem(
     val iconResId: Int,
     val onClick: () -> Unit
 )
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LineTokenUpdateScreen(
+    navController: NavController,
+    viewModel: MainViewModel
+) {
+    var lineToken by remember { mutableStateOf("") }
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    val user = viewModel.user.collectAsState().value
+    val scope = rememberCoroutineScope()
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "Line Token 更新",
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFFB67B6C)
+                )
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp)
+                .background(Color(0xD2FFF3E6)),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            OutlinedTextField(
+                value = lineToken,
+                onValueChange = { lineToken = it },
+                label = { Text("Line Notify Token") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = lightBrown,
+                    focusedLabelColor = lightBrown
+                ),
+                singleLine = true
+            )
+
+            Button(
+                onClick = {
+                    if (lineToken.isNotBlank() && user != null) {
+                        isLoading = true
+                        scope.launch {
+                            try {
+                                viewModel.updataLineToken(user.id, lineToken)
+                                showSuccessDialog = true
+                            } catch (e: Exception) {
+                                // Handle error
+                            } finally {
+                                isLoading = false
+                            }
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = lightBrown
+                ),
+                enabled = lineToken.isNotBlank() && !isLoading
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White
+                    )
+                } else {
+                    Text("更新 Token")
+                }
+            }
+
+            if (showSuccessDialog) {
+                AlertDialog(
+                    onDismissRequest = {
+                        showSuccessDialog = false
+                        navController.navigateUp()
+                    },
+                    title = { Text("更新成功") },
+                    text = { Text("Line Token 已成功更新") },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showSuccessDialog = false
+                            navController.navigateUp()
+                        }) {
+                            Text("確定")
+                        }
+                    }
+                )
+            }
+        }
+    }
+}

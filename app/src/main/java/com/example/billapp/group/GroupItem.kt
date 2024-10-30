@@ -16,9 +16,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -128,7 +130,7 @@ fun GroupItem(
 //                            groupTotalDebt > 0 -> Green // 正數時為綠色
 //                            else -> Orange4 // 0 為淺黃色
 //                        },
-                        color = MainBackgroundColor,
+                        color = Color(0xFFF8DBBE),
                         shape = RoundedCornerShape(8.dp) // 圓角背景
                     ),
                 contentAlignment = Alignment.BottomStart
@@ -145,7 +147,7 @@ fun GroupItem(
                 val (debtText, debtColor) = when {
                     groupTotalDebt < 0.0 -> "應付 : ${String.format("%.0f", -groupTotalDebt)}" to Color.Red
                     groupTotalDebt > 0.0 -> "應收 : ${String.format("%.0f", groupTotalDebt)}" to Color(0xFF228B22)
-                    else -> "帳務已結清" to Color.Yellow
+                    else -> "帳務已結清" to Color(0xFFC49700)
                 }
 
                 Text(
