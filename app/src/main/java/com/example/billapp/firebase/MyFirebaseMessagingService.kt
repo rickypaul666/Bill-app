@@ -1,4 +1,4 @@
-package com.example.billapp
+package com.example.billapp.firebase
 
 import android.annotation.SuppressLint
 import android.app.NotificationChannel

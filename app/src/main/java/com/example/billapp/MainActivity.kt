@@ -16,7 +16,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.work.*
-import com.example.billapp.ui.theme.*
+import com.example.billapp.home.MainScreen
+import com.example.billapp.ui.theme.theme.ButtonRedColor
+import com.example.billapp.ui.theme.theme.MainBackgroundColor
+import com.example.billapp.ui.theme.theme.PrimaryFontColor
+import com.example.billapp.ui.theme.theme.custom_jf_Typography
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
 import com.google.firebase.Firebase

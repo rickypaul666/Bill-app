@@ -43,8 +43,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.billapp.R
 import com.example.billapp.data.models.DebtRelation
-import com.example.billapp.ui.theme.Black
-import com.example.billapp.ui.theme.Brown5
+import com.example.billapp.ui.theme.theme.Black
+import com.example.billapp.ui.theme.theme.Brown5
 import com.example.billapp.viewModel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

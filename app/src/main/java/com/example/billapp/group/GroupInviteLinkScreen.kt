@@ -31,9 +31,8 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.billapp.R
-import com.example.billapp.ui.theme.ButtonRedColor
-import com.example.billapp.ui.theme.MainBackgroundColor
-import com.example.billapp.ui.theme.Orange1
+import com.example.billapp.ui.theme.theme.MainBackgroundColor
+import com.example.billapp.ui.theme.theme.Orange1
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.common.BitMatrix

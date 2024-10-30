@@ -30,8 +30,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.billapp.R
-import com.example.billapp.ui.theme.Brown5
-import com.example.billapp.ui.theme.Brown6
+import com.example.billapp.ui.theme.theme.Brown5
+import com.example.billapp.ui.theme.theme.Brown6
 
 @Composable
 fun IntroScreen(

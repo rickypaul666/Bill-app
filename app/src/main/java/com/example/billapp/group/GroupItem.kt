@@ -39,8 +39,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.billapp.R
 import com.example.billapp.data.models.Group
-import com.example.billapp.ui.theme.MainBackgroundColor
-import com.example.billapp.ui.theme.Purple40
+import com.example.billapp.ui.theme.theme.MainBackgroundColor
+import com.example.billapp.ui.theme.theme.Purple40
 import com.example.billapp.viewModel.MainViewModel
 
 @SuppressLint("DefaultLocale")
