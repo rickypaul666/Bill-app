@@ -271,15 +271,7 @@ fun MainScreen(
                 }
 
                 composable("qrCodeScanner") {
-                    QRCodeScannerScreen(
-                        onScanResult = { result ->
-                            navController.previousBackStackEntry?.savedStateHandle?.set("groupLink", result)
-                            navController.navigateUp()
-                        },
-                        onBack = {
-                            navController.navigateUp()
-                        }
-                    )
+                    QRCodeScannerScreen(navController = navController)
                 }
 
                 composable("groupDetail/{groupId}") { backStackEntry ->

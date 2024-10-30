@@ -67,11 +67,21 @@ fun GroupTest(
     val currentUser = viewModel.user.collectAsState().value
     val userId by remember { mutableStateOf(currentUser?.id ?: "") }
 
+    // 初始化時根據amount是否為整數決定顯示的內容
+    LaunchedEffect(amount) {
+        amountInput = if (amount % 1.0 == 0.0) {
+            amount.toInt().toString()
+        } else {
+            amount.toString()
+        }
+    }
+
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Group Test") },
+                title = { Text("新增交易") },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
@@ -107,15 +117,21 @@ fun GroupTest(
             ) {
                 StylishTextField(
                     value = amountInput,
-                    onValueChange = {
-                        amountInput = it
-                        it.toDoubleOrNull()?.let { validAmount ->
-                            viewModel.setAmount(validAmount)
-                            // 根據是否為整數來決定顯示的內容
-                            amountInput = if (validAmount % 1.0 == 0.0) {
-                                validAmount.toInt().toString()
-                            } else {
-                                validAmount.toString()
+                    onValueChange = { input ->
+                        if (input.isEmpty()) {
+                            amountInput = ""
+                            viewModel.setAmount(0.0)
+                        } else {
+                            input.toDoubleOrNull()?.let { validAmount ->
+                                viewModel.setAmount(validAmount)
+                                // 根據是否為整數來決定顯示的內容
+                                amountInput = if (validAmount % 1.0 == 0.0) {
+                                    validAmount.toInt().toString()
+                                } else {
+                                    validAmount.toString()
+                                }
+                            } ?: run {
+                                amountInput = input
                             }
                         }
                     },
@@ -132,7 +148,16 @@ fun GroupTest(
                             isBottomSheetVisible = toggleKeyboard
                         }
                 )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable {
+                            toggleKeyboard = !toggleKeyboard
+                            isBottomSheetVisible = toggleKeyboard
+                        }
+                )
             }
+
 
             AnimatedVisibility(visible = isBottomSheetVisible) {
                 CustomKeyboard(

@@ -1,35 +1,36 @@
 package com.example.billapp
 
-import android.net.Uri
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.example.billapp.PieChart
-import com.example.billapp.PieChartWithCategory
-import com.example.billapp.viewModel.MainViewModel
-import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 
 @Composable
 fun YearPickerDialog(
@@ -207,5 +208,94 @@ fun MyDatePickerDialog(
         content = {
             DatePicker(state = datePickerState)
         }
+    )
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DatePickerModal(
+    onDateSelected: (Long?) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val datePickerState = rememberDatePickerState()
+
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                onDateSelected(datePickerState.selectedDateMillis)
+                onDismiss()
+            }) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    ) {
+        DatePicker(state = datePickerState)
+    }
+}
+
+
+// DatePicker.kt
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CustomDatePickerDialog(
+    onDateSelected: (Long, Long) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val dateRangePickerState = rememberDateRangePickerState()
+
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onDateSelected(
+                        dateRangePickerState.selectedStartDateMillis ?: 0L,
+                        dateRangePickerState.selectedEndDateMillis ?: 0L
+                    )
+                    onDismiss()
+                }
+            ) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    ) {
+        DateRangePicker(
+            state = dateRangePickerState,
+            title = {
+                Text(
+                    text = "選擇起訖日期"
+                )
+            },
+            showModeToggle = false,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(500.dp)
+                .padding(16.dp)
+        )
+    }
+}
+
+@Composable
+fun RangeDatePickerDialog(
+    onDateRangeSelected: (Long, Long) -> Unit,
+    onDismiss: () -> Unit
+) {
+    CustomDatePickerDialog(
+        onDateSelected = { start, end ->
+            onDateRangeSelected(start, end)
+        },
+        onDismiss = onDismiss
     )
 }

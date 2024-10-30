@@ -59,6 +59,7 @@ import com.example.billapp.R
 import com.example.billapp.models.Group
 import com.example.billapp.ui.theme.ButtonRedColor
 import com.example.billapp.ui.theme.Gray
+import com.example.billapp.ui.theme.Orange1
 
 // 下方群組圖示點擊後會導到 GroupScreen
 @OptIn(ExperimentalMaterial3Api::class)
@@ -87,7 +88,7 @@ fun GroupScreen(
                         onClick = { navController.navigate("CreateGroupScreen") },
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFD4634E)  // Use containerColor instead of backgroundColor
+                            containerColor = Orange1
                         ),
                         modifier = Modifier
                             .padding(top = 30.dp, end = 16.dp, bottom = 30.dp)
@@ -105,7 +106,7 @@ fun GroupScreen(
                         onClick = { navController.navigate("Join_Group") },
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFD4634E)  // Use containerColor instead of backgroundColor
+                            containerColor = Orange1 // Use containerColor instead of backgroundColor
                         ),
                         modifier = Modifier
                             .padding(top = 30.dp, end = 16.dp, bottom = 30.dp)
