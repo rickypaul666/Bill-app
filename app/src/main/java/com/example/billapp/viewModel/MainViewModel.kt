@@ -46,6 +46,9 @@ class MainViewModel : ViewModel() {
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user.asStateFlow()
 
+    private val _lineToken = MutableStateFlow<String?>(null)
+    val lineToken: StateFlow<String?> = _lineToken.asStateFlow()
+
     private val _totalDebtMap = MutableStateFlow<Map<String, Double>>(emptyMap())
     val totalDebtMap: StateFlow<Map<String, Double>> = _totalDebtMap
 
@@ -386,6 +389,20 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    suspend fun getLineToken(userId: String): String {
+        return try {
+            FirebaseRepository.getUserLineToken(userId)
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
+    fun updataLineToken(userId: String, lineToken: String) {
+        viewModelScope.launch {
+            FirebaseRepository.updateUserLineToken(userId, lineToken)
+        }
+    }
+
     fun loadInitialData(userId: String) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -466,32 +483,17 @@ class MainViewModel : ViewModel() {
 
 
     fun clearData() {
-//        _groupCreationStatus.value = GroupCreationStatus.IDLE
-//        _groupIdDebtRelations.value = emptyMap()
-//        currentGroup.value = null
-//        _userTransactions.value = emptyList()
-//        _groupTransactions.value = emptyList()
-//        _debtRelations.value = emptyList()
-//        _isLoading.value = false
-//        _error.value = null
-//        _dividers.value = emptyList()
-//        _payers.value = emptyList()
-//        _transactionType.value = "支出"
-//        _amount.value = 0.0
-//        _note.value = ""
-//        _date.value = Timestamp.now()
-//        _category.value = ""
-//        _name.value = ""
-//        _shareMethod.value = "均分"
-//        _groupMembers.value = emptyList()
-//        _transaction.value = null
-//        _updatetime.value = Timestamp.now()
-//        _userGroups.value = emptyList()
-//        _userPercentages.value = emptyMap()
-//        _userAdjustments.value = emptyMap()
-//        _userExactAmounts.value = emptyMap()
-//        _userShares.value = emptyMap()
-//        _groupName.value = ""
+        _user.value = null
+        _userTransactions.value = emptyList()
+        _groupTransactions.value = emptyList()
+        _debtRelations.value = emptyList()
+        _transactionType.value = "支出"
+        _shareMethod.value = "均分"
+        _groupMembers.value = emptyList()
+        _transaction.value = null
+        _updatetime.value = Timestamp.now()
+        _userGroups.value = emptyList()
+        _groupName.value = ""
     }
 
     fun reloadUserData() {

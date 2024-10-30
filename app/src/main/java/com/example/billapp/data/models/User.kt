@@ -17,4 +17,5 @@ data class User(
     var trustLevel: Int = 100,
     val fcmToken: String = "",
     val budget: Int = 0,
+    val lineToken: String = ""
 ) : Parcelable

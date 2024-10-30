@@ -67,7 +67,8 @@ object PaymentMethods {
         val label: String,
         val color: Color,
         val appUri: String? = null,
-        val webUri: String? = null
+        val webUri: String? = null,
+        val requiresToken: Boolean = false
     )
 
     val availablePayments = listOf(
@@ -76,35 +77,9 @@ object PaymentMethods {
             icon = Icons.Default.Payment,
             label = "Line Pay",
             color = Color(0xFF00B900),
-            appUri = "linepay://",
-            webUri = "https://pay.line.me/portal/tw/main"
+            appUri = "https://line.me/R/ch/1586237320/?forwardPath=/c2c/transfer&no=",
+            requiresToken = true
         ),
-//        PaymentOption(
-//            id = "creditcard",
-//            icon = Icons.Default.CreditCard,
-//            label = "信用卡",
-//            color = Color(0xFF1976D2)
-//        ),
-//        PaymentOption(
-//            id = "bank",
-//            icon = Icons.Default.AccountBalance,
-//            label = "銀行轉帳",
-//            color = Color(0xFF388E3C)
-//        ),
-        PaymentOption(
-            id = "jkopay",
-            icon = Icons.Default.Payment,
-            label = "街口支付",
-            color = Color(0xFFFF6B00),
-            appUri = "jkopay://",
-            webUri = "https://www.jkopay.com"
-        ),
-//        PaymentOption(
-//            id = "taiwanpay",
-//            icon = Icons.Default.Payment,
-//            label = "台灣 Pay",
-//            color = Color(0xFF00A0E9)
-//        ),
         PaymentOption(
             id = "other",
             icon = Icons.Default.Construction,
@@ -129,6 +104,8 @@ fun DebtRelationDetailItem(
 
     var fromName by remember { mutableStateOf("") }
     var toName by remember { mutableStateOf("") }
+    var toLineToken by remember { mutableStateOf("") }
+
     val canRemind = lastRemindTime?.let {
         (System.currentTimeMillis() - it.toDate().time) > 86400000
     } ?: true
@@ -140,6 +117,7 @@ fun DebtRelationDetailItem(
     LaunchedEffect(debtRelation.from, debtRelation.to) {
         fromName = viewModel.getUserName(debtRelation.from)
         toName = viewModel.getUserName(debtRelation.to)
+        toLineToken = viewModel.getLineToken(debtRelation.to)
     }
 
     Card(
@@ -190,7 +168,8 @@ fun DebtRelationDetailItem(
                 viewModel.updateUserExperience(userId, 5)
                 showBottomSheet = false
             },
-            context = context
+            context = context,
+            lineToken = toLineToken
         )
     }
 
@@ -317,8 +296,11 @@ fun PaymentBottomSheet(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
     context: Context,
+    lineToken: String = "",
     modifier: Modifier = Modifier
 ) {
+    var showNoTokenDialog by remember { mutableStateOf(false) }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         modifier = modifier,
@@ -332,7 +314,6 @@ fun PaymentBottomSheet(
                 .padding(top = 24.dp)
                 .navigationBarsPadding()
         ) {
-            // Header
             Text(
                 "選擇付款方式",
                 style = MaterialTheme.typography.headlineMedium,
@@ -347,12 +328,11 @@ fun PaymentBottomSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Payment Grid - 減少高度並移除固定高度限制
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.wrapContentHeight() // 改用 wrapContentHeight
+                modifier = Modifier.wrapContentHeight()
             ) {
                 items(PaymentMethods.availablePayments.size) { index ->
                     val payment = PaymentMethods.availablePayments[index]
@@ -361,18 +341,25 @@ fun PaymentBottomSheet(
                         label = payment.label,
                         color = payment.color
                     ) {
-                        payment.appUri?.let { appUri ->
-                            payment.webUri?.let { webUri ->
-                                launchPaymentApp(context, appUri, webUri)
+                        when {
+                            payment.id == "linepay" && lineToken.isEmpty() -> {
+                                showNoTokenDialog = true
+                            }
+                            payment.appUri != null -> {
+                                val finalUri = if (payment.requiresToken) {
+                                    payment.appUri + lineToken
+                                } else {
+                                    payment.appUri
+                                }
+                                launchPaymentApp(context, finalUri)
                             }
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp)) // 調整間距
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Confirmation Buttons
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -403,6 +390,20 @@ fun PaymentBottomSheet(
                 }
             }
         }
+    }
+
+    // No Line Token Dialog
+    if (showNoTokenDialog) {
+        AlertDialog(
+            onDismissRequest = { showNoTokenDialog = false },
+            title = { Text("無法使用 Line Pay") },
+            text = { Text("對方未提供 Line 付款碼") },
+            confirmButton = {
+                TextButton(onClick = { showNoTokenDialog = false }) {
+                    Text("確定")
+                }
+            }
+        )
     }
 }
 
@@ -435,16 +436,10 @@ fun PaymentMethod(
 
 private fun launchPaymentApp(
     context: Context,
-    appUri: String,
-    webUri: String
+    uri: String
 ) {
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(appUri))
-    try {
-        context.startActivity(intent)
-    } catch (e: ActivityNotFoundException) {
-        val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(webUri))
-        context.startActivity(webIntent)
-    }
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
+    context.startActivity(intent)
 }
 
 @Preview(showBackground = true)

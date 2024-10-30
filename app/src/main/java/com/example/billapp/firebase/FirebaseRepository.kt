@@ -682,6 +682,24 @@ object FirebaseRepository {
             ?: throw IllegalStateException("User data not found")
     }
 
+    suspend fun getUserLineToken(userId: String): String = withContext(Dispatchers.IO) {
+        try {
+            val user = getFirestoreInstance().collection(Constants.USERS)
+                .document(userId)
+                .get()
+                .await()
+                .toObject(User::class.java)
+
+            return@withContext user?.lineToken ?: throw Exception("User or line token not found")
+        } catch (e: Exception) {
+            throw Exception("Failed to get user line token: ${e.message}")
+        }
+    }
+
+    suspend fun updateUserLineToken(userId: String, lineToken: String) {
+           getFirestoreInstance().collection(Constants.USERS).document(userId).update("lineToken", lineToken).await()
+    }
+
     suspend fun getUserData(userId: String): User = withContext(Dispatchers.IO) {
         try {
             val userDocument = getFirestoreInstance().collection(Constants.USERS)

@@ -48,6 +48,7 @@ import coil.compose.AsyncImage
 import com.example.billapp.Achievement.AchievementsScreen
 import com.example.billapp.Achievement.DetailedAchievementsScreen
 import com.example.billapp.Achievement.DetailedBadgesScreen
+import com.example.billapp.LineTokenUpdateScreen
 import com.example.billapp.ProfileScreen
 import com.example.billapp.QRCodeScannerScreen
 import com.example.billapp.R
@@ -366,7 +367,9 @@ fun MainScreen(
                         onNavigateBack = { navController.navigateUp() }
                     )
                 }
-
+                composable("line_token_update") {
+                    LineTokenUpdateScreen(navController = navController, viewModel = viewModel)
+                }
 
             }
         }
