@@ -157,6 +157,8 @@ dependencies {
 
     implementation ("com.google.accompanist:accompanist-pager:0.28.0")
     implementation ("com.google.accompanist:accompanist-pager-indicators:0.28.0")
+    implementation ("androidx.compose.foundation:foundation:1.3.1")
+    implementation ("androidx.compose.material3:material3:1.0.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

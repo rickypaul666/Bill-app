@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-@SuppressLint("CoroutineCreationDuringComposition")
+@SuppressLint("CoroutineCreationDuringComposition", "DefaultLocale")
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun PersonalTransactionItem(
@@ -138,7 +138,7 @@ fun PersonalTransactionItem(
                             Text(text = transaction.name)
                         }
                         Text(
-                            text = "${if (transaction.type == "收入") "+" else "-"}${transaction.amount}",
+                            text = "${if (transaction.type == "收入") "+" else "-"}${String.format("%.0f", transaction.amount)}",
                             color = if (transaction.type == "收入") Color.Green else Color.Red
                         )
                     }

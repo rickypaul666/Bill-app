@@ -63,6 +63,7 @@ import com.example.billapp.ui.theme.ButtonGrayColor
 import com.example.billapp.ui.theme.Green
 import com.example.billapp.ui.theme.Red
 import com.example.billapp.ui.theme.ItemAddMainColor
+import com.example.billapp.ui.theme.MainBackgroundColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,7 +91,7 @@ fun StylishTextField(
             .padding(8.dp)
             .border(2.dp, Brown1, RoundedCornerShape(8.dp)),
         colors = TextFieldDefaults.textFieldColors(
-            containerColor = ItemAddMainColor,
+            containerColor = BoxBackgroundColor,
             focusedIndicatorColor = Brown1,
             focusedLabelColor = Brown5,
 
@@ -284,7 +285,7 @@ fun ItemAdd(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFD9C9BA))  // 背景顏色
+                .background(MainBackgroundColor)  // 背景顏色
                 .padding(innerPadding)
                 .padding(top = 23.dp, start = 16.dp, end = 16.dp, bottom = 7.dp)
 //                .verticalScroll(rememberScrollState())
@@ -416,7 +417,7 @@ fun ItemAdd(
                     label = "金額",
                     readOnly = true,
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth(),
                 )
                 Box(
                     modifier = Modifier
