@@ -53,6 +53,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import com.example.billapp.group.CustomBottomSheet
+import com.example.billapp.ui.theme.BoxBackgroundColor
 import com.example.billapp.ui.theme.VeryDarkGray
 import com.example.billapp.ui.theme.DarkGray
 import com.example.billapp.ui.theme.LightGray

@@ -5,15 +5,12 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-<<<<<<< HEAD
+
     <uses-permission
         android:name="android.permission.POST_NOTIFICATIONS"
         android:required="false" />
-
-=======
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
->>>>>>> origin/QR_code_update
+
 
 
     <application

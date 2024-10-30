@@ -17,16 +17,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.billapp.R
-<<<<<<< HEAD
-import com.example.billapp.data.models.User
-import com.example.billapp.ui.theme.Brown1
-import com.example.billapp.ui.theme.Brown2
-import com.example.billapp.ui.theme.Brown5
 import com.example.billapp.ui.theme.Brown6
-import com.example.billapp.ui.theme.Brown7
-=======
-import com.example.billapp.ui.theme.*
->>>>>>> origin/QR_code_update
+import com.example.billapp.ui.theme.ButtonRedColor
+import com.example.billapp.ui.theme.ItemAddMainColor
+import com.example.billapp.ui.theme.MainBackgroundColor
+import com.example.billapp.ui.theme.MainCardRedColor
+import com.example.billapp.ui.theme.PrimaryFontColor
 import com.example.billapp.viewModel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

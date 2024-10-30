@@ -452,7 +452,6 @@ fun TransactionItem(transaction: GroupTransaction, viewModel: MainViewModel) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-<<<<<<< HEAD
                     text = "付款人: $payerName",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Gray
@@ -474,10 +473,7 @@ fun TransactionItem(transaction: GroupTransaction, viewModel: MainViewModel) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "$${transaction.amount}",
-=======
                     text = "${String.format("%.0f", transaction.amount)}",
->>>>>>> origin/QR_code_update
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )

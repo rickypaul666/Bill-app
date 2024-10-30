@@ -19,21 +19,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-<<<<<<< HEAD
 import com.example.billapp.MonthPickerDialog
 import com.example.billapp.MyDatePickerDialog
-import com.example.billapp.PieChart
 import com.example.billapp.PieChartWithCategory
-import com.example.billapp.R
+import com.example.billapp.RangeDatePickerDialog
 import com.example.billapp.YearPickerDialog
 import com.example.billapp.data.models.TransactionCategory
-import com.example.billapp.ui.theme.ButtonRedColor
-=======
-import com.example.billapp.*
-import com.example.billapp.models.TransactionCategory
 import com.example.billapp.ui.theme.BoxBackgroundColor
->>>>>>> origin/QR_code_update
-import com.example.billapp.ui.theme.MainBackgroundColor
 import com.example.billapp.viewModel.MainViewModel
 import java.text.SimpleDateFormat
 import java.util.*
