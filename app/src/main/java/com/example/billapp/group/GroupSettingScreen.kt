@@ -33,7 +33,10 @@ import com.example.billapp.R
 import com.example.billapp.data.models.Group
 import com.example.billapp.data.models.GroupTransaction
 import com.example.billapp.data.models.User
-import com.example.billapp.ui.theme.*
+import com.example.billapp.ui.theme.theme.BoxBackgroundColor
+import com.example.billapp.ui.theme.theme.MainBackgroundColor
+import com.example.billapp.ui.theme.theme.Orange1
+import com.example.billapp.ui.theme.theme.Orange4
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi

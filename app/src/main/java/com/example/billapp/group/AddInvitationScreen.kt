@@ -17,12 +17,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.billapp.R
-import com.example.billapp.ui.theme.Brown6
-import com.example.billapp.ui.theme.ButtonRedColor
-import com.example.billapp.ui.theme.ItemAddMainColor
-import com.example.billapp.ui.theme.MainBackgroundColor
-import com.example.billapp.ui.theme.MainCardRedColor
-import com.example.billapp.ui.theme.PrimaryFontColor
+import com.example.billapp.ui.theme.theme.Brown6
+import com.example.billapp.ui.theme.theme.ButtonRedColor
+import com.example.billapp.ui.theme.theme.ItemAddMainColor
+import com.example.billapp.ui.theme.theme.MainBackgroundColor
+import com.example.billapp.ui.theme.theme.MainCardRedColor
+import com.example.billapp.ui.theme.theme.PrimaryFontColor
 import com.example.billapp.viewModel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

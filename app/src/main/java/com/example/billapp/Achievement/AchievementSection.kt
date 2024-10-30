@@ -1,4 +1,4 @@
-package com.example.billapp
+package com.example.billapp.Achievement
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -40,16 +40,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.billapp.R
 import com.example.billapp.data.models.Achievement
 import com.example.billapp.data.models.Badge
-import com.example.billapp.ui.theme.BoxBackgroundColor
-import com.example.billapp.ui.theme.Brown1
-import com.example.billapp.ui.theme.Brown2
-import com.example.billapp.ui.theme.Brown3
-import com.example.billapp.ui.theme.Brown4
-import com.example.billapp.ui.theme.MainBackgroundColor
-import com.example.billapp.ui.theme.Orange1
-import com.example.billapp.ui.theme.Orange3
+import com.example.billapp.ui.theme.theme.BoxBackgroundColor
+import com.example.billapp.ui.theme.theme.Brown1
+import com.example.billapp.ui.theme.theme.Brown2
+import com.example.billapp.ui.theme.theme.Brown3
+import com.example.billapp.ui.theme.theme.Brown4
+import com.example.billapp.ui.theme.theme.MainBackgroundColor
+import com.example.billapp.ui.theme.theme.Orange1
+import com.example.billapp.ui.theme.theme.Orange3
 
 val GrayBackgroundColor = Color(0xFFF5F5F5) // 淺灰色背景
 val Brown7 = Color(0xFF8B4513)

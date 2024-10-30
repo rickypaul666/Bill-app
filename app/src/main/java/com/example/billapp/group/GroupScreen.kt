@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.billapp.ui.theme.Orange1
+import com.example.billapp.ui.theme.theme.Orange1
 import com.example.billapp.viewModel.MainViewModel
 
 // 下方群組圖示點擊後會導到 GroupScreen

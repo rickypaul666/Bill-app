@@ -1,4 +1,4 @@
-package com.example.billapp
+package com.example.billapp.Achievement
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,6 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.billapp.home.DETAILED_ACHIEVEMENTS_ROUTE
+import com.example.billapp.home.DETAILED_BADGES_ROUTE
 import com.example.billapp.viewModel.MainViewModel
 
 @Composable

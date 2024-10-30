@@ -19,13 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.billapp.MonthPickerDialog
-import com.example.billapp.MyDatePickerDialog
-import com.example.billapp.PieChartWithCategory
-import com.example.billapp.RangeDatePickerDialog
-import com.example.billapp.YearPickerDialog
 import com.example.billapp.data.models.TransactionCategory
-import com.example.billapp.ui.theme.BoxBackgroundColor
+import com.example.billapp.ui.theme.theme.BoxBackgroundColor
 import com.example.billapp.viewModel.MainViewModel
 import java.text.SimpleDateFormat
 import java.util.*

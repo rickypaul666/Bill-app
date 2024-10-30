@@ -40,7 +40,10 @@ import com.google.zxing.RGBLuminanceSource
 import android.widget.FrameLayout
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
-import com.example.billapp.ui.theme.*
+import com.example.billapp.ui.theme.theme.ButtonGrayColor
+import com.example.billapp.ui.theme.theme.ButtonRedColor
+import com.example.billapp.ui.theme.theme.MainBackgroundColor
+import com.example.billapp.ui.theme.theme.PrimaryFontColor
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable

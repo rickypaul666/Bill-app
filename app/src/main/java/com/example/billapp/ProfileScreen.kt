@@ -18,16 +18,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.billapp.ui.theme.BoxBackgroundColor
-import com.example.billapp.ui.theme.Brown1
-import com.example.billapp.ui.theme.ButtonGrayColor
-import com.example.billapp.ui.theme.ButtonGreenColor
-import com.example.billapp.ui.theme.ButtonRedColor
-import com.example.billapp.ui.theme.MainBackgroundColor
-import com.example.billapp.ui.theme.Orange1
+import com.example.billapp.ui.theme.theme.BoxBackgroundColor
+import com.example.billapp.ui.theme.theme.ButtonGreenColor
+import com.example.billapp.ui.theme.theme.ButtonRedColor
+import com.example.billapp.ui.theme.theme.MainBackgroundColor
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
 import androidx.compose.ui.graphics.graphicsLayer
+import com.example.billapp.home.StylishTextField
 
 
 @OptIn(ExperimentalMaterial3Api::class)
