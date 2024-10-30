@@ -53,6 +53,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.billapp.data.models.DebtRelation
 import com.example.billapp.ui.theme.theme.Orange4
 import com.example.billapp.ui.theme.theme.PrimaryFontColor
@@ -196,7 +197,7 @@ fun DebtRelationDetailItem(
     // Reminder Confirmation Dialog
     if (showRemindConfirmation) {
         ReminderConfirmationDialog(
-            toName = toName,
+            fromName = fromName,
             onDismiss = { showRemindConfirmation = false }
         )
     }
@@ -212,7 +213,7 @@ private fun DebtInfo(
 ) {
     Column(
         modifier = modifier
-            .padding(8.dp) // 增加 padding
+            .padding(8.dp)
     ) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -220,25 +221,25 @@ private fun DebtInfo(
         ) {
             Text(
                 text = debtName,
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.headlineSmall.copy(fontSize = 16.sp), // 調整字體大小
                 color = PrimaryFontColor
             )
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = "$${String.format("%.2f", amount)}",
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.headlineSmall.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold), // 調整字體大小
                 color = PrimaryFontColor
             )
         }
 
-        Spacer(modifier = Modifier.height(4.dp)) // 增加間距
+        Spacer(modifier = Modifier.height(4.dp))
 
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "$fromName",
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp), // 調整字體大小
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.width(4.dp))
@@ -251,7 +252,7 @@ private fun DebtInfo(
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = "$toName",
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp), // 調整字體大小
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -295,13 +296,13 @@ private fun ActionButtons(
 
 @Composable
 private fun ReminderConfirmationDialog(
-    toName: String,
+    fromName: String,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("催債通知已發送") },
-        text = { Text("已成功發送催債通知給 $toName") },
+        text = { Text("已成功發送催債通知給 $fromName") },
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text("確定")

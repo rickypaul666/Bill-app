@@ -69,6 +69,7 @@ import com.example.billapp.Achievement.AchievementsSection
 import com.example.billapp.Achievement.BadgesSection
 import com.example.billapp.personal.PieChart
 import com.example.billapp.R
+import com.example.billapp.ReminderSummary
 import com.example.billapp.data.models.Group
 import com.example.billapp.data.models.PersonalTransaction
 import com.example.billapp.data.models.User
@@ -86,6 +87,7 @@ import com.example.billapp.ui.theme.theme.Red
 import com.example.billapp.ui.theme.theme.VeryDarkGray
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -100,19 +102,18 @@ fun HomeScreen(
     avatarViewModel: AvatarViewModel
 ) {
     val user = viewModel.user.collectAsState().value
-
     val achievements by viewModel.achievements.collectAsState()
     val badges by viewModel.badges.collectAsState()
-
     val userImage = avatarViewModel.avatarUrl.collectAsState().value
-
-
     val groups by viewModel.userGroups.collectAsState()
 
     val transactions by viewModel.userTransactions.collectAsState()
     var filteredRecords by remember { mutableStateOf(transactions) }
 
     var selectedChart by remember { mutableStateOf("結餘") }
+
+    var isDialogVisible by remember { mutableStateOf(true) }
+    var reminderSummary by remember { mutableStateOf<ReminderSummary?>(null) }
 
     fun filtered(){
         val filtered = transactions.filter {
@@ -135,9 +136,9 @@ fun HomeScreen(
 
 
     LaunchedEffect(user,transactions) {
+        viewModel.loadUserData(user?.id ?: "")
         filtered()
     }
-
 
     val pagerState = rememberPagerState(pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
