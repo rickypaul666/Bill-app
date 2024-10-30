@@ -48,6 +48,8 @@ import com.example.billapp.viewModel.MainViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
@@ -291,7 +293,7 @@ fun ItemAdd(
                 .background(MainBackgroundColor)  // 背景顏色
                 .padding(innerPadding)
                 .padding(top = 23.dp, start = 16.dp, end = 16.dp, bottom = 7.dp)
-//                .verticalScroll(rememberScrollState())
+                .verticalScroll(rememberScrollState())
 //                .clickable {
 //                    if (isBottomSheetVisible) {
 //                        coroutineScope.launch {
