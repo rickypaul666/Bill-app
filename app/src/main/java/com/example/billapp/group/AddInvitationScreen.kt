@@ -39,11 +39,38 @@ fun AddInvitationScreen(
 
     val userId by remember { mutableStateOf(currentUser?.id ?: "") }
 
+    // Collect group exists and user in group states
+    val groupExistsState by viewModel.groupExistsState.collectAsState()
+    val userInGroupState by viewModel.userInGroupState.collectAsState()
+
     // Handle QR code scan result
     val qrCodeResult = navController.currentBackStackEntry?.savedStateHandle?.get<String>("qrCodeResult")
     qrCodeResult?.let {
         groupLink = it
         navController.currentBackStackEntry?.savedStateHandle?.remove<String>("qrCodeResult")
+    }
+
+    // Effect to handle group existence and user group membership
+    LaunchedEffect(groupExistsState, userInGroupState) {
+        when {
+            groupExistsState == false -> {
+                dialogMessage = "查無此ID"
+                showDialog = true
+                viewModel.resetGroupStates()
+            }
+            groupExistsState == true && userInGroupState == true -> {
+                dialogMessage = "您已加入該群組"
+                showDialog = true
+                viewModel.resetGroupStates()
+            }
+            groupExistsState == true && userInGroupState == false -> {
+                viewModel.assignUserToGroup(groupLink, userId)
+                viewModel.updateUserExperience(userId, 10)
+                dialogMessage = "成功加入群組"
+                showDialog = true
+                viewModel.resetGroupStates()
+            }
+        }
     }
 
     Scaffold(
@@ -86,10 +113,10 @@ fun AddInvitationScreen(
             ) {
                 TextField(
                     colors = TextFieldDefaults.textFieldColors(
-                        containerColor = MainBackgroundColor, // 背景顏色
-                        focusedIndicatorColor = Brown6, // 焦點下的指示器顏色
-                        unfocusedIndicatorColor = ItemAddMainColor, // 未焦點下的指示器顏色
-                        errorIndicatorColor = MaterialTheme.colorScheme.error, // 錯誤狀態下的指示器顏色
+                        containerColor = MainBackgroundColor,
+                        focusedIndicatorColor = Brown6,
+                        unfocusedIndicatorColor = ItemAddMainColor,
+                        errorIndicatorColor = MaterialTheme.colorScheme.error,
                     ),
                     value = groupLink,
                     onValueChange = {
@@ -113,23 +140,8 @@ fun AddInvitationScreen(
                 Button(
                     onClick = {
                         if (groupLink.isNotBlank()) {
-                            viewModel.checkGroupExists(groupLink) { groupExists ->
-                                if (groupExists) {
-                                    viewModel.checkUserInGroup(groupLink, userId) { userInGroup ->
-                                        if (userInGroup) {
-                                            dialogMessage = "您已加入該群組"
-                                        } else {
-                                            viewModel.assignUserToGroup(groupLink, userId)
-                                            viewModel.updateUserExperience(userId, 10)
-                                            dialogMessage = "成功加入群組"
-                                        }
-                                        showDialog = true
-                                    }
-                                } else {
-                                    dialogMessage = "查無此ID"
-                                    showDialog = true
-                                }
-                            }
+                            viewModel.checkGroupExists(groupLink)
+                            viewModel.checkUserInGroup(groupLink, userId)
                         } else {
                             isError = true
                         }
@@ -137,7 +149,7 @@ fun AddInvitationScreen(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = ButtonRedColor,
-                        contentColor = Color.White // 根據需要調整文本顏色
+                        contentColor = Color.White
                     ),
                     enabled = groupLink.isNotBlank()
                 ) {
@@ -149,9 +161,15 @@ fun AddInvitationScreen(
 
     if (showDialog) {
         AlertDialog(
-            onDismissRequest = { showDialog = false },
+            onDismissRequest = {
+                showDialog = false
+                viewModel.resetGroupStates()
+            },
             confirmButton = {
-                TextButton(onClick = { showDialog = false }) {
+                TextButton(onClick = {
+                    showDialog = false
+                    viewModel.resetGroupStates()
+                }) {
                     Text("確定", color = PrimaryFontColor)
                 }
             },

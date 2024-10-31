@@ -639,6 +639,33 @@ object FirebaseRepository {
         }
     }
 
+    fun checkGroupExists(groupLink: String, callback: (Boolean) -> Unit) {
+        getFirestoreInstance().collection("groups").document(groupLink).get()
+            .addOnSuccessListener { document ->
+                callback(document.exists())
+            }
+            .addOnFailureListener {
+                callback(false)
+            }
+    }
+
+    fun checkUserInGroup(groupLink: String, userId: String, callback: (Boolean) -> Unit) {
+        getFirestoreInstance().collection("groups").document(groupLink).get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val group = document.toObject(Group::class.java)
+                    val isInGroup = group?.createdBy == userId ||
+                            group?.assignedTo?.contains(userId) == true
+                    callback(isInGroup)
+                } else {
+                    callback(false)
+                }
+            }
+            .addOnFailureListener {
+                callback(false)
+            }
+    }
+
     //////
 
 
@@ -718,6 +745,7 @@ object FirebaseRepository {
             throw e
         }
     }
+
 
     suspend fun fetchGroupWithDebtRelations(groupId: String): Group? {
         return withContext(Dispatchers.IO) {
