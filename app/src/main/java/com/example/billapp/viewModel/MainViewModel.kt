@@ -243,33 +243,37 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    // 群組是否存在的狀態
+    private val _groupExistsState = MutableStateFlow<Boolean?>(null)
+    val groupExistsState: StateFlow<Boolean?> = _groupExistsState.asStateFlow()
+
+    // 使用者是否在群組中的狀態
+    private val _userInGroupState = MutableStateFlow<Boolean?>(null)
+    val userInGroupState: StateFlow<Boolean?> = _userInGroupState.asStateFlow()
+
     //Group_invitation
-    fun checkGroupExists(groupLink: String, callback: (Boolean) -> Unit) {
-        // 在這裡實現檢查群組是否存在的邏輯
-        // 假設我們使用 Firebase Firestore
-        val db = FirebaseFirestore.getInstance()
-        db.collection("groups").document(groupLink).get()
-            .addOnSuccessListener { document ->
-                callback(document.exists())
+    fun checkGroupExists(groupLink: String) {
+        FirebaseRepository.checkGroupExists(groupLink) { exists ->
+            viewModelScope.launch {
+                _groupExistsState.emit(exists)
             }
-            .addOnFailureListener {
-                callback(false)
-            }
+        }
     }
 
-    fun checkUserInGroup(groupLink: String, userId: String, callback: (Boolean) -> Unit) {
-        // 在這裡實現檢查使用者是否已加入群組的邏輯
-        // 假設我們使用 Firebase Firestore
-        val db = FirebaseFirestore.getInstance()
-        db.collection("groups").document(groupLink).collection("members").document(userId).get()
-            .addOnSuccessListener { document ->
-                callback(document.exists())
+    fun checkUserInGroup(groupLink: String, userId: String) {
+        FirebaseRepository.checkUserInGroup(groupLink, userId) { isInGroup ->
+            viewModelScope.launch {
+                _userInGroupState.emit(isInGroup)
             }
-            .addOnFailureListener {
-                callback(false)
-            }
+        }
     }
 
+    fun resetGroupStates() {
+        viewModelScope.launch {
+            _groupExistsState.emit(null)
+            _userInGroupState.emit(null)
+        }
+    }
 
     fun dailyExperienceIncrease(userId: String) {
         updateUserExperience(userId, 10)
