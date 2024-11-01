@@ -57,6 +57,7 @@ import androidx.compose.ui.text.font.FontWeight
 import com.example.billapp.R
 import com.example.billapp.group.SeparateBottomSheetContent
 import com.example.billapp.group.CustomBottomSheet
+import com.example.billapp.ui.theme.theme.BottomBackgroundColor
 import com.example.billapp.ui.theme.theme.BoxBackgroundColor
 import com.example.billapp.ui.theme.theme.VeryDarkGray
 import com.example.billapp.ui.theme.theme.DarkGray
@@ -730,37 +731,46 @@ fun ItemAdd(
             if (showErrorDialog) {
                 AlertDialog(
                     onDismissRequest = { showErrorDialog = false },
-                    title = { Text(text = "警告") },
-                    text = { Text(text = errorMessage) },
+                    title = {
+                        Text(text = "警告", color = Color.White)
+                    },
+                    text = {
+                        Text(text = errorMessage, color = Color.White)
+                    },
                     confirmButton = {
                         Button(
                             onClick = {
                                 showErrorDialog = false
-                                if(personalOrGroup == "群組"){
+                                if (personalOrGroup == "群組") {
                                     amountInput = ""
                                     viewModel.setAmount(0.0)
                                     viewModel.setCategory(TransactionCategory.OTHER)
                                     viewModel.setName("")
                                     viewModel.setNote("")
-                                }else{
+                                } else {
                                     amountInput = ""
                                     viewModel.setAmount(0.0)
                                     viewModel.setCategory(TransactionCategory.OTHER)
                                     viewModel.setName("")
                                     viewModel.setNote("")
                                 }
-                            }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                            shape = RoundedCornerShape(50)
                         ) {
-                            Text("確定")
+                            Text("確定", color = Color.Red)
                         }
                     },
                     dismissButton = {
                         Button(
-                            onClick = { showErrorDialog = false }
+                            onClick = { showErrorDialog = false },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                            shape = RoundedCornerShape(50)
                         ) {
-                            Text("取消")
+                            Text("取消", color = Color.Black)
                         }
-                    }
+                    },
+                    containerColor = BottomBackgroundColor
                 )
             }
         }
