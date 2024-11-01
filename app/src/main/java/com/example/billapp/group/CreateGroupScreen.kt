@@ -11,11 +11,13 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -33,7 +35,7 @@ fun CreateGroup(
     navController: NavController
 ) {
     var groupName by remember { mutableStateOf("") }
-    var selectedImageId by remember { mutableStateOf(0) }
+    var selectedImageId by remember { mutableStateOf(1) }
     var showBottomSheet by remember { mutableStateOf(false) }
     val user by viewModel.user.collectAsState()
     val userId by remember { mutableStateOf(user?.id ?: "") }
@@ -80,6 +82,18 @@ fun CreateGroup(
                         .clip(CircleShape)
                         .border(2.dp, Brown5, CircleShape),
                     contentScale = ContentScale.Crop
+                )
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit Icon",
+                    modifier = Modifier
+                        .size(24.dp)
+                        .align(Alignment.BottomEnd)
+                        .offset(x = (-8).dp, y = (-8).dp)
+                        .background(Color.White, shape = CircleShape)
+                        .clip(CircleShape)
+                        .padding(4.dp),
+                    tint = Color.Gray
                 )
             }
 

@@ -1,5 +1,6 @@
 package com.example.billapp.personal
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,10 +28,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.example.billapp.ui.theme.theme.BottomBackgroundColor
 
 @Composable
 fun YearPickerDialog(
@@ -55,21 +58,26 @@ fun YearPickerDialog(
                 onYearSelected(selectedYear)
                 onDismiss()
             }) {
-                Text("OK")
+                Text("OK", color = Color.White)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text("Cancel", color = Color.Red)
             }
         },
         text = {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(16.dp) // 增加內邊距
+            ) {
                 Text("選擇年份", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(16.dp))
                 LazyColumn(
                     state = yearListState,
-                    modifier = Modifier.weight(1f).height(200.dp) // 限制高度以便滾動
+                    modifier = Modifier
+                        .height(200.dp) // 限制高度以便滾動
+                        .fillMaxWidth()
                 ) {
                     items((2010..currentYear).toList()) { year ->
                         Text(
@@ -82,12 +90,14 @@ fun YearPickerDialog(
                                 .padding(16.dp),
                             textAlign = TextAlign.Center,
                             fontWeight = if (year == selectedYear) FontWeight.Bold else FontWeight.Normal,
-                            color = if (year == selectedYear) Color.Blue else Color.Black
+                            color = if (year == selectedYear) Color.Red else Color.White
                         )
                     }
                 }
             }
-        }
+        },
+        containerColor = BottomBackgroundColor,
+        modifier = Modifier.fillMaxWidth(0.8f) // 限制對話框的最大寬度
     )
 }
 
@@ -119,12 +129,12 @@ fun MonthPickerDialog(
                 onMonthSelected(selectedYear, selectedMonth)
                 onDismiss()
             }) {
-                Text("OK")
+                Text("OK", color = Color.White)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text("Cancel", color = Color.Red)
             }
         },
         text = {
@@ -149,7 +159,7 @@ fun MonthPickerDialog(
                                     .padding(16.dp),
                                 textAlign = TextAlign.Center,
                                 fontWeight = if (year == selectedYear) FontWeight.Bold else FontWeight.Normal,
-                                color = if (year == selectedYear) Color.Blue else Color.Black
+                                color = if (year == selectedYear) Color.Red else Color.White
                             )
                         }
                     }
@@ -172,13 +182,14 @@ fun MonthPickerDialog(
                                     .padding(16.dp),
                                 textAlign = TextAlign.Center,
                                 fontWeight = if (month == selectedMonth) FontWeight.Bold else FontWeight.Normal,
-                                color = if (month == selectedMonth) Color.Blue else Color.Black
+                                color = if (month == selectedMonth) Color.Red else Color.White
                             )
                         }
                     }
                 }
             }
-        }
+        },
+        containerColor = BottomBackgroundColor,
     )
 }
 
@@ -188,26 +199,49 @@ fun MyDatePickerDialog(
     onDateSelected: (Long?) -> Unit,
     onDismiss: () -> Unit
 ) {
+    // 設置預設日期為 2023 年 1 月 1 日
+    val initialDate = Calendar.getInstance().timeInMillis
+
+    // 創建 DatePickerState
     val datePickerState = rememberDatePickerState()
+
+    // 設置初始日期
+    LaunchedEffect(Unit) {
+        datePickerState.selectedDateMillis = initialDate
+    }
 
     DatePickerDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = {
+            TextButton(
+                onClick = {
                 onDateSelected(datePickerState.selectedDateMillis)
                 onDismiss()
-            }) {
-                Text("OK")
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                shape = RoundedCornerShape(50)
+            ) {
+                Text("OK", color = Color.Black)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                shape = RoundedCornerShape(50)
+            ) {
+                Text("Cancel", color = Color.Red)
             }
         },
         content = {
-            DatePicker(state = datePickerState)
-        }
+            Box(
+                modifier = Modifier
+                    .background(BottomBackgroundColor) // 設置底色
+            ) {
+                DatePicker(state = datePickerState)
+            }
+        },
+        colors = DatePickerDefaults.colors(BottomBackgroundColor)
     )
 }
 
@@ -223,18 +257,27 @@ fun DatePickerModal(
     DatePickerDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = {
+            TextButton(
+                onClick = {
                 onDateSelected(datePickerState.selectedDateMillis)
                 onDismiss()
-            }) {
-                Text("OK")
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                shape = RoundedCornerShape(50)
+            ) {
+                Text("OK", color = Color.Black)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                shape = RoundedCornerShape(50)
+            ) {
+                Text("Cancel", color = Color.Red)
             }
-        }
+        },
+        colors = DatePickerDefaults.colors(BottomBackgroundColor)
     ) {
         DatePicker(state = datePickerState)
     }
@@ -260,16 +303,23 @@ fun CustomDatePickerDialog(
                         dateRangePickerState.selectedEndDateMillis ?: 0L
                     )
                     onDismiss()
-                }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                shape = RoundedCornerShape(50)
             ) {
-                Text("OK")
+                Text("OK", color = Color.Black)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                shape = RoundedCornerShape(50)
+            ) {
+                Text("Cancel", color = Color.Red)
             }
-        }
+        },
+        colors = DatePickerDefaults.colors(BottomBackgroundColor)
     ) {
         DateRangePicker(
             state = dateRangePickerState,

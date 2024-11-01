@@ -33,6 +33,7 @@ import com.example.billapp.R
 import com.example.billapp.data.models.Group
 import com.example.billapp.data.models.GroupTransaction
 import com.example.billapp.data.models.User
+import com.example.billapp.ui.theme.theme.BottomBackgroundColor
 import com.example.billapp.ui.theme.theme.BoxBackgroundColor
 import com.example.billapp.ui.theme.theme.MainBackgroundColor
 import com.example.billapp.ui.theme.theme.Orange1
@@ -551,30 +552,35 @@ fun ManagementDialog(
             AlertDialog(
                 onDismissRequest = { showDeleteConfirmationDialog = false },
                 title = {
-                    Text("確認刪除", fontWeight = FontWeight.Bold)
+                    Text("確認刪除", fontWeight = FontWeight.Bold, color = Color.White)
                 },
                 text = {
-                    Text("您確定要刪除群組嗎？此操作無法撤銷。")
+                    Text("您確定要刪除群組嗎？此操作無法撤銷。", color = Color.White)
                 },
                 confirmButton = {
-                    TextButton(
+                    Button(
                         onClick = {
                             viewModel.deleteGroup(groupId)
                             showDeleteConfirmationDialog = false
                             onDismiss()  // 關閉主要對話框
                             navController.navigateUp()
-                        }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                        shape = RoundedCornerShape(50)
                     ) {
                         Text("刪除", color = Color.Red)
                     }
                 },
                 dismissButton = {
-                    TextButton(
-                        onClick = { showDeleteConfirmationDialog = false }
+                    Button(
+                        onClick = { showDeleteConfirmationDialog = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                        shape = RoundedCornerShape(50)
                     ) {
-                        Text("取消")
+                        Text("取消", color = Color.Black)
                     }
-                }
+                },
+                containerColor = BottomBackgroundColor // 设置背景色
             )
         }
     }

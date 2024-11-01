@@ -53,6 +53,7 @@ import com.example.billapp.home.StylishTextField
 import com.example.billapp.home.evaluateExpression
 import com.example.billapp.data.models.PersonalTransaction
 import com.example.billapp.data.models.TransactionCategory
+import com.example.billapp.ui.theme.theme.BottomBackgroundColor
 import com.example.billapp.ui.theme.theme.Brown7
 import com.example.billapp.ui.theme.theme.ButtonGrayColor
 import com.example.billapp.ui.theme.theme.ButtonGreenColor
@@ -399,11 +400,14 @@ fun EditTransactionDetailScreen(
             text = { Text(text = errorMessage) },
             confirmButton = {
                 Button(
-                    onClick = { showErrorDialog = false }
+                    onClick = { showErrorDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(50)
                 ) {
                     Text("確定")
                 }
-            }
+            },
+            containerColor = BottomBackgroundColor
         )
     }
 }
@@ -424,8 +428,8 @@ fun DeleteTransactionButton(
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text(text = "確認刪除") },
-            text = { Text(text = "你確定要刪除此交易紀錄嗎？") },
+            title = { Text(text = "確認刪除", color = Color.White) },
+            text = { Text(text = "你確定要刪除此交易紀錄嗎？", color = Color.White) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -434,18 +438,23 @@ fun DeleteTransactionButton(
                             navController.navigateUp()
                         }
                         showDialog = false
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(50)
                 ) {
-                    Text("確定")
+                    Text("確定", color = Color.Red)
                 }
             },
             dismissButton = {
                 Button(
-                    onClick = { showDialog = false }
+                    onClick = { showDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(50)
                 ) {
-                    Text("取消")
+                    Text("取消", color = Color.Black)
                 }
-            }
+            },
+            containerColor = BottomBackgroundColor
         )
     }
 
