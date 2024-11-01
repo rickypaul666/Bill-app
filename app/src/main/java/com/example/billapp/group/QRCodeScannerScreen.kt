@@ -40,6 +40,7 @@ import com.google.zxing.RGBLuminanceSource
 import android.widget.FrameLayout
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
+import com.example.billapp.ui.theme.theme.BottomBackgroundColor
 import com.example.billapp.ui.theme.theme.ButtonGrayColor
 import com.example.billapp.ui.theme.theme.ButtonRedColor
 import com.example.billapp.ui.theme.theme.MainBackgroundColor
@@ -206,12 +207,12 @@ fun QRCodeScannerScreen(navController: NavController) {
             onDismissRequest = { showErrorDialog = false },
             confirmButton = {
                 TextButton(onClick = { showErrorDialog = false }) {
-                    Text("確定", color = PrimaryFontColor)
+                    Text("確定", color = Color.White)
                 }
             },
-            title = { Text("錯誤", color = PrimaryFontColor) },
-            text = { Text("無法解碼選擇的圖片中的 QR code，請重試。", color = PrimaryFontColor) },
-            containerColor = MainBackgroundColor
+            title = { Text("錯誤", color = Color.White) },
+            text = { Text("無法解碼選擇的圖片中的 QR code，請重試。", color = Color.White) },
+            containerColor = BottomBackgroundColor
         )
     }
 }
