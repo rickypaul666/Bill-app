@@ -1,5 +1,6 @@
 package com.example.billapp.group
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -28,10 +30,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import coil.compose.AsyncImage
 import com.example.billapp.R
 import com.example.billapp.data.models.User
 import com.example.billapp.ui.theme.theme.BoxBackgroundColor
+import com.example.billapp.ui.theme.theme.MainBackgroundColor
 import com.example.billapp.ui.theme.theme.Orange1
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
@@ -74,7 +78,7 @@ fun MemberListScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(BoxBackgroundColor)
+                .background(MainBackgroundColor)
         ) {
             LazyColumn(
                 modifier = Modifier.weight(1f)
@@ -126,55 +130,98 @@ fun MemberListItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp) // 增加水平間距
+            .animateContentSize(), // 添加動畫效果
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = BoxBackgroundColor
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(12.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp), // 增加陰影
+        shape = RoundedCornerShape(16.dp) // 增加圓角
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(20.dp), // 增加內部間距
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween // 優化排列
         ) {
-            Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(CircleShape)
-                    .border(2.dp, Orange1, CircleShape)
+            Row(
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                if (imageUrl.isNotEmpty()) {
-                    AsyncImage(
-                        model = coil.request.ImageRequest.Builder(LocalContext.current)
-                            .data(imageUrl)
-                            .crossfade(true)
-                            .build(),
-                        placeholder = painterResource(R.drawable.ic_user_place_holder),
-                        contentDescription = "User Image",
-                        error = painterResource(R.drawable.ic_user_place_holder),
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
+                Box(
+                    modifier = Modifier
+                        .size(70.dp) // 增加頭像大小
+                        .clip(CircleShape)
+                        .border(width = 2.dp, color = Orange1, shape = CircleShape) // 增加邊框粗細
+                ) {
+                    if (imageUrl.isNotEmpty()) {
+                        AsyncImage(
+                            model = coil.request.ImageRequest.Builder(LocalContext.current)
+                                .data(imageUrl)
+                                .crossfade(true)
+                                .build(),
+                            placeholder = painterResource(R.drawable.ic_user_place_holder),
+                            contentDescription = "User Image",
+                            error = painterResource(R.drawable.ic_user_place_holder),
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(R.drawable.ic_user_place_holder),
+                            contentDescription = "User Image",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(20.dp))
+
+                Text(
+                    text = member.name,
+                    style = MaterialTheme.typography.titleLarge, // 使用更合適的文字樣式
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    fontSize = 22.sp,
+                    color = Color.Black,
+                    fontWeight = FontWeight.Medium // 添加字重
+                )
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .background(
+                        color = Color.LightGray.copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(8.dp)
                     )
-                } else {
-                    Image(
-                        painter = painterResource(R.drawable.ic_user_place_holder),
-                        contentDescription = "User Image",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Verified,  // 或其他適合的圖示
+                    contentDescription = "信用等級圖示",
+                    modifier = Modifier.size(20.dp),
+                    tint = Color.Black.copy(alpha = 0.6f)
+                )
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                Column {
+                    Text(
+                        text = "誠信值",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 12.sp,
+                        color = Color.Black.copy(alpha = 0.6f)
+                    )
+                    Text(
+                        text = member.trustLevel.toString(),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontSize = 20.sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                text = member.name,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(8.dp),
-                fontSize = 20.sp,
-                color = Color.Black
-            )
         }
     }
 }
