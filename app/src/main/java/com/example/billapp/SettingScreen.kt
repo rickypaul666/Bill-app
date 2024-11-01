@@ -33,6 +33,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.billapp.data.models.User
+import com.example.billapp.ui.theme.theme.BottomBackgroundColor
 import com.example.billapp.viewModel.AvatarViewModel
 import com.example.billapp.viewModel.MainViewModel
 import kotlinx.coroutines.launch
@@ -397,20 +398,24 @@ fun LogoutButton(viewModel: MainViewModel?, navController: NavController?, onClo
                                 popUpTo(navController.graph.startDestinationId) { inclusive = true }
                             }
                         }
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(50)
                 ) {
-                    Text("Yes")
+                    Text("Yes", color = Color.Black)
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = {
                         showDialog = false
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                 ) {
-                    Text("No")
+                    Text("No", color = Color.Red)
                 }
-            }
+            },
+            containerColor = BottomBackgroundColor
         )
     }
 }
@@ -540,16 +545,21 @@ fun LineTokenUpdateScreen(
                         showSuccessDialog = false
                         navController.navigateUp()
                     },
-                    title = { Text("更新成功") },
-                    text = { Text("Line Token 已成功更新") },
+                    title = { Text("更新成功", color = Color.White) },
+                    text = { Text("Line Token 已成功更新", color = Color.White) },
                     confirmButton = {
-                        TextButton(onClick = {
+                        TextButton(
+                            onClick = {
                             showSuccessDialog = false
                             navController.navigateUp()
-                        }) {
-                            Text("確定")
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                            shape = RoundedCornerShape(50)
+                        ) {
+                            Text("確定", color = Color.Black)
                         }
-                    }
+                    },
+                    containerColor = BottomBackgroundColor,
                 )
             }
         }

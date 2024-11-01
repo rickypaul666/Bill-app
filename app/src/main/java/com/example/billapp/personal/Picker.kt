@@ -54,15 +54,23 @@ fun YearPickerDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = {
+            TextButton(
+                onClick = {
                 onYearSelected(selectedYear)
                 onDismiss()
-            }) {
-                Text("OK", color = Color.White)
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                shape = RoundedCornerShape(50)
+            ) {
+                Text("OK", color = Color.Black)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                shape = RoundedCornerShape(50)
+            ) {
                 Text("Cancel", color = Color.Red)
             }
         },
@@ -125,15 +133,23 @@ fun MonthPickerDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = {
-                onMonthSelected(selectedYear, selectedMonth)
-                onDismiss()
-            }) {
-                Text("OK", color = Color.White)
+            TextButton(
+                onClick = {
+                    onMonthSelected(selectedYear, selectedMonth)
+                    onDismiss()
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                shape = RoundedCornerShape(50)
+            ) {
+                Text("OK", color = Color.Black)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                shape = RoundedCornerShape(50)
+            ) {
                 Text("Cancel", color = Color.Red)
             }
         },
